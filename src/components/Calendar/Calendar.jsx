@@ -32,7 +32,7 @@ function Claendar({state,role}){
                     }
                     }}><img src={CalendarAfter}/></button>
             </div>
-        </div>{state=="all"}
+        </div>
         <div className="CalendarBody">
             <CalendarBlock date={"일"} isWeekend={true}/>
             <CalendarBlock date={"월"} isWeekend={true}/>
@@ -46,7 +46,6 @@ function Claendar({state,role}){
             <CalendarBlock date={1}/>
             <CalendarBlock date={1}/>
             <CalendarBlock date={1}/>
-            {}
         </div>
         <div className="CalendarFoot">
             <div className="CalendarFootTag">
@@ -66,6 +65,7 @@ function Claendar({state,role}){
                 <div>보강대기중</div>
             </div>
         </div>
+        
     </CalendarContainer>)
 }
 export default Claendar
