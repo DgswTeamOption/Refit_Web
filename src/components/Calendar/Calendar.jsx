@@ -41,11 +41,39 @@ function Claendar({state,role}){
             <CalendarBlock date={"목"} isWeekend={true}/>
             <CalendarBlock date={"금"} isWeekend={true}/>
             <CalendarBlock date={"토"} isWeekend={true}/>
+            <CalendarBlock />
+            <CalendarBlock />
+            <CalendarBlock />
             <CalendarBlock date={1} colors={["red","yellow"]}/>
-            <CalendarBlock date={1}/>
-            <CalendarBlock date={1}/>
-            <CalendarBlock date={1}/>
-            <CalendarBlock date={1}/>
+            <CalendarBlock date={2}/>
+            <CalendarBlock date={3}/>
+            <CalendarBlock date={4}/>
+            <CalendarBlock date={5}/>
+            <CalendarBlock date={6}/>
+            <CalendarBlock date={7}/>
+            <CalendarBlock date={8}/>
+            <CalendarBlock date={9}/>
+            <CalendarBlock date={10}/>
+            <CalendarBlock date={11} colors={["red","yellow"]}/>
+            <CalendarBlock date={12}/>
+            <CalendarBlock date={13}/>
+            <CalendarBlock date={14}/>
+            <CalendarBlock date={15}/>
+            <CalendarBlock date={16}/>
+            <CalendarBlock date={17}/>
+            <CalendarBlock date={18}/>
+            <CalendarBlock date={19}/>
+            <CalendarBlock date={20}/>
+            <CalendarBlock date={21} colors={["red","yellow"]}/>
+            <CalendarBlock date={22}/>
+            <CalendarBlock date={23}/>
+            <CalendarBlock date={24}/>
+            <CalendarBlock date={25}/>
+            <CalendarBlock date={26}/>
+            <CalendarBlock date={27}/>
+            <CalendarBlock date={28}/>
+            <CalendarBlock date={29}/>
+            <CalendarBlock date={30}/>
         </div>
         <div className="CalendarFoot">
             <div className="CalendarFootTag">
