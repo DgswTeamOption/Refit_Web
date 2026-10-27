@@ -64,7 +64,9 @@
 *{
     font-family: 'Pretendard';
 }
-
+button{
+    cursor: pointer;
+}
 :root {
   --color-background: #FAFAFA;
   --color-gray: #767B81;
