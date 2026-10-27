@@ -24,7 +24,7 @@ function Claendar({state,role}){
                     }
                     }}><img src={CalendarBefore}/></button>
                 <button onClick={()=>{
-                    if(month>12){
+                    if(month>=11){
                         setYear(year+1)
                         setMonth(0)
                     }else{
@@ -32,7 +32,7 @@ function Claendar({state,role}){
                     }
                     }}><img src={CalendarAfter}/></button>
             </div>
-        </div>
+        </div>{state=="all"}
         <div className="CalendarBody">
             <CalendarBlock date={"일"} isWeekend={true}/>
             <CalendarBlock date={"월"} isWeekend={true}/>
