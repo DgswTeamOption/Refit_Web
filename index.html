@@ -1,40 +1,13 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>refit</title>
-    <style>
-      body {
-        margin: 0;
-        background: #fff;
-      }
-
-      #root {
-        box-sizing: border-box;
-        display: grid;
-        place-items: center;
-        min-height: 10vh;
-        min-height: 50dvh;
-        padding: 16px;
-      }
-    </style>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module">
-      import React from 'react';
-      import { createRoot } from 'react-dom/client';
-      import ClassBlock from '/src/components/ClassBlock/ClassBlock.jsx';
-      import '/src/styles/global.css';
-
-      createRoot(document.getElementById('root')).render(
-        React.createElement(ClassBlock, {
-          title: '영어1',
-          // onLeave: () => window.alert('수업 나가기 버튼이 클릭되었습니다.'),
-        })
-      );
-    </script>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
