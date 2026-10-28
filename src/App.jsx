@@ -1,5 +1,4 @@
 import React from 'react';
-import Container from "./components/Condition/Condition.jsx";
 import Condition from "./components/Condition/Condition.jsx";
 function App() {
 

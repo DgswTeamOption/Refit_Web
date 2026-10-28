@@ -1,12 +1,12 @@
 import "./Condition.css";
 
 const conditionColors = {
-    결석: "red",
-    거절됨: "red",
-    출석: "blue",
-    수락됨: "blue",
-    보강: "yellow",
-    대기중: "gray",
+    "결석": "red",
+    "거절됨": "red",
+    "출석": "blue",
+    "수락됨": "blue",
+    "보강": "yellow",
+    "대기중": "gray",
 };
 
 export default function Condition({ status = "대기중" }) {
