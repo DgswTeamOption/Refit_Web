@@ -1,9 +1,11 @@
 import React from 'react';
 import Button from './components/Button/Button';
-function App() {
+import SubNav from './components/SubNav/SubNav';
 
+function App() {
   return (
     <div>
+      <SubNav />
     </div>
   );
 }
