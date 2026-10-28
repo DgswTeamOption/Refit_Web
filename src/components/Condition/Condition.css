@@ -1,0 +1,43 @@
+.condition {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 25px;
+    padding: 0;
+    flex-shrink: 0;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.condition--short {
+    width: 47px;
+}
+
+.condition--long {
+    width: 58px;
+}
+
+.condition--red {
+    color: #ff6458;
+    background-color: #fce8e8;
+}
+
+.condition--blue {
+    color: #3daeff;
+    background-color: #e4f3ff;
+}
+
+.condition--yellow {
+    color: #ffc45b;
+    background-color: #fff3d4;
+}
+
+.condition--gray {
+    color: #555555;
+    background-color: #f0f0f0;
+}
