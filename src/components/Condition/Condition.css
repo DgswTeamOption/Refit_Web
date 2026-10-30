@@ -3,8 +3,9 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    width: auto;
     height: 25px;
-    padding: 0;
+    padding: 0 12px;
     flex-shrink: 0;
     border-radius: 999px;
     font-size: 12px;
@@ -12,14 +13,6 @@
     line-height: 1;
     white-space: nowrap;
     vertical-align: middle;
-}
-
-.condition--short {
-    width: 47px;
-}
-
-.condition--long {
-    width: 58px;
 }
 
 .condition--red {

@@ -14,11 +14,9 @@ export default function Condition({ status = "대기중" }) {
 
     if (!color) return null;
 
-    const size = status.length === 2 ? "short" : "long";
-
     return (
-        <span className={`condition condition--${color} condition--${size}`}>
-      {status}
-    </span>
+        <span className={`condition condition--${color}`}>
+    {status}
+  </span>
     );
 }
