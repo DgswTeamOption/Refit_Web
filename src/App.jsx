@@ -4,6 +4,7 @@ function App() {
 
   return (
     <div>
+      <Button text={"안녕"} color={"blue"} width={100}/>
     </div>
   );
 }

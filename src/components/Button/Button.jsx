@@ -1,7 +1,7 @@
 import { ButtonContainer } from "./Button.styles";
-function Button({ text, color, width, height, textSize, onClick }) {
+function Button({ text, color, width, onClick }) {
   return (
-    <ButtonContainer $color={color} $width={width} $height={height} $textSize={textSize} onClick={onClick}>
+    <ButtonContainer $color={color} $width={width} onClick={onClick}>
       {text}
     </ButtonContainer>
   );
