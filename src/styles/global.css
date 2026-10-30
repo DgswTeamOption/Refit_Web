@@ -66,10 +66,69 @@
 }
 
 :root {
+  /* 기존 설정 */
   --color-background: #FAFAFA;
   --color-gray: #767B81;
   --color-light-gray: #E3E3E3;
   --color-red: #FF0000;
   --color-blue: #0099FF;
-  --color-yellow:#FFCC40;
+  --color-yellow: #FFCC40;
+
+  /* 01. 주요 동작 */
+  --color-primary-blue: #0099FF;
+  --color-danger-red: #F04444;
+  --color-deep-blue: #0077CC;
+
+  /* 02. 기본 UI · 뉴트럴 */
+  --color-neutral-100: #151515;
+  --color-neutral-200: #444444;
+  --color-neutral-300: #555555;
+  --color-neutral-400: #666666;
+  --color-neutral-500: #777777;
+  --color-neutral-600: #888888;
+  --color-neutral-700: #999999;
+  --color-neutral-800: #AAAAAA;
+  --color-neutral-900: #E8E8E8;
+  --color-neutral-950: #F3F3F3;
+  --color-neutral-975: #F7F7F7;
+  --color-white: #FFFFFF;
+
+  /* 03. 출결 · 보강 상태 */
+  /* 출석·수락됨 */
+  --color-status-attendance-text: #3DAEFF;
+  --color-status-attendance-bg: #E4F3FF;
+  
+  /* 결석·거절됨 */
+  --color-status-absence-text: #FF6458;
+  --color-status-absence-bg: #FCE8E8;
+  
+  /* 보강 */
+  --color-status-makeup-text: #FFC45B;
+  --color-status-makeup-bg: #FFF3D4;
+  
+  /* 대기중 */
+  --color-status-pending-text: #555555;
+  --color-status-pending-bg: #F1F1F1;
+
+  /* 04. 수업 구분 · 그라데이션 */
+  --gradient-english1-peach: linear-gradient(to right, #F5AA8C, #FFE0A1);
+  --gradient-english2-lavender: linear-gradient(to right, #BBA8F6, #E8D6FF);
+  --gradient-math1-yellow: linear-gradient(to right, #FFC45B, #FFE9A2);
+  --gradient-math2-mint: linear-gradient(to right, #82D2BC, #C8EFE2);
+
+  /* 05. 챗봇 확장 색상 */
+  --color-chatbot-primary: #0099FF;
+  --color-chatbot-bg: #EFF8FF;
+  --color-chatbot-border: #E9E9E9;
+  --color-chatbot-input-bg: #F5F6F8;
+  --color-chatbot-notice-bg: #FFF7E8;
+  --color-chatbot-point: #FFD462;
+  --color-chatbot-close: #F4F5F7;
+  --color-chatbot-card-bg: #F7F9FB;
+
+  /* 06. 브랜드 로고 색상 */
+  --color-brand-black: #000000;
+  --color-brand-blue: #0099FF;
+  --color-brand-yellow: #FFCC40;
+  --color-brand-red: #FF0000;
 }
