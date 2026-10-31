@@ -7,6 +7,8 @@ const conditionColors = {
     "수락됨": "blue",
     "보강": "yellow",
     "대기중": "gray",
+    "필요": "yellow",
+    "불필요": "gray",
 };
 
 export default function Condition({ status = "대기중" }) {

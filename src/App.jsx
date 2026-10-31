@@ -15,6 +15,8 @@ function App() {
       <Condition status="수락됨" />
       <Condition status="보강" />
       <Condition status="대기중" />
+      <Condition status="필요" />
+      <Condition status="불필요" />
     </div>
   );
 }
