@@ -6,7 +6,7 @@ function App() {
 
   return (
       <div style={{ position: 'fixed', inset: 0, display: 'grid', placeItems: 'center' }}>
-        <ClassBlock title="영어1" onLeave={() => {}} />
+        <ClassBlock title="영어1" color='peach' />
     </div>
   );
 }

@@ -12,8 +12,17 @@ import './ClassBlock.css';
  * @param {boolean} [props.disabled=false] 나가기 버튼 비활성화 여부
  * @param {string} [props.className=''] 레이아웃 확장용 클래스
  */
+
+const COLORS = {
+    peach: 'linear-gradient(to bottom right, #F5AA8C, #FFE0A1)',
+    lavender: 'linear-gradient(to bottom right, #BBA8F6, #E8D6FF)',
+    yellow: 'linear-gradient(to bottom right, #FFC45B, #FFE9A2)',
+    mint: 'linear-gradient(to bottom right, #82D2BC, #C8EFE2)',
+};
+
 function ClassBlock({
                         title,
+                        color = 'peach',
                         onLeave,
                         isLeaving = false,
                         disabled = false,
@@ -23,10 +32,10 @@ function ClassBlock({
 
     return (
         <article
-            className={`class-block ${className}`.trim()}
-            aria-labelledby={titleId}
-        >
-            <div className="class-block__banner" aria-hidden="true" />
+            className={`class-block ${className}`.trim()} aria-labelledby={titleId}>
+            <div className="class-block__banner"
+                 style={{background: COLORS[color] ?? COLORS.peach}}
+                 aria-hidden="true" />
 
             <div className="class-block__body">
                 <h3 id={titleId} className="class-block__title">
@@ -36,7 +45,7 @@ function ClassBlock({
                 <button
                     type="button"
                     className="class-block__leave"
-                    onClick={() => onLeave()}
+                    onClick={onLeave}
                     disabled={disabled || isLeaving}
                     aria-label={`${title} 수업 나가기`}
                     aria-busy={isLeaving}
