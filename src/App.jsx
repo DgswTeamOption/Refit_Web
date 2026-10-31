@@ -1,7 +1,8 @@
 import React from 'react';
 import Condition from "./components/Condition/Condition.jsx";
+import Button from './components/Button/Button';
+import SubNav from './components/SubNav/SubNav';
 function App() {
-
   return (
     <div style={{
       display: "flex",
