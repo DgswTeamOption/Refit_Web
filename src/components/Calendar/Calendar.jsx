@@ -5,7 +5,7 @@ import { CalendarContainer } from "./Calendar.styles"
 import CalendarBlock from "./CalendarBlock"
 import "./Calendar.css"
 import { useState } from "react"
-function Claendar({state,role}){
+function Calendar({state,role}){
     const today = new Date();
     const [year,setYear] = useState(today.getFullYear());
     const [month,setMonth] = useState(today.getMonth());
@@ -77,23 +77,23 @@ function Claendar({state,role}){
         </div>
         <div className="CalendarFoot">
             <div className="CalendarFootTag">
-                <div className="CalendarSircle CalendarSircleYellow"></div>
+                <div className="CalendarCircle CalendarCircleYellow"></div>
                 <div>출석</div>
             </div>
             <div className="CalendarFootTag">
-                <div className="CalendarSircle CalendarSircleBlue"></div>
+                <div className="CalendarCircle CalendarCircleBlue"></div>
                 <div>결석</div>
             </div>
             <div className="CalendarFootTag">
-                <div className="CalendarSircle CalendarSircleRed"></div>
+                <div className="CalendarCircle CalendarCircleRed"></div>
                 <div>보강</div>
             </div>
             <div className="CalendarFootTag">
-                <div className="CalendarSircle CalendarSircleGreen"></div>
+                <div className="CalendarCircle CalendarCircleGreen"></div>
                 <div>보강대기중</div>
             </div>
         </div>
         
     </CalendarContainer>)
 }
-export default Claendar
+export default Calendar

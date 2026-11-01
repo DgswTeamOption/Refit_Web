@@ -4,10 +4,10 @@ function CalendarBlock ({date,isWeekend,colors}){
     return(
     <div className="CalendarBlock">
         <div className={`CalendarDate${isWeekend?"Weekend":""}`}>{date}</div>
-        <div className="CalendarSircleWrap">
+        <div className="CalendarCircleWrap">
             {Array.isArray(colors)&&colors!==null?colors.map((color)=>{
             color = color[0].toUpperCase()+color.slice(1)
-            return <div className={`CalendarSircle CalendarSircle${color}`}></div>
+            return <div className={`CalendarCircle CalendarCircle${color}`}></div>
         }):""}
         </div>
         
