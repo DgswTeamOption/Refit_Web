@@ -1,8 +1,10 @@
-import { ButtonContainer } from "./Button.styles"
-function Button({text,color,onClick,width,height,textSize}){
-    return(<ButtonContainer $primary={"primary"} color = {color} width={width} height={height} textSize={textSize} onClick={onClick} >
-        {text}
+import { ButtonContainer } from "./Button.styles";
+function Button({ text, color='blue', width=100, onClick,disabled = false }) {
+  return (
+    <ButtonContainer $color={color} $width={width} onClick={onClick} disabled={disabled}>
+      {text}
     </ButtonContainer>
-    )
+  );
 }
+
 export default Button;
