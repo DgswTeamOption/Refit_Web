@@ -1,7 +1,7 @@
 import React from 'react';
 import './Footer.css';
-import logoImg from '../../assets/logo.png';
-import githubIcon from '../../assets/github.png';
+import logoImg from '../../assets/logo.svg';
+import githubIcon from '../../assets/github.svg';
 
 const Footer = () => {
     const frontendDevs = [
