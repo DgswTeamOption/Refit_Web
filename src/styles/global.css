@@ -63,13 +63,15 @@
 
 *{
     font-family: 'Pretendard';
+    padding: 0;
+    margin: 0;
 }
 
 :root {
-  --color-background: #FAFAFA;
-  --color-gray: #767B81;
-  --color-light-gray: #E3E3E3;
-  --color-red: #FF0000;
-  --color-blue: #0099FF;
-  --color-yellow:#FFCC40;
+    --color-background: #FAFAFA;
+    --color-gray: #767B81;
+    --color-light-gray: #E3E3E3;
+    --color-red: #FF0000;
+    --color-blue: #0099FF;
+    --color-yellow:#FFCC40;
 }
