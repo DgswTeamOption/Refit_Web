@@ -1,0 +1,76 @@
+.sub-nav {
+  position: relative;
+  display: flex;
+  gap: 36px;
+  width: 80%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 16px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR",
+    "Malgun Gothic", sans-serif;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+  box-sizing: border-box;
+}
+
+.sub-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.sub-nav__tab {
+  position: relative;
+  flex: none;
+  padding: 12px 8px 14px 8px;
+  border: 0;
+  background: none;
+  color: #8c8c8c;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  outline: none;
+}
+
+.sub-nav__tab:hover {
+  color: #444;
+}
+
+.sub-nav__tab.is-active {
+  color: #111;
+  font-weight: 700;
+}
+
+.sub-nav__indicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: #111;
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.sub-nav__label {
+  display: inline-block;
+  position: relative;
+}
+
+.sub-nav__label::before {
+  content: attr(data-label);
+  display: block;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sub-nav__tab,
+  .sub-nav__indicator {
+    transition: none;
+  }
+}
