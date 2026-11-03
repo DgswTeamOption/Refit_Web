@@ -1,0 +1,344 @@
+/* 안쪽 여백과 테두리를 지정한 너비에 포함 */
+.teacher-overview,
+.teacher-overview * {
+    box-sizing: border-box;
+}
+
+.teacher-overview {
+    min-height: 100vh;
+    background: #fff;
+    color: #151515;
+}
+
+/* 헤더 */
+.teacher-overview .header-container {
+    max-width: none;
+    padding-left: max(24px, calc((100% - 1248px) / 2));
+    padding-right: 32px;
+}
+
+.teacher-overview .header-logo {
+    width: 103px;
+    height: 49px;
+}
+
+.teacher-overview .header-right {
+    gap: 16px;
+}
+
+.teacher-overview .header-bell-icon {
+    height: 19px;
+}
+
+.teacher-overview .header-profile-icon {
+    width: 34px;
+    height: 34px;
+}
+
+/* 메인 화면 */
+.teacher-overview__main {
+    display: grid;
+    grid-template-columns: 420px minmax(0, 1fr);
+    align-items: start;
+    gap: 30px;
+
+    width: calc(100% - 48px);
+    max-width: 1248px;
+    margin: 40px auto 0;
+    padding-bottom: 40px;
+}
+
+.teacher-overview__calendar,
+.teacher-overview__classes {
+    min-width: 0;
+}
+
+.teacher-overview__calendar > div {
+    width: 100%;
+}
+
+/* 내 수업 제목과 만들기 버튼 */
+.teacher-overview__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    min-height: 42px;
+    margin-bottom: 14px;
+}
+
+.teacher-overview__toolbar h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 30px;
+}
+
+.teacher-overview__create > button {
+    height: 42px;
+    border-radius: 9px;
+}
+
+/* 수업 카드 */
+.teacher-overview__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 18px;
+}
+
+.teacher-overview__grid .class-block {
+    width: 100%;
+}
+
+.teacher-overview__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 560px;
+    padding: 24px;
+
+    border: 1px solid #e8e8e8;
+    border-radius: 14px;
+    background: #fff;
+    text-align: center;
+}
+
+.teacher-overview__empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 26px;
+
+    width: 100%;
+    transform: translateY(-36px);
+}
+
+.teacher-overview__empty-content p {
+    margin: 0;
+    color: #888;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.teacher-overview__empty-content > button {
+    max-width: 100%;
+    height: 42px;
+    border-radius: 8px;
+}
+
+@media (max-width: 520px) {
+    .teacher-overview__empty {
+        height: 360px;
+    }
+
+    .teacher-overview__empty-content {
+        transform: translateY(-16px);
+    }
+}
+
+/* 팝업 */
+.teacher-overview .overview-modal {
+    box-sizing: border-box;
+    position: fixed;
+    inset: 0;
+
+    width: min(470px, calc(100% - 32px));
+    height: fit-content;
+    max-height: calc(100dvh - 48px);
+    margin: auto;
+    padding: 28px;
+    overflow-y: auto;
+
+    border: 0;
+    border-radius: 18px;
+    background: #fff;
+    color: #151515;
+}
+
+.teacher-overview .overview-modal::backdrop {
+    background: rgba(0, 0, 0, 0.28);
+}
+
+.overview-modal h2 {
+    margin: 0 0 24px;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 28px;
+}
+
+/* 제목 입력 */
+.overview-modal__label {
+    display: block;
+    margin-bottom: 8px;
+
+    color: #444;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 18px;
+}
+
+.overview-modal__input {
+    box-sizing: border-box;
+    display: block;
+
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: 44px;
+    padding: 0 14px;
+
+    border: 1px solid #e3e3e3;
+    border-radius: 8px;
+    outline: none;
+    background: #fff;
+
+    color: #151515;
+    font-size: 14px;
+}
+
+.overview-modal__input::placeholder {
+    color: #aaa;
+}
+
+.overview-modal__input:focus {
+    border-color: var(--color-blue, #0099ff);
+}
+
+.overview-modal__input[aria-invalid='true'] {
+    border-color: #f04444;
+}
+
+.overview-modal__error {
+    margin: 8px 0 0;
+    color: #f04444;
+    font-size: 12px;
+    line-height: 18px;
+}
+
+/* 입력칸과 같은 너비로 버튼 배치 */
+.overview-modal__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+
+    width: 100%;
+    margin-top: 28px;
+}
+
+.teacher-overview .overview-modal__actions > button {
+    width: 100%;
+    height: 42px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.teacher-overview .overview-modal__actions > button:focus-visible {
+    outline: 2px solid #151515;
+    outline-offset: 3px;
+}
+
+/* 삭제 확인 */
+.overview-modal--delete h2 {
+    margin-bottom: 0;
+}
+
+.overview-modal__description {
+    margin: 16px 0 0;
+    color: #888;
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.overview-modal--delete .overview-modal__actions {
+    margin-top: 24px;
+}
+
+.teacher-overview
+.overview-modal--delete
+.overview-modal__actions
+> button:last-child {
+    background: var(--color-danger-red, #f04444);
+}
+
+.teacher-overview
+.overview-modal--delete
+.overview-modal__actions
+> button:last-child:hover {
+    background: #d93c3c;
+}
+
+/* 화면 너비에 따른 배치 */
+@media (max-width: 1100px) {
+    .teacher-overview__main {
+        grid-template-columns: 340px minmax(0, 1fr);
+        gap: 24px;
+    }
+}
+
+@media (max-width: 800px) {
+    .teacher-overview .header-container {
+        padding: 0 24px;
+    }
+
+    .teacher-overview .header-logo {
+        width: auto;
+        height: 40px;
+    }
+
+    .teacher-overview__main {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 28px;
+        margin-top: 24px;
+    }
+}
+
+@media (max-width: 520px) {
+    .teacher-overview__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .teacher-overview__toolbar h1 {
+        font-size: 20px;
+    }
+
+    .teacher-overview__create > button {
+        width: 150px;
+    }
+
+    .teacher-overview .overview-modal {
+        padding: 24px;
+    }
+}
+/* 수업 만들기 팝업 간격 */
+.teacher-overview .overview-modal--create {
+    padding-bottom: 14px;
+}
+
+.overview-modal--create h2 {
+    margin-bottom: 16px;
+}
+
+/* 배너 사진 선택 영역 */
+.overview-modal__photo {
+    margin-top: 16px;
+}
+
+.teacher-overview .overview-modal__photo > button {
+    width: 100%;
+    height: 74px;
+
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    background: #f7f7f7;
+
+    color: #888;
+    font-size: 13px;
+    font-weight: 400;
+
+    opacity: 1;
+    cursor: default;
+}
