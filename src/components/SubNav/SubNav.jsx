@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./SubNav.css";
 
-export const DEFAULT_TABS = [
+const DEFAULT_TABS = [
   { key: "main", label: "메인" },
   { key: "student", label: "학생" },
   { key: "absence", label: "결석정보" },

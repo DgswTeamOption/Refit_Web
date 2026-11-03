@@ -1,0 +1,556 @@
+.class-page {
+    width: 100%;
+    min-height: calc(100vh - 80px);
+    background-color: #FFFFFF;
+    padding: 32px 80px 60px;
+    box-sizing: border-box;
+}
+
+.class-container {
+    max-width: 1352px;
+    margin: 0 auto;
+}
+
+/* 1. Breadcrumb */
+.class-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+.breadcrumb-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #0099FF;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.breadcrumb-link:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-separator {
+    color: #999999;
+    font-size: 12px;
+}
+
+.breadcrumb-current {
+    color: #767B81;
+    font-size: 13px;
+}
+
+/* 2. 수업 메인 타이틀 */
+.class-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0 0 20px 0;
+    letter-spacing: -0.3px;
+}
+
+/* 3. SubNav 탭 바 래퍼 (시안 간격 40px) */
+.class-subnav-wrapper {
+    margin-bottom: 40px;
+}
+
+/* 4. 본문 2컬럼 레이아웃 */
+.class-two-columns {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+}
+
+.class-calendar-aside {
+    flex-shrink: 0;
+    width: 360px;
+}
+
+.class-content-area {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+/* 공통 섹션 헤더 및 타이틀 */
+.content-section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111111;
+    letter-spacing: -0.2px;
+    margin: 0;
+}
+
+.content-card {
+    background-color: #FFFFFF;
+    border: 1px solid #ECECEC;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    box-sizing: border-box;
+}
+
+.card-subtitle {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0 0 16px 0;
+}
+
+/* 이번달 출석 현황 (view5) */
+.attendance-status-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.attendance-pills {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.attendance-pill {
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+.pill-present {
+    background-color: #E4F3FF;
+    color: #3DAEFF;
+}
+
+.pill-absent {
+    background-color: #FCE8E8;
+    color: #FF6458;
+}
+
+/* 테이블 공통 스타일 */
+.class-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.class-table th {
+    font-size: 13px;
+    font-weight: 500;
+    color: #767B81;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #F0F0F0;
+}
+
+.class-table td {
+    font-size: 14px;
+    color: #111111;
+    padding: 14px 0;
+    border-bottom: 1px solid #F5F5F5;
+    vertical-align: middle;
+}
+
+.class-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* 최근 출석 카드 */
+.recent-attendance-card {
+    margin-bottom: 32px;
+}
+
+/* 공지 섹션 (view5) */
+.notice-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.view-more-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #0099FF;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.view-more-link:hover {
+    text-decoration: underline;
+}
+
+.notice-preview-item {
+    cursor: pointer;
+}
+
+.notice-preview-meta {
+    font-size: 12px;
+    color: #999999;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.notice-preview-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0 0 6px 0;
+}
+
+.notice-preview-desc {
+    font-size: 13px;
+    color: #767B81;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.notice-preview-divider {
+    height: 1px;
+    background-color: #F0F0F0;
+    margin: 16px 0;
+}
+
+/* 결석 및 보강 일정 탭 (view10, view11) */
+.absence-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.absence-table-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.absence-table th {
+    background-color: #F8F9FA;
+    padding: 14px 20px;
+    border-bottom: 1px solid #ECECEC;
+}
+
+.absence-table td {
+    padding: 16px 20px;
+}
+
+.table-action-btn {
+    background-color: #F4F5F7;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #333333;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.table-action-btn:hover {
+    background-color: #ECEEF2;
+}
+
+.btn-cancel-action {
+    color: #555555;
+}
+
+/* 4-C, 4-D. 결석/보강 신청 폼 화면 (view12, view13) */
+.apply-view-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.apply-section-guide-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0 0 16px 0;
+}
+
+.apply-two-columns {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+}
+
+.apply-calendar-column {
+    flex-shrink: 0;
+    width: 360px;
+}
+
+.apply-form-column {
+    flex: 1;
+    min-width: 0;
+}
+
+.apply-form-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0 0 12px 0;
+}
+
+.apply-form-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.apply-field-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333333;
+    margin-top: 8px;
+}
+
+.apply-input {
+    width: 100%;
+    height: 48px;
+    border: 1px solid #ECECEC;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-size: 14px;
+    color: #111111;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.apply-input:focus {
+    border-color: #0099FF;
+}
+
+.apply-time-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.apply-time-input {
+    flex: 1;
+}
+
+.apply-time-tilde {
+    font-size: 16px;
+    font-weight: 500;
+    color: #666666;
+    user-select: none;
+}
+
+.apply-input.input-error {
+    border-color: #F04444;
+}
+
+.apply-textarea {
+    width: 100%;
+    height: 140px;
+    border: 1px solid #ECECEC;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #111111;
+    box-sizing: border-box;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.apply-textarea:focus {
+    border-color: #0099FF;
+}
+
+.apply-submit-btn-wrap {
+    margin-top: 16px;
+}
+
+/* 신청 폼 하단 신청 내역 (view12, view13) */
+.apply-bottom-history {
+    margin-top: 48px;
+}
+
+.apply-history-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0 0 16px 0;
+}
+
+.history-table-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.history-table th {
+    background-color: #F8F9FA;
+    padding: 14px 20px;
+    border-bottom: 1px solid #ECECEC;
+}
+
+.history-table td {
+    padding: 16px 20px;
+}
+
+/* 공지 목록 뷰 (view7) */
+.notice-view-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0 0 20px 0;
+}
+
+.notice-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.notice-item-card {
+    background: #FFFFFF;
+    border: 1px solid #ECECEC;
+    border-radius: 14px;
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.notice-item-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.notice-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notice-item-meta {
+    font-size: 12px;
+    color: #999999;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.notice-item-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0 0 6px 0;
+}
+
+.notice-item-excerpt {
+    font-size: 13px;
+    color: #767B81;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.notice-view-btn {
+    background: none;
+    border: none;
+    color: #0099FF;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 24px;
+}
+
+.notice-view-btn:hover {
+    text-decoration: underline;
+}
+
+/* 공지 상세 뷰 (view8) */
+.notice-detail-card {
+    background: #FFFFFF;
+    border: 1px solid #ECECEC;
+    border-radius: 16px;
+    padding: 36px 32px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.notice-detail-meta {
+    font-size: 13px;
+    color: #999999;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.notice-detail-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0;
+    letter-spacing: -0.2px;
+}
+
+.notice-detail-divider {
+    height: 1px;
+    background-color: #ECECEC;
+    margin: 24px 0;
+}
+
+.notice-detail-paragraph {
+    font-size: 14px;
+    color: #333333;
+    line-height: 1.8;
+    margin: 0 0 8px 0;
+}
+
+.notice-inline-link {
+    color: #0099FF;
+    text-decoration: underline;
+}
+
+.notice-detail-footer {
+    margin-top: 32px;
+}
+
+.notice-back-btn {
+    background: none;
+    border: none;
+    color: #0099FF;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+}
+
+.notice-back-btn:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .class-two-columns,
+    .apply-two-columns {
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    .class-calendar-aside,
+    .apply-calendar-column {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .class-page {
+        padding: 20px;
+    }
+}

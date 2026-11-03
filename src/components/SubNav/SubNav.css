@@ -1,13 +1,12 @@
 .sub-nav {
   position: relative;
   display: flex;
-  gap: 36px;
-  width: 80%;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 16px;
+  gap: 40px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   background: #fff;
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid #ECECEC;
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR",
     "Malgun Gothic", sans-serif;
   overflow-x: auto;
@@ -23,7 +22,7 @@
 .sub-nav__tab {
   position: relative;
   flex: none;
-  padding: 12px 8px 14px 8px;
+  padding: 12px 0 14px 0;
   border: 0;
   background: none;
   color: #8c8c8c;
