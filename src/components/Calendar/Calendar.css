@@ -48,11 +48,6 @@
 }
 .CalendarBlock.is-clickable {
     cursor: pointer;
-    border-radius: 8px;
-    transition: background-color 0.15s ease;
-}
-.CalendarBlock.is-clickable:hover {
-    background-color: #F5F7FA;
 }
 .CalendarBlock.is-selected {
     background-color: #EBF5FF;
