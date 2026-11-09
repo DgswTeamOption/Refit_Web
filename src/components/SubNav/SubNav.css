@@ -1,41 +1,40 @@
 .sub-nav {
   position: relative;
-  display: flex;
-  gap: 40px;
   width: 100%;
-  margin: 0;
+  max-width: 1350px;
+  margin: 0 auto;
   padding: 0;
   background: #fff;
-  border-bottom: 1px solid #ECECEC;
-  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR",
-    "Malgun Gothic", sans-serif;
-  overflow-x: auto;
-  white-space: nowrap;
-  scrollbar-width: none;
+  border-bottom: 1px solid #f0f0f0;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
   box-sizing: border-box;
 }
 
-.sub-nav::-webkit-scrollbar {
-  display: none;
+.sub-nav__list {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
 }
 
 .sub-nav__tab {
   position: relative;
   flex: none;
-  padding: 12px 0 14px 0;
+  padding: 12px 0 16px 0;
   border: 0;
   background: none;
-  color: #8c8c8c;
+  color: #767676;
   font: inherit;
   font-size: 15px;
   line-height: 1.2;
   cursor: pointer;
-  transition: color 0.2s ease;
   outline: none;
+  transition: color 0.2s ease;
 }
 
 .sub-nav__tab:hover {
-  color: #444;
+  color: #333;
 }
 
 .sub-nav__tab.is-active {
@@ -46,8 +45,9 @@
 .sub-nav__indicator {
   position: absolute;
   bottom: 0;
-  height: 2px;
+  height: 3px;
   background: #111;
+  border-radius: 1.5px;
   transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1),
               width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
