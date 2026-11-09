@@ -58,7 +58,6 @@ function Class({ classInfo, onGoHome }) {
         setActiveTab('main');
         setSubView('tab');
     };
-
     const handleOpenNoticeDetail = (notice) => {
         setSelectedNotice(notice);
         setSubView('notice-detail');
