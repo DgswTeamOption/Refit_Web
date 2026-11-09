@@ -116,6 +116,7 @@ function Class({ classInfo, onGoHome }) {
                     <SubNav
                         role="student"
                         customTabs={CLASS_TABS}
+                        tabs={CLASS_TABS}
                         defaultKey={activeTab}
                         onChange={handleTabChange}
                     />
