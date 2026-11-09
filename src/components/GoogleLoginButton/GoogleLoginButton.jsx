@@ -1,61 +1,32 @@
-import React, { useState } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
+import { useState } from 'react';
+import { useGoogleLogin } from '@react-oauth/google';
 function GoogleLoginButton() {
-  // 기본 기본값 설정
-  const defaultUser = {
-    name: "로그인필요",
-    email: "로그인필요",
-    picture: "https://via.placeholder.com/150" // 구글 웹이미지 URL 대신 안정적인 기본 프로필 이미지 경로 사용
-  };
-
-  // 1. 초기 상태 설정: 로컬스토리지에 저장된 토큰이 있으면 디코딩, 없으면 defaultUser 사용
-  const [user, setUser] = useState(() => {
-    const savedToken = localStorage.getItem("token");
-    if (savedToken) {
-      try {
-        return jwtDecode(savedToken);
-      } catch (error) {
-        console.error("유효하지 않은 토큰입니다:", error);
-        localStorage.removeItem("token");
-      }
-    }
-    return defaultUser;
+  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(localStorage.getItem("token")));
+  const startGoogleLogin = useGoogleLogin({
+    onSuccess: ({ access_token: token }) => {
+      localStorage.setItem("token", token);
+      setIsLoggedIn(true);
+    },
+    onError: () => console.error("구글 로그인에 실패했습니다."),
   });
-  // 로그인 성공 시 실행되는 함수
-  const handleSuccess = (credentialResponse) => {
-    const token = credentialResponse.credential;
-    console.log("구글 로그인 성공! 토큰:", token);
 
-    // 로컬스토리지 저장
-    localStorage.setItem("token", token);
-
-    // 토큰 디코딩 후 React 상태 업데이트 (화면 리렌더링)
-    const decoded = jwtDecode(token);
-    setUser(decoded);
-  };
-
-  // 로그인 실패 시 실행되는 함수
-  const handleError = () => {
-    console.log("로그인 실패");
-  };
-
-  // 로그아웃 처리 함수
   const handleLogout = () => {
     localStorage.removeItem("token");
-    setUser(defaultUser);
+    setIsLoggedIn(false);
   };
 
-  const isLoggedIn = !!localStorage.getItem("token");
-
   return (
-    <div>
+    <div className="google-login-wrap">
       {!isLoggedIn ? (
-        <GoogleLogin
-          onSuccess={handleSuccess}
-          onError={handleError}
-          width="400"
-        />
+        <button type="button" className="google-login-button" onClick={() => startGoogleLogin()}>
+          <svg className="google-login-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11c-.5 2.5-2 4.6-4.3 6l6.8 5.3c4-3.7 6.1-9 6.1-15z" />
+            <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.8-5.3c-1.9 1.3-4.1 2-6.7 2-5.1 0-9.4-3.4-10.9-8H6.1v5.5C9.5 39.7 16.2 44 24 44z" />
+            <path fill="#FBBC05" d="M13.1 27.8a12 12 0 0 1 0-7.6v-5.5H6.1a20 20 0 0 0 0 18.6l7-5.5z" />
+            <path fill="#EA4335" d="M24 12.2c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 6.1 29.5 4 24 4 16.2 4 9.5 8.3 6.1 14.7l7 5.5c1.5-4.6 5.8-8 10.9-8z" />
+          </svg>
+          <span>Google 계정으로 로그인</span>
+        </button>
       ) : (
         <button  onClick={handleLogout}>로그아웃</button>
       )}

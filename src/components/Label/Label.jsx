@@ -1,6 +1,6 @@
 import styled from "styled-components"
 import "./Label.css"
-function Label({LabelText="레이블",id,placeHolder="",type="text",inputButton=null,width=400,underText}){
+function Label({LabelText="레이블",id,placeHolder="",type="text",inputButton=null,width=550,underText}){
     return(<div className="Label">
         <label htmlFor={id}>{LabelText}</label>
         {(inputButton!==null)?
@@ -10,16 +10,16 @@ function Label({LabelText="레이블",id,placeHolder="",type="text",inputButton=
         </div>
         :<InputContainer $width={width} id={id} type={type} placeholder={placeHolder}/>
         }
-        <div className="inputUnder">{underText}</div>
+        {underText && <div className="inputUnder">{underText}</div>}
     </div>)
 }
 const InputContainer = styled.input`
     width:${props => props.$width}px;
-    height:40px;
-    font-size:13px;
+    height:48px;
+    font-size:16px;
     border:1px solid #E0E0E0;
     border-radius:8px;
-    padding:5px;
+    padding:8px 12px;
     box-sizing:border-box;
     outline:none;
     &:focus{

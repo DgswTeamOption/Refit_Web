@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Button from "../../../components/Button/Button";
@@ -14,21 +14,7 @@ import "./Login.css";
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function LoginScreen({ onNavigate }) {
-  const [codeSent, setCodeSent] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(300);
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    if (!codeSent || secondsLeft === 0) return undefined;
-
-    const timer = window.setTimeout(() => {
-      setSecondsLeft((seconds) => Math.max(0, seconds - 1));
-    }, 1000);
-
-    return () => window.clearTimeout(timer);
-  }, [codeSent, secondsLeft]);
-
-  const formattedTime = `${String(Math.floor(secondsLeft / 60)).padStart(2, "0")}:${String(secondsLeft % 60).padStart(2, "0")}`;
 
   const requestCode = () => {
     const email = document.getElementById("email")?.value.trim() ?? "";
@@ -38,8 +24,6 @@ function LoginScreen({ onNavigate }) {
       return;
     }
 
-    setCodeSent(true);
-    setSecondsLeft(300);
     setMessage("인증코드를 보냈어요. 메일함을 확인해주세요.");
   };
 
@@ -71,33 +55,25 @@ function LoginScreen({ onNavigate }) {
         <div className="LoginLine">또는</div>
         <Label
           LabelText="이메일"
-          width={290}
+          width={420}
           placeHolder="example@email.com"
           id="email"
           type="email"
           inputButton={
             <span className="login-code-button">
-              <Button text="인증코드 받기" color="blue" onClick={requestCode} />
+              <Button text="인증코드 받기" color="blue" width={120} onClick={requestCode} />
             </span>
           }
         />
         {message && <p className="login-feedback" role="status">{message}</p>}
-        <div className={`login-code-field ${codeSent ? "is-sent" : ""}`}>
-          <Label
-            LabelText="인증코드"
-            placeHolder="6자리 숫자 입력"
-            id="code"
-            type="text"
-          />
-          {codeSent && <span className="login-code-countdown">{formattedTime}</span>}
-        </div>
-        {codeSent && (
-          <p className="login-code-helper">
-            5분 안에 입력해 주세요. 메일이 없다면 스팸함을 확인해 주세요.
-          </p>
-        )}
+        <Label
+          LabelText="인증코드"
+          placeHolder="6자리 숫자 입력"
+          id="code"
+          type="text"
+        />
         <div className="login-actions">
-          <Button text="로그인" width={400} onClick={submitLogin} />
+          <Button text="로그인" width={550} onClick={submitLogin} />
           <p>계정이 없나요? <button type="button" onClick={() => onNavigate("signup")}>회원가입</button></p>
         </div>
         <GlobalNavigation onNavigate={onNavigate} />

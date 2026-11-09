@@ -2,6 +2,7 @@ import Header from "../../../components/Header/Header";
 import Footer from "../../../components/Footer/Footer";
 import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
 import Nav from "../../../components/Nav/Nav";
+import "../GlobalPages.css";
 import "./TermsOf.css";
 
 const policyText = "서비스 이용에 필요한 내용을 안내합니다. 본 화면은 원문 정책 내용을 확인할 수 있는 페이지입니다.";

@@ -4,6 +4,7 @@ import Header from "../../../components/Header/Header";
 import Footer from "../../../components/Footer/Footer";
 import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
 import Nav from "../../../components/Nav/Nav";
+import "../GlobalPages.css";
 import "./PersonalInfo.css";
 
 export default function PersonalInfo({ onNavigate }) {

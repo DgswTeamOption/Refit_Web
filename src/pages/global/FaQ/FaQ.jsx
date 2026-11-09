@@ -3,6 +3,7 @@ import Header from "../../../components/Header/Header";
 import Footer from "../../../components/Footer/Footer";
 import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
 import Nav from "../../../components/Nav/Nav";
+import "../GlobalPages.css";
 import "./FaQ.css";
 
 const questions = [
@@ -29,15 +30,15 @@ export default function FaQ({ onNavigate }) {
         <Nav items={[{ text: "홈", link: "/" }, { text: "FAQ" }]} />
         <div className="global-page-heading"><h1>FAQ</h1></div>
 
-      <label className="faq-search">
-        <span className="faq-screen-reader">자주 묻는 질문 검색</span>
-        <input
-          type="search"
-          placeholder="무엇을 도와드릴까요?"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-      </label>
+        <label className="faq-search">
+          <span className="faq-screen-reader">자주 묻는 질문 검색</span>
+          <input
+            type="search"
+            placeholder="무엇을 도와드릴까요?"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
 
         <section className="faq-questions" aria-labelledby="faq-questions-heading">
           <h2 id="faq-questions-heading">자주 묻는 질문</h2>

@@ -1,17 +1,17 @@
 .Label{
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 11px;
 }
 .Label label{
-    font-size: 12px;
+    font-size: 15px;
     font-weight: bold;
     color: var(--color-neutral-300);
     
 }
 .Label .inputUnder{
     color: var(--color-red);
-    font-size: 12px;
+    font-size: 14px;
 }
 .Label .InputWrap{
     display: flex;

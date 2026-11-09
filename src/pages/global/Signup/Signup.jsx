@@ -14,7 +14,6 @@ const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 export default function Signup({ onNavigate }) {
   const [step, setStep] = useState("information");
   const [role, setRole] = useState("student");
-  const [codeSent, setCodeSent] = useState(false);
   const [message, setMessage] = useState("");
   const formRef = useRef(null);
 
@@ -26,7 +25,6 @@ export default function Signup({ onNavigate }) {
       return;
     }
 
-    setCodeSent(true);
     setMessage("인증코드를 보냈어요. 메일함을 확인해주세요.");
   };
 
@@ -61,27 +59,26 @@ export default function Signup({ onNavigate }) {
             </GoogleOAuthProvider>
 
             <div className="LoginLine">또는</div>
-            <Label LabelText="이름" width={400} placeHolder="이름을 입력해주세요" id="signup-name" />
+            <Label LabelText="이름" width={550} placeHolder="이름을 입력해주세요" id="signup-name" />
             <Label
               LabelText="이메일"
-              width={295}
+              width={420}
               placeHolder="example@email.com"
               id="signup-email"
               type="email"
               inputButton={
                 <span className="signup-code-button">
-                  <Button text="인증코드 받기" width={95} color="blue" onClick={requestCode} />
+                  <Button text="인증코드 받기" width={120} color="blue" onClick={requestCode} />
                 </span>
               }
             />
-            {codeSent && <p className="signup-feedback">인증코드를 보냈어요. 메일함을 확인해주세요.</p>}
-            <Label LabelText="인증코드" width={400} placeHolder="6자리 숫자 입력" id="signup-code" />
+            <p className="signup-feedback" role="status">{message}</p>
+            <Label LabelText="인증코드" width={550} placeHolder="6자리 숫자 입력" id="signup-code" />
 
             <div className="signup-actions">
-              <Button text="회원가입" width={400} onClick={continueToRole} />
+              <Button text="회원가입" width={550} onClick={continueToRole} />
               <p>이미 계정이 있나요? <button type="button" onClick={() => onNavigate("login")}>로그인</button></p>
             </div>
-            {message && <p className="signup-feedback" role="status">{message}</p>}
             <GlobalNavigation onNavigate={onNavigate} />
           </div>
         ) : (
@@ -114,7 +111,7 @@ export default function Signup({ onNavigate }) {
               </button>
             </div>
 
-            <Button text="시작하기" width={400} onClick={completeSignup} />
+            <Button text="시작하기" width={550} onClick={completeSignup} />
             <GlobalNavigation onNavigate={onNavigate} />
           </div>
         )}

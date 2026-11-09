@@ -3,9 +3,9 @@
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
   color: #999;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .global-navigation-links a {
@@ -23,7 +23,7 @@
 
 @media (max-width: 768px) {
   .global-navigation-links {
-    gap: 6px;
-    font-size: 11px;
+    gap: 9px;
+    font-size: 13px;
   }
 }

@@ -1,0 +1,35 @@
+:is(.faq-site, .terms-site, .personal-site) {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #151515;
+}
+
+:is(.faq-page, .terms-page, .personal-info-page) {
+  width: min(1248px, calc(100% - 64px));
+  flex: 1;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 38px 0 72px;
+}
+
+:is(.faq-page, .terms-page, .personal-info-page) .global-page-heading {
+  margin-top: 20px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid #e3e3e3;
+}
+
+:is(.faq-page, .terms-page, .personal-info-page) .global-page-heading h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+@media (max-width: 768px) {
+  :is(.faq-page, .terms-page, .personal-info-page) {
+    width: calc(100% - 40px);
+    padding: 28px 0 48px;
+  }
+}
