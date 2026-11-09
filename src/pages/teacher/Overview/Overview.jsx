@@ -12,7 +12,7 @@ const INITIAL_CLASSES = [
     { id: 'math2', title: '수학2', color: 'mint' },
 ];
 
-export default function Overview() {
+export default function Overview({ hidden, classHref }) {
     const [classes, setClasses] = useState(INITIAL_CLASSES);
     const [modal, setModal] = useState(null);
     const [title, setTitle] = useState('');
@@ -106,7 +106,7 @@ export default function Overview() {
     }
 
     return (
-        <div className="teacher-overview">
+        <div className="teacher-overview" hidden={hidden}>
             <Header />
 
             <main className="teacher-overview__main">
@@ -137,12 +137,20 @@ export default function Overview() {
                     {classes.length > 0 ? (
                         <div className="teacher-overview__grid">
                             {classes.slice(0, 4).map((item) => (
-                                <ClassBlock
-                                    key={item.id}
-                                    title={item.title}
-                                    color={item.color}
-                                    onLeave={() => setModal({ type: 'delete', item })}
-                                />
+                                <div key={item.id} className="teacher-overview__class-card">
+                                    <ClassBlock
+                                        title={item.title}
+                                        color={item.color}
+                                        onLeave={() => setModal({ type: 'delete', item })}
+                                    />
+                                    {item.id === 'english1' && classHref && (
+                                        <a
+                                            className="teacher-overview__class-link"
+                                            href={classHref}
+                                            aria-label={`${item.title} 수업 열기`}
+                                        />
+                                    )}
+                                </div>
                             ))}
                         </div>
                     ) : (

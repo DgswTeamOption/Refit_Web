@@ -342,3 +342,23 @@
     opacity: 1;
     cursor: default;
 }
+.teacher-overview__class-card {
+    position: relative;
+    min-width: 0;
+}
+
+.teacher-overview__class-link {
+    position: absolute;
+    inset: 0;
+    border-radius: 13px;
+}
+
+.teacher-overview__class-link:focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: 3px;
+}
+
+.teacher-overview__class-card .class-block__leave {
+    position: relative;
+    z-index: 1;
+}
