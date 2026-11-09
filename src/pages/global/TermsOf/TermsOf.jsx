@@ -20,10 +20,7 @@ export default function TermsOf({ documentType = "terms", onNavigate }) {
 
   return (
     <div className="terms-site">
-      <div className="terms-site-header global-page-header with-account-links">
-        <Header />
-        <GlobalNavigation variant="account" onNavigate={onNavigate} />
-      </div>
+      <Header />
       <main className="terms-page">
         <Nav items={[{ text: "홈", link: "/" }, { text: title }]} />
         <div className="global-page-heading"><h1>{title}</h1></div>

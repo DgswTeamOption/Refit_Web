@@ -1,4 +1,3 @@
-import Button from "../Button/Button";
 import "./GlobalNavigation.css";
 
 const footerPages = {
@@ -27,15 +26,6 @@ export default function GlobalNavigation({
       <div className="global-navigation-footer" onClickCapture={handleFooterClick}>
         {children}
       </div>
-    );
-  }
-
-  if (variant === "account") {
-    return (
-      <nav className="global-navigation-account" aria-label="계정 메뉴">
-        <button type="button" onClick={() => onNavigate?.("login")}>로그인</button>
-        <Button text="회원가입" width={88} onClick={() => onNavigate?.("signup")} />
-      </nav>
     );
   }
 

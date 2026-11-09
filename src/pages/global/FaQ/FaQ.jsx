@@ -24,10 +24,7 @@ export default function FaQ({ onNavigate }) {
 
   return (
     <div className="faq-site">
-      <div className="faq-site-header global-page-header with-account-links">
-        <Header />
-        <GlobalNavigation variant="account" onNavigate={onNavigate} />
-      </div>
+      <Header />
       <main className="faq-page">
         <Nav items={[{ text: "홈", link: "/" }, { text: "FAQ" }]} />
         <div className="global-page-heading"><h1>FAQ</h1></div>

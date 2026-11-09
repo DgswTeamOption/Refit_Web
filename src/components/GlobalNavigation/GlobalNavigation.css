@@ -13,8 +13,7 @@
   text-decoration: none;
 }
 
-.global-navigation-links button,
-.global-navigation-account > button:first-child {
+.global-navigation-links button {
   padding: 0;
   border: 0;
   background: transparent;
@@ -22,38 +21,7 @@
   font-size: inherit;
 }
 
-.global-navigation-account {
-  position: absolute;
-  z-index: 2;
-  top: 21px;
-  right: max(20px, calc((100vw - 1248px) / 2));
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.global-navigation-account > button:first-child {
-  padding: 8px 4px;
-  color: #444;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.global-page-header {
-  position: relative;
-  flex: 0 0 80px;
-}
-
-.global-page-header.with-account-links .header-right {
-  visibility: hidden;
-}
-
 @media (max-width: 768px) {
-  .global-navigation-account {
-    right: 20px;
-    gap: 10px;
-  }
-
   .global-navigation-links {
     gap: 6px;
     font-size: 11px;
