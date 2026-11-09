@@ -1,0 +1,70 @@
+.terms-site {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #151515;
+}
+
+.terms-page {
+  width: min(1248px, calc(100% - 64px));
+  flex: 1;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 38px 0 72px;
+}
+
+.terms-page .global-page-heading {
+  margin-top: 20px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid #e3e3e3;
+}
+
+.terms-page .global-page-heading h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.terms-effective-date {
+  margin: 28px 0 16px;
+  color: #999;
+  font-size: 13px;
+}
+
+.terms-copy-section {
+  padding: 22px 0 20px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.terms-copy-section h2 {
+  margin: 0 0 12px;
+  color: #222;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.terms-copy-section p {
+  margin: 0;
+  color: #888;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .terms-page {
+    width: calc(100% - 40px);
+    padding-top: 28px;
+    padding-bottom: 48px;
+  }
+
+  .terms-copy-section {
+    padding: 18px 0;
+  }
+
+  .terms-copy-section p {
+    font-size: 13px;
+  }
+}
