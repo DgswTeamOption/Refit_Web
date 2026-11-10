@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Header from "./components/Header/Header.jsx";
 import Footer from "./components/Footer/Footer.jsx";
@@ -25,6 +25,19 @@ const legacyPages = {
   student: "/student",
   overview: "/student",
 };
+
+/**
+ * 페이지 라우트 이동 시 항상 화면 최상단(0, 0)으로 스크롤 이동
+ */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname]);
+
+  return null;
+}
 
 function withNavigation(Page, pageProps = {}) {
   return function RoutedPage() {
@@ -97,6 +110,7 @@ const IntroduceRoute = withNavigation(Introduce);
 export default function App() {
   return (
     <Suspense fallback={null}>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<LegacyRedirect />} />
         <Route path="/student" element={<StudentOverviewRoute />} />

@@ -20,6 +20,7 @@ export default function GlobalNavigation({
       if (!page) return;
 
       event.preventDefault();
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       onNavigate?.(page);
     };
 
@@ -30,15 +31,20 @@ export default function GlobalNavigation({
     );
   }
 
+  const handleNavClick = (page) => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    onNavigate?.(page);
+  };
+
   return (
     <nav className="global-navigation-links" aria-label="서비스 메뉴">
-      <button type="button" onClick={() => onNavigate?.("introduce")}>서비스 소개</button>
+      <button type="button" onClick={() => handleNavClick("introduce")}>서비스 소개</button>
       <span>·</span>
-      <button type="button" onClick={() => onNavigate?.("faq")}>FAQ</button>
+      <button type="button" onClick={() => handleNavClick("faq")}>FAQ</button>
       <span>·</span>
-      <button type="button" onClick={() => onNavigate?.("terms")}>이용약관</button>
+      <button type="button" onClick={() => handleNavClick("terms")}>이용약관</button>
       <span>·</span>
-      <button type="button" onClick={() => onNavigate?.("privacy")}>
+      <button type="button" onClick={() => handleNavClick("privacy")}>
         개인정보 처리방침
       </button>
     </nav>
