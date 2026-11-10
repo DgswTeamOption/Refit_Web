@@ -86,6 +86,17 @@ const Header = ({
                     >
                         <img src="/logo.svg" alt="Refit 로고" className="header-logo" />
                     </button>
+
+                    {/* 로그인 전 헤더 메뉴 (Header · 로그인 전) */}
+                    {!isLoggedIn && (
+                        <nav className="header-prelog-nav" aria-label="메인 메뉴">
+                            <a href="#intro" className="header-prelog-link">서비스 소개</a>
+                            <a href="#features" className="header-prelog-link">기능</a>
+                            <a href="#how-to" className="header-prelog-link">이용 방법</a>
+                            <a href="#ai" className="header-prelog-link">Refit AI</a>
+                            <a href="#faq" className="header-prelog-link">FAQ</a>
+                        </nav>
+                    )}
                 </div>
                 <div className="header-right">
                     {/* 로그인 전: 로그인 및 회원가입 버튼 (headerBeforeLog.svg) */}
