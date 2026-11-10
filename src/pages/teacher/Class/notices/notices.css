@@ -7,8 +7,7 @@
 }
 
 .teacher-class__notice-toolbar {
-    align-items: flex-end;
-    margin: 14px 0 10px;
+    margin: 18px 0 6px;
 }
 
 .teacher-class__notice-toolbar > button,
@@ -20,19 +19,26 @@
 }
 
 .teacher-class__notice-list {
-    position: relative;
-    min-height: 236px;
-    padding: 0 24px;
+    --notice-preview-padding: 24px;
+    overflow: hidden;
     border: 1px solid #e8e8e8;
     border-radius: 13px;
 }
 
 .teacher-class__notice {
-    padding: 18px 0 12px;
+    position: relative;
+    padding: 18px var(--notice-preview-padding) 12px;
 }
 
-.teacher-class__notice + .teacher-class__notice {
+.teacher-class__notice + .teacher-class__notice::before {
+    position: absolute;
+    inset: 0 var(--notice-preview-padding) auto;
     border-top: 1px solid #e8e8e8;
+    content: '';
+}
+
+.teacher-class__notice-list > .notices-empty {
+    padding-inline: var(--notice-preview-padding);
 }
 
 .teacher-class__notice-meta,
@@ -62,15 +68,11 @@
     -webkit-line-clamp: 2;
 }
 
-.teacher-class__notice-list:hover {
-    border-color: #b6dfff;
-}
-
 .teacher-class__notice-open {
     position: absolute;
     inset: 0;
     border: 0;
-    border-radius: inherit;
+    padding: 0;
     background: transparent;
     cursor: pointer;
 }
@@ -82,12 +84,27 @@
     background: transparent;
     font: inherit;
     font-size: 13px;
+    text-decoration: none;
     white-space: nowrap;
     cursor: pointer;
 }
 
-.notices-link:hover {
-    text-decoration: underline;
+.teacher-class__notice-more {
+    display: block;
+    margin: 12px auto 0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.teacher-class .notices-link:focus-visible,
+.teacher-class .teacher-class__notice-open:focus-visible {
+    outline-color: #666;
+}
+
+.teacher-class .teacher-class__notice-open:focus-visible {
+    outline-offset: -3px;
 }
 
 .notices-empty {
@@ -124,8 +141,17 @@
     border-radius: 11px;
 }
 
+.teacher-class__notice:hover,
+.teacher-class__notice-more:hover,
 .notices-list__card:hover {
-    border-color: #b6dfff;
+    background-color: #f7f7f7;
+}
+
+.teacher-class__notice:active,
+.teacher-class__notice-more:active,
+.notices-list__card:active {
+    background-color: #ededed;
+    box-shadow: inset 0 1px 3px rgb(0 0 0 / 8%);
 }
 
 .notices-list__copy {
@@ -319,7 +345,7 @@
     }
 
     .teacher-class__notice-list {
-        padding: 0 20px 16px;
+        --notice-preview-padding: 20px;
     }
 
     .notices-list__card,

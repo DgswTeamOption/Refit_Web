@@ -74,7 +74,7 @@ function readNotices() {
     }
 }
 
-function ClassHome({ notices, onCreate, onList }) {
+function ClassHome({ notices, onCreate, onOpen, onList }) {
     return (
         <div className="teacher-class__layout">
             <aside className="teacher-class__calendar" aria-label="수업 달력">
@@ -127,18 +127,21 @@ function ClassHome({ notices, onCreate, onList }) {
                                 <p className="teacher-class__notice-meta">{notice.author} · {notice.date}</p>
                                 <h3>{notice.title}</h3>
                                 <p className="teacher-class__notice-content">{notice.content.split('\n', 2).join(' ')}</p>
+                                <button
+                                    type="button"
+                                    className="teacher-class__notice-open"
+                                    aria-label={`${notice.title} 공지 보기`}
+                                    onClick={() => onOpen(notice.id)}
+                                />
                             </article>
                         ))}
                         {notices.length === 0 && (
                             <p className="notices-empty">등록된 공지가 없습니다.</p>
                         )}
-                        <button
-                            type="button"
-                            className="teacher-class__notice-open"
-                            aria-label="공지 목록 열기"
-                            onClick={onList}
-                        />
                     </div>
+                    <button type="button" className="notices-link teacher-class__notice-more" onClick={onList}>
+                        더보기
+                    </button>
                 </section>
             </div>
         </div>
@@ -202,6 +205,7 @@ export default function Class({ classHref, onReload }) {
             <ClassHome
                 notices={notices}
                 onCreate={() => setView({ type: 'create', from: 'home' })}
+                onOpen={showDetail}
                 onList={showList}
             />
         );
