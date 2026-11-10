@@ -1,17 +1,71 @@
 import React from 'react';
-import Footer from './components/Footer/Footer';
-import Condition from "./components/Condition/Condition.jsx";
-import ClassBlock from './components/ClassBlock/ClassBlock.jsx';
-import Button from './components/Button/Button';
-import Calendar from './components/Calendar/Calendar'
-import SubNav from './components/SubNav/SubNav';
-import Overview from "./pages/teacher/Overview/Overview";
-function App() {
-  return (
-    <div>
-    </div>
-  );
+import Header from './components/Header/Header.jsx';
+import Overview from './pages/teacher/Overview/Overview.jsx';
+import Class from './pages/teacher/Class/Class.jsx';
+
+const ENGLISH_CLASS_HREF = '#class/english1';
+const CLASS_RELOAD_STATE_KEY = 'refitEnglishClassReload';
+
+function reloadClass(event) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    event.preventDefault();
+    window.history.replaceState({
+        ...window.history.state,
+        [CLASS_RELOAD_STATE_KEY]: true,
+    }, '');
+    window.location.reload();
 }
 
+function App() {
+    const [startsInClass] = React.useState(() => (
+        window.location.hash === ENGLISH_CLASS_HREF
+        && window.history.state?.[CLASS_RELOAD_STATE_KEY] === true
+    ));
+    const [isClassPage, setIsClassPage] = React.useState(startsInClass);
 
-export default App;
+    React.useEffect(() => {
+        if (startsInClass) {
+            const historyState = { ...window.history.state };
+            delete historyState[CLASS_RELOAD_STATE_KEY];
+            window.history.replaceState(historyState, '');
+        } else if (window.location.hash === ENGLISH_CLASS_HREF) {
+            const { pathname, search } = window.location;
+            window.history.replaceState(window.history.state, '', pathname + search);
+        }
+
+        function updatePage() {
+            setIsClassPage(window.location.hash === ENGLISH_CLASS_HREF);
+        }
+
+        window.addEventListener('hashchange', updatePage);
+        return () => window.removeEventListener('hashchange', updatePage);
+    }, [startsInClass]);
+
+    const page = isClassPage ? 'class' : 'overview';
+
+    return (
+        <div className={`teacher-layout teacher-layout--${page}`}>
+            <Header />
+            <Overview hidden={isClassPage} classHref={ENGLISH_CLASS_HREF} />
+            {isClassPage && <Class classHref={ENGLISH_CLASS_HREF} onReload={reloadClass} />}
+        </div>
+    );
+}
+
+export default function App() {
+  return (
+    <Suspense fallback={null}>
+      <Routes>
+        <Route path="/" element={<LegacyRedirect />} />
+        <Route path="/login" element={<LoginRoute />} />
+        <Route path="/signup" element={<SignupRoute />} />
+        <Route path="/personal-info" element={<PersonalInfoRoute />} />
+        <Route path="/faq" element={<FaQRoute />} />
+        <Route path="/terms" element={<TermsRoute />} />
+        <Route path="/privacy" element={<PrivacyRoute />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Suspense>
+  );
+}

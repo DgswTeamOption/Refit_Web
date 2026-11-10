@@ -1,0 +1,19 @@
+.Label{
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+.Label label{
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--color-neutral-300);
+    
+}
+.Label .inputUnder{
+    color: var(--color-red);
+    font-size: 14px;
+}
+.Label .InputWrap{
+    display: flex;
+    gap: 10px;
+}

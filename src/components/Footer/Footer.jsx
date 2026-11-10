@@ -1,6 +1,5 @@
 import React from 'react';
 import './Footer.css';
-import logoImg from '../../assets/logo.svg';
 import githubIcon from '../../assets/github.svg';
 
 const Footer = () => {
@@ -25,7 +24,7 @@ const Footer = () => {
                     {/* Brand Section */}
                     <div className="footer-brand">
                         <a href="/" className="footer-logo-link" aria-label="Refit 홈으로 이동">
-                            <img src={logoImg} alt="Refit 로고" className="footer-logo" />
+                            <img src="/logo.svg" alt="Refit 로고" className="footer-logo" />
                         </a>
                         <p className="footer-slogan">
                             빈틈을 채우는 스마트한<br />
@@ -109,7 +108,7 @@ const Footer = () => {
                     {/* Team GitHub Button */}
                     <div className="footer-team-github">
                         <a
-                            href="https://github.com"
+                            href="https://github.com/DgswTeamOption"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="team-github-btn"
