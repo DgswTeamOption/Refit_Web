@@ -1,0 +1,35 @@
+.terms-effective-date {
+  margin: 28px 0 16px;
+  color: #999;
+  font-size: 13px;
+}
+
+.terms-copy-section {
+  padding: 22px 0 20px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.terms-copy-section h2 {
+  margin: 0 0 12px;
+  color: #222;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.terms-copy-section p {
+  margin: 0;
+  color: #888;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .terms-copy-section {
+    padding: 18px 0;
+  }
+
+  .terms-copy-section p {
+    font-size: 13px;
+  }
+}
