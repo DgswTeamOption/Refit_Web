@@ -5,7 +5,7 @@ import Calendar from '../../../components/Calendar/Calendar';
 import ClassBlock from '../../../components/ClassBlock/ClassBlock';
 import Button from '../../../components/Button/Button';
 
-const INITIAL_CLASSES = [
+const SAMPLE_CLASSES = [
     { id: 'eng1', title: '영어1', color: 'peach' },
     { id: 'eng2', title: '영어2', color: 'lavender' },
     { id: 'math1', title: '수학1', color: 'yellow' },
@@ -14,11 +14,12 @@ const INITIAL_CLASSES = [
 
 function Overview({ onSelectClass }) {
     const navigate = useNavigate();
-    const [classes, setClasses] = useState(INITIAL_CLASSES);
+    // 처음 로그인했을 때는 참여 중인 수업이 없도록 빈 배열([])로 시작
+    const [classes, setClasses] = useState([]);
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
     const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
     const [targetClass, setTargetClass] = useState(null);
-    const [joinCode, setJoinCode] = useState('ABC123');
+    const [joinCode, setJoinCode] = useState('');
     const [joinError, setJoinError] = useState(false);
 
     // 수업 참여 모달 열기
@@ -28,18 +29,20 @@ function Overview({ onSelectClass }) {
         setIsJoinModalOpen(true);
     };
 
-    // 수업 참여 처리
+    // 수업 참여 처리 (비어 있지 않은 수업 코드 입력 시 수업 추가)
     const handleJoinSubmit = (e) => {
         e.preventDefault();
-        if (!joinCode || joinCode.trim() !== 'REFIT2026') {
+        const trimmed = joinCode.trim();
+        if (!trimmed) {
             setJoinError(true);
             return;
         }
 
+        const nextSample = SAMPLE_CLASSES[classes.length % SAMPLE_CLASSES.length];
         const newClass = {
-            id: `class-${Date.now()}`,
-            title: `새 수업 ${classes.length + 1}`,
-            color: 'peach',
+            id: classes.length < SAMPLE_CLASSES.length ? nextSample.id : `class-${Date.now()}`,
+            title: classes.length < SAMPLE_CLASSES.length ? nextSample.title : `새 수업 ${classes.length + 1}`,
+            color: nextSample.color,
         };
         setClasses((prev) => [...prev, newClass]);
         setIsJoinModalOpen(false);
@@ -72,7 +75,7 @@ function Overview({ onSelectClass }) {
             <div className="overview-container">
                 {/* 좌측 캘린더 영역 */}
                 <aside className="overview-calendar-aside">
-                    <Calendar mode="class" />
+                    <Calendar mode="class" classes={classes} />
                 </aside>
 
                 {/* 우측 내 수업 영역 */}

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import MainLayout from './components/MainLayout/MainLayout.jsx';
 import FaQ from './pages/global/FaQ/FaQ.jsx';
+import Introduce from './pages/global/Introduce/Introduce.jsx';
 import Login from './pages/global/Login/Login.jsx';
 import PersonalInfo from './pages/global/PersonalInfo/PersonalInfo.jsx';
 import Signup from './pages/global/Signup/Signup.jsx';
@@ -19,15 +20,12 @@ const PAGE_PATHS = {
     faq: '/faq',
     terms: '/terms',
     privacy: '/privacy',
+    introduce: '/introduce',
+    'service-intro': '/introduce',
 };
 
 const LEGACY_PAGE_PATHS = {
-    login: PAGE_PATHS.login,
-    signup: PAGE_PATHS.signup,
-    'personal-info': PAGE_PATHS['personal-info'],
-    faq: PAGE_PATHS.faq,
-    terms: PAGE_PATHS.terms,
-    privacy: PAGE_PATHS.privacy,
+    ...PAGE_PATHS,
     student: '/student',
     teacher: '/teacher',
     memo: '/memo',
@@ -68,6 +66,10 @@ function TermsRoute({ documentType }) {
     return <TermsOf documentType={documentType} />;
 }
 
+function IntroduceRoute() {
+    return <Introduce />;
+}
+
 function ScrollToTop() {
     const { pathname } = useLocation();
 
@@ -91,6 +93,7 @@ export default function App() {
                     <Route path="/faq" element={<FaQRoute />} />
                     <Route path="/terms" element={<TermsRoute documentType="terms" />} />
                     <Route path="/privacy" element={<TermsRoute documentType="privacy" />} />
+                    <Route path="/introduce" element={<IntroduceRoute />} />
                     <Route path="/student" element={<StudentOverview />} />
                     <Route path="/class/:classId" element={<StudentClass />} />
                     <Route path="/teacher" element={<TeacherOverview />} />

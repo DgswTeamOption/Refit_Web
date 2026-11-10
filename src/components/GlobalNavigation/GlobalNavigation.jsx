@@ -1,6 +1,7 @@
 import "./GlobalNavigation.css";
 
 const footerPages = {
+  "#service-intro": "introduce",
   "#faq": "faq",
   "#terms": "terms",
   "#privacy": "privacy",
@@ -31,7 +32,7 @@ export default function GlobalNavigation({
 
   return (
     <nav className="global-navigation-links" aria-label="서비스 메뉴">
-      <a href="#service-intro">서비스 소개</a>
+      <button type="button" onClick={() => onNavigate?.("introduce")}>서비스 소개</button>
       <span>·</span>
       <button type="button" onClick={() => onNavigate?.("faq")}>FAQ</button>
       <span>·</span>
