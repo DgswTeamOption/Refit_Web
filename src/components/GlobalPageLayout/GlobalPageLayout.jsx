@@ -6,7 +6,7 @@ import "../../pages/global/GlobalPages.css";
 export default function GlobalPageLayout({ children, onNavigate }) {
   return (
     <div className="global-site">
-      <Header />
+      <Header isLoggedIn={false}/>
       {children}
       <GlobalNavigation variant="footer" onNavigate={onNavigate}>
         <Footer />
