@@ -1,391 +1,303 @@
-/* 교사용 공통 레이아웃 */
-.teacher-layout,
-.teacher-layout * {
-    box-sizing: border-box;
+.overview-page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #fff;
 }
 
-.teacher-layout {
-    --teacher-header-content-width: 1248px;
-    --teacher-header-inset: max(24px, calc((100% - var(--teacher-header-content-width)) / 2));
-
-    min-height: 100vh;
-    background: #fff;
-    color: #151515;
+.overview-container {
+  width: 100%;
+  max-width: 1350px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Noto Sans KR",
+    "Malgun Gothic", sans-serif;
 }
 
-.teacher-layout--class {
-    --teacher-header-content-width: min(82.6%, 1248px);
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #8c8c8c;
+  margin-bottom: 16px;
 }
 
-.teacher-layout .header-container {
-    max-width: none;
-    padding-left: var(--teacher-header-gutter, var(--teacher-header-inset));
-    padding-right: var(--teacher-header-gutter, 32px);
+.breadcrumb__separator {
+  color: #ccc;
+  font-size: 11px;
 }
 
-.teacher-layout .header-logo {
-    width: var(--teacher-header-logo-width, 103px);
-    height: var(--teacher-header-logo-height, 49px);
+.breadcrumb__current {
+  color: #555;
 }
 
-.teacher-layout .header-right {
-    gap: 16px;
+.overview-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 24px 0;
 }
 
-.teacher-layout .header-bell-icon {
-    height: 19px;
+.overview-content {
+  margin-top: 24px;
 }
 
-.teacher-layout .header-profile-icon {
-    width: 34px;
-    height: 34px;
+/* 폼 요소 공통 스타일 */
+.search-bar-wrapper {
+  margin-bottom: 20px;
 }
 
-.teacher-layout--class > .refit-header :is(a, button):focus-visible {
-    outline: 2px solid var(--color-blue, #0099ff);
-    outline-offset: 4px;
+.student-search-input {
+  width: 100%;
+  max-width: 400px;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
 }
 
-@media (max-width: 1000px) {
-    .teacher-layout--class {
-        --teacher-header-gutter: 24px;
-    }
+.student-search-input:focus {
+  border-color: #0099ff;
 }
 
-@media (max-width: 800px) {
-    .teacher-layout--overview {
-        --teacher-header-gutter: 24px;
-        --teacher-header-logo-width: auto;
-        --teacher-header-logo-height: 40px;
-    }
+.section-date-title,
+.section-header-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 16px;
 }
 
-@media (max-width: 760px) {
-    .teacher-layout--class {
-        --teacher-header-gutter: 20px;
-        --teacher-header-logo-width: auto;
-        --teacher-header-logo-height: 40px;
-    }
+.bottom-action-bar {
+  margin-top: 24px;
 }
 
-.teacher-overview__calendar,
-.teacher-class__calendar {
-    min-width: 0;
+.form-section {
+  margin-bottom: 40px;
 }
 
-.teacher-overview__calendar > div,
-.teacher-class__calendar > div {
-    width: 100%;
+.form-title,
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 20px 0;
 }
 
-/* 메인 화면 */
-.teacher-overview__main {
-    display: grid;
-    grid-template-columns: 420px minmax(0, 1fr);
-    align-items: start;
-    gap: 30px;
-
-    width: calc(100% - 48px);
-    max-width: 1248px;
-    margin: 40px auto 0;
-    padding-bottom: 40px;
+.form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
 }
 
-.teacher-overview__classes {
-    min-width: 0;
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-/* 내 수업 제목과 만들기 버튼 */
-.teacher-overview__toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-
-    min-height: 42px;
-    margin-bottom: 14px;
+.form-group label {
+  font-size: 13px;
+  color: #555;
 }
 
-.teacher-overview__toolbar h1 {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 30px;
+.form-control {
+  width: 200px;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  background-color: #fff;
+  outline: none;
+  box-sizing: border-box;
 }
 
-.teacher-overview__create > button {
-    height: 42px;
-    border-radius: 9px;
+.form-control:focus {
+  border-color: #0099ff;
 }
 
-/* 수업 카드 */
-.teacher-overview__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 18px;
+/* 요일 선택 다중 칩 */
+.day-select-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  box-sizing: border-box;
 }
 
-.teacher-overview__grid .class-block {
-    width: 100%;
+.day-chip {
+  width: 36px;
+  height: 42px;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
-.teacher-overview__empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 100%;
-    height: 560px;
-    padding: 24px;
-
-    border: 1px solid #e8e8e8;
-    border-radius: 14px;
-    background: #fff;
-    text-align: center;
+.day-chip:hover {
+  border-color: #0099ff;
+  color: #0099ff;
 }
 
-.teacher-overview__empty-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 26px;
-
-    width: 100%;
-    transform: translateY(-36px);
+.day-chip.is-selected {
+  background-color: #0099ff;
+  border-color: #0099ff;
+  color: #fff;
+  font-weight: 700;
 }
 
-.teacher-overview__empty-content p {
-    margin: 0;
-    color: #888;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 24px;
+.form-submit {
+  margin-bottom: 1px;
 }
 
-.teacher-overview__empty-content > button {
-    max-width: 100%;
-    height: 42px;
-    border-radius: 8px;
+/* 테이블 레이아웃 및 셀 규격 */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
 }
 
-@media (max-width: 520px) {
-    .teacher-overview__empty {
-        height: 360px;
-    }
-
-    .teacher-overview__empty-content {
-        transform: translateY(-16px);
-    }
+.student-table,
+.absence-table,
+.attendance-table,
+.makeup-table,
+.setting-table,
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+  table-layout: fixed;
 }
 
-/* 팝업 */
-.teacher-overview .overview-modal {
-    position: fixed;
-    inset: 0;
+/* 1. 학생 테이블 컬럼 비율 */
+.student-table th:nth-child(1),
+.student-table td:nth-child(1) { width: 20%; }
+.student-table th:nth-child(2),
+.student-table td:nth-child(2) { width: 20%; }
+.student-table th:nth-child(3),
+.student-table td:nth-child(3) { width: 20%; }
+.student-table th:nth-child(4),
+.student-table td:nth-child(4) { width: 20%; }
+.student-table th:nth-child(5),
+.student-table td:nth-child(5) { width: 20%; }
 
-    width: min(470px, calc(100% - 32px));
-    height: fit-content;
-    max-height: calc(100dvh - 48px);
-    margin: auto;
-    padding: 28px;
-    overflow-y: auto;
+/* 2. 결석정보 테이블 컬럼 비율 */
+.absence-table th:nth-child(1),
+.absence-table td:nth-child(1) { width: 15%; }
+.absence-table th:nth-child(2),
+.absence-table td:nth-child(2) { width: 20%; }
+.absence-table th:nth-child(3),
+.absence-table td:nth-child(3) { width: 25%; }
+.absence-table th:nth-child(4),
+.absence-table td:nth-child(4) { width: 15%; }
+.absence-table th:nth-child(5),
+.absence-table td:nth-child(5) { width: 25%; }
 
-    border: 0;
-    border-radius: 18px;
-    background: #fff;
-    color: #151515;
+/* 3. 출석 테이블 컬럼 비율 */
+.attendance-table th:nth-child(1),
+.attendance-table td:nth-child(1) { width: 35%; }
+.attendance-table th:nth-child(2),
+.attendance-table td:nth-child(2) { width: 35%; }
+.attendance-table th:nth-child(3),
+.attendance-table td:nth-child(3) { width: 30%; }
+
+/* 4. 보강 테이블 컬럼 비율 */
+.makeup-table th:nth-child(1),
+.makeup-table td:nth-child(1) { width: 15%; }
+.makeup-table th:nth-child(2),
+.makeup-table td:nth-child(2) { width: 20%; }
+.makeup-table th:nth-child(3),
+.makeup-table td:nth-child(3) { width: 20%; }
+.makeup-table th:nth-child(4),
+.makeup-table td:nth-child(4) { width: 20%; }
+.makeup-table th:nth-child(5),
+.makeup-table td:nth-child(5) { width: 25%; }
+
+/* 5. 보강설정 테이블 컬럼 비율 */
+.setting-table th:nth-child(1),
+.setting-table td:nth-child(1),
+.setting-table th:nth-child(2),
+.setting-table td:nth-child(2),
+.setting-table th:nth-child(3),
+.setting-table td:nth-child(3),
+.setting-table th:nth-child(4),
+.setting-table td:nth-child(4) { width: 25%; }
+
+/* 6. 스케줄 관리 테이블 컬럼 비율*/
+.schedule-table th:nth-child(1),
+.schedule-table td:nth-child(1) { width: 14%; }
+
+.schedule-table th:nth-child(2), .schedule-table td:nth-child(2),
+.schedule-table th:nth-child(3), .schedule-table td:nth-child(3),
+.schedule-table th:nth-child(4), .schedule-table td:nth-child(4),
+.schedule-table th:nth-child(5), .schedule-table td:nth-child(5),
+.schedule-table th:nth-child(6), .schedule-table td:nth-child(6),
+.schedule-table th:nth-child(7), .schedule-table td:nth-child(7),
+.schedule-table th:nth-child(8), .schedule-table td:nth-child(8) { width: 9%; } 
+
+.schedule-table th:nth-child(9),
+.schedule-table td:nth-child(9) { width: 23%; }
+
+.student-table th,
+.absence-table th,
+.attendance-table th,
+.makeup-table th,
+.setting-table th,
+.schedule-table th {
+  background-color: #f8f8f8;
+  color: #555;
+  font-weight: 500;
+  padding: 14px 20px;
+  border-bottom: 1px solid #eee;
+  height: 48px;
+  box-sizing: border-box;
 }
 
-.teacher-overview .overview-modal::backdrop {
-    background: rgba(0, 0, 0, 0.28);
+.student-table td,
+.absence-table td,
+.attendance-table td,
+.makeup-table td,
+.setting-table td,
+.schedule-table td {
+  padding: 12px 20px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+  height: 64px;
+  box-sizing: border-box;
 }
 
-.overview-modal h2 {
-    margin: 0 0 24px;
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 28px;
+.student-table tbody tr:last-child td,
+.absence-table tbody tr:last-child td,
+.attendance-table tbody tr:last-child td,
+.makeup-table tbody tr:last-child td,
+.setting-table tbody tr:last-child td,
+.schedule-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
-/* 제목 입력 */
-.overview-modal__label {
-    display: block;
-    margin-bottom: 8px;
-
-    color: #444;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 18px;
-}
-
-.overview-modal__input {
-    display: block;
-
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    height: 44px;
-    padding: 0 14px;
-
-    border: 1px solid #e3e3e3;
-    border-radius: 8px;
-    outline: none;
-    background: #fff;
-
-    color: #151515;
-    font-size: 14px;
-}
-
-.overview-modal__input::placeholder {
-    color: #aaa;
-}
-
-.overview-modal__input:focus {
-    border-color: var(--color-blue, #0099ff);
-}
-
-.overview-modal__input[aria-invalid='true'] {
-    border-color: #f04444;
-}
-
-.overview-modal__error {
-    margin: 8px 0 0;
-    color: #f04444;
-    font-size: 12px;
-    line-height: 18px;
-}
-
-/* 입력칸과 같은 너비로 버튼 배치 */
-.overview-modal__actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-
-    width: 100%;
-    margin-top: 28px;
-}
-
-.teacher-overview .overview-modal__actions > button {
-    width: 100%;
-    height: 42px;
-    border-radius: 8px;
-    font-size: 13px;
-}
-
-.teacher-overview .overview-modal__actions > button:focus-visible {
-    outline: 2px solid #151515;
-    outline-offset: 3px;
-}
-
-/* 삭제 확인 */
-.overview-modal--delete h2 {
-    margin-bottom: 0;
-}
-
-.overview-modal__description {
-    margin: 16px 0 0;
-    color: #888;
-    font-size: 13px;
-    line-height: 20px;
-}
-
-.overview-modal--delete .overview-modal__actions {
-    margin-top: 24px;
-}
-
-.teacher-overview
-.overview-modal--delete
-.overview-modal__actions
-> button:last-child {
-    background: var(--color-danger-red, #f04444);
-}
-
-.teacher-overview
-.overview-modal--delete
-.overview-modal__actions
-> button:last-child:hover {
-    background: #d93c3c;
-}
-
-/* 화면 너비에 따른 배치 */
-@media (max-width: 1100px) {
-    .teacher-overview__main {
-        grid-template-columns: 340px minmax(0, 1fr);
-        gap: 24px;
-    }
-}
-
-@media (max-width: 800px) {
-    .teacher-overview__main {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 28px;
-        margin-top: 24px;
-    }
-}
-
-@media (max-width: 520px) {
-    .teacher-overview__grid {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .teacher-overview__toolbar h1 {
-        font-size: 20px;
-    }
-
-    .teacher-overview__create > button {
-        width: 150px;
-    }
-
-    .teacher-overview .overview-modal {
-        padding: 24px;
-    }
-}
-/* 수업 만들기 팝업 간격 */
-.teacher-overview .overview-modal--create {
-    padding-bottom: 14px;
-}
-
-.overview-modal--create h2 {
-    margin-bottom: 16px;
-}
-
-/* 배너 사진 선택 영역 */
-.overview-modal__photo {
-    margin-top: 16px;
-}
-
-.teacher-overview .overview-modal__photo > button {
-    width: 100%;
-    height: 74px;
-
-    border: 1px solid #e8e8e8;
-    border-radius: 8px;
-    background: #f7f7f7;
-
-    color: #888;
-    font-size: 13px;
-    font-weight: 400;
-
-    opacity: 1;
-    cursor: default;
-}
-.teacher-overview__class-card {
-    position: relative;
-    min-width: 0;
-}
-
-.teacher-overview__class-link {
-    position: absolute;
-    inset: 0;
-    border-radius: 13px;
-}
-
-.teacher-overview__class-link:focus-visible {
-    outline: 2px solid var(--color-blue);
-    outline-offset: 3px;
-}
-
-.teacher-overview__class-card .class-block__leave {
-    position: relative;
-    z-index: 1;
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 36px;
+  width: 100%;
 }
