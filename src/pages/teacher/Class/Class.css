@@ -1,0 +1,240 @@
+.teacher-class__main {
+    width: 82.6%;
+    max-width: 1248px;
+    margin: 0 auto;
+    padding: 22px 0 44px;
+}
+
+.teacher-class__breadcrumb ol {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    color: #888;
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.teacher-class__breadcrumb li + li::before {
+    content: '›';
+    margin-right: 8px;
+    color: #aaa;
+}
+
+.teacher-class__breadcrumb a {
+    color: var(--color-blue, #0099ff);
+    text-decoration: none;
+}
+
+.teacher-class__breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.teacher-class__title {
+    margin: 14px 0 15px;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 36px;
+}
+
+.teacher-class .sub-nav {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0 0 4px;
+    gap: 36px;
+}
+
+.teacher-class .sub-nav__tab {
+    padding: 12px 0 14px;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.teacher-class .sub-nav__indicator {
+    bottom: 4px;
+}
+
+.teacher-class__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 420fr) minmax(0, 798fr);
+    align-items: start;
+    gap: 30px;
+    margin-top: 24px;
+}
+
+.teacher-class__content {
+    min-width: 0;
+}
+
+.teacher-class__calendar > div {
+    min-height: 388px;
+    border: 1px solid #e8e8e8;
+    border-radius: 15px;
+}
+
+.teacher-class__calendar .CalendarHead {
+    padding: 15px 24px 18px;
+}
+
+.teacher-class__calendar .CalendarMonth {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 700;
+}
+
+.teacher-class__calendar .CalendarBody {
+    padding: 0 22px;
+    grid-template-rows: none;
+    grid-auto-rows: 39px;
+    gap: 0 4px;
+}
+
+.teacher-class__calendar .CalendarDate,
+.teacher-class__calendar .CalendarDateWeekend {
+    padding: 8px 4px 5px;
+}
+
+.teacher-class__calendar .CalendarFoot {
+    margin-top: auto;
+    padding: 20px 20px 13px;
+    gap: 4px 10px;
+}
+
+.teacher-class__calendar .CalendarFootTag {
+    gap: 7px;
+}
+
+.teacher-class__content h2 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 28px;
+}
+
+.teacher-class__summary {
+    padding-top: 8px;
+}
+
+.teacher-class__totals {
+    display: flex;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.teacher-class__total {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 25px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.teacher-class__total--attendance {
+    color: var(--color-status-attendance-text);
+    background: var(--color-status-attendance-bg);
+}
+
+.teacher-class__total--absence {
+    color: var(--color-status-absence-text);
+    background: var(--color-status-absence-bg);
+}
+
+.teacher-class__total .condition {
+    height: auto;
+    padding: 0;
+    background: transparent;
+}
+
+.teacher-class__attendance {
+    min-height: 270px;
+    margin-top: 30px;
+    padding: 18px 25px 30px;
+    border: 1px solid #e8e8e8;
+    border-radius: 13px;
+}
+
+.teacher-class__attendance h2 {
+    font-size: 17px;
+    line-height: 24px;
+}
+
+.teacher-class__attendance table {
+    width: 100%;
+    margin-top: 14px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 13px;
+    line-height: 20px;
+    text-align: left;
+}
+
+.teacher-class__attendance th {
+    height: 38px;
+    color: #999;
+    font-weight: 400;
+}
+
+.teacher-class__attendance th:nth-child(1) {
+    width: 32%;
+}
+
+.teacher-class__attendance th:nth-child(2) {
+    width: 38%;
+}
+
+.teacher-class__attendance td {
+    height: 48px;
+    border-bottom: 1px solid #f1f1f1;
+    color: #555;
+}
+
+.teacher-class a:focus-visible,
+.teacher-class button:focus-visible {
+    outline: 2px solid var(--color-blue, #0099ff);
+    outline-offset: 4px;
+}
+
+@media (max-width: 1000px) {
+    .teacher-class__main {
+        width: calc(100% - 48px);
+    }
+
+    .teacher-class__layout {
+        grid-template-columns: minmax(260px, 1fr) minmax(0, 1.8fr);
+        gap: 24px;
+    }
+
+    .teacher-class .sub-nav {
+        gap: 28px;
+    }
+}
+
+@media (max-width: 760px) {
+    .teacher-class__main {
+        width: calc(100% - 40px);
+        padding-top: 20px;
+    }
+
+    .teacher-class__title {
+        font-size: 25px;
+        line-height: 32px;
+    }
+
+    .teacher-class__layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+    }
+
+    .teacher-class__summary {
+        padding-top: 0;
+    }
+
+    .teacher-class__attendance {
+        margin-top: 24px;
+        padding: 18px 20px 28px;
+    }
+}

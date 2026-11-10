@@ -1,42 +1,57 @@
-import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import React from 'react';
+import Header from './components/Header/Header.jsx';
+import Overview from './pages/teacher/Overview/Overview.jsx';
+import Class from './pages/teacher/Class/Class.jsx';
 
-const Login = lazy(() => import("./pages/global/Login/Login.jsx"));
-const Signup = lazy(() => import("./pages/global/Signup/Signup.jsx"));
-const PersonalInfo = lazy(() => import("./pages/global/PersonalInfo/PersonalInfo.jsx"));
-const FaQ = lazy(() => import("./pages/global/FaQ/FaQ.jsx"));
-const TermsOf = lazy(() => import("./pages/global/TermsOf/TermsOf.jsx"));
+const ENGLISH_CLASS_HREF = '#class/english1';
+const CLASS_RELOAD_STATE_KEY = 'refitEnglishClassReload';
 
-const legacyPages = {
-  login: "/login",
-  signup: "/signup",
-  "personal-info": "/personal-info",
-  faq: "/faq",
-  terms: "/terms",
-  privacy: "/privacy",
-};
+function reloadClass(event) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
-function withNavigation(Page, pageProps = {}) {
-  return function RoutedPage() {
-    const navigate = useNavigate();
-    const onNavigate = (page) => navigate(legacyPages[page] ?? "/login");
-
-    return <Page {...pageProps} onNavigate={onNavigate} />;
-  };
+    event.preventDefault();
+    window.history.replaceState({
+        ...window.history.state,
+        [CLASS_RELOAD_STATE_KEY]: true,
+    }, '');
+    window.location.reload();
 }
 
-function LegacyRedirect() {
-  const { search } = useLocation();
-  const requestedPage = new URLSearchParams(search).get("page");
-  return <Navigate to={legacyPages[requestedPage] ?? "/login"} replace />;
-}
+function App() {
+    const [startsInClass] = React.useState(() => (
+        window.location.hash === ENGLISH_CLASS_HREF
+        && window.history.state?.[CLASS_RELOAD_STATE_KEY] === true
+    ));
+    const [isClassPage, setIsClassPage] = React.useState(startsInClass);
 
-const LoginRoute = withNavigation(Login);
-const SignupRoute = withNavigation(Signup);
-const PersonalInfoRoute = withNavigation(PersonalInfo);
-const FaQRoute = withNavigation(FaQ);
-const TermsRoute = withNavigation(TermsOf);
-const PrivacyRoute = withNavigation(TermsOf, { documentType: "privacy" });
+    React.useEffect(() => {
+        if (startsInClass) {
+            const historyState = { ...window.history.state };
+            delete historyState[CLASS_RELOAD_STATE_KEY];
+            window.history.replaceState(historyState, '');
+        } else if (window.location.hash === ENGLISH_CLASS_HREF) {
+            const { pathname, search } = window.location;
+            window.history.replaceState(window.history.state, '', pathname + search);
+        }
+
+        function updatePage() {
+            setIsClassPage(window.location.hash === ENGLISH_CLASS_HREF);
+        }
+
+        window.addEventListener('hashchange', updatePage);
+        return () => window.removeEventListener('hashchange', updatePage);
+    }, [startsInClass]);
+
+    const page = isClassPage ? 'class' : 'overview';
+
+    return (
+        <div className={`teacher-layout teacher-layout--${page}`}>
+            <Header />
+            <Overview hidden={isClassPage} classHref={ENGLISH_CLASS_HREF} />
+            {isClassPage && <Class classHref={ENGLISH_CLASS_HREF} onReload={reloadClass} />}
+        </div>
+    );
+}
 
 export default function App() {
   return (
