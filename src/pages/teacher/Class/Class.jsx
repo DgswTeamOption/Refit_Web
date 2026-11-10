@@ -1,4 +1,3 @@
-import Header from '../../../components/Header/Header.jsx';
 import SubNav from '../../../components/SubNav/SubNav.jsx';
 import Calendar from '../../../components/Calendar/Calendar.jsx';
 import Condition from '../../../components/Condition/Condition.jsx';
@@ -38,7 +37,6 @@ function reloadClass(event) {
 export default function Class() {
     return (
         <div className="teacher-class">
-            <Header />
             <main className="teacher-class__main">
                 <nav className="teacher-class__breadcrumb" aria-label="현재 위치">
                     <ol>

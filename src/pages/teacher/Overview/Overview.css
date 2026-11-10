@@ -1,38 +1,81 @@
-/* 안쪽 여백과 테두리를 지정한 너비에 포함 */
-.teacher-overview,
-.teacher-overview * {
+/* 교사용 공통 레이아웃 */
+.teacher-layout,
+.teacher-layout * {
     box-sizing: border-box;
 }
 
-.teacher-overview {
+.teacher-layout {
+    --teacher-header-content-width: 1248px;
+    --teacher-header-inset: max(24px, calc((100% - var(--teacher-header-content-width)) / 2));
+
     min-height: 100vh;
     background: #fff;
     color: #151515;
 }
 
-/* 헤더 */
-.teacher-overview .header-container {
+.teacher-layout--class {
+    --teacher-header-content-width: min(82.6%, 1248px);
+}
+
+.teacher-layout .header-container {
     max-width: none;
-    padding-left: max(24px, calc((100% - 1248px) / 2));
-    padding-right: 32px;
+    padding-left: var(--teacher-header-gutter, var(--teacher-header-inset));
+    padding-right: var(--teacher-header-gutter, 32px);
 }
 
-.teacher-overview .header-logo {
-    width: 103px;
-    height: 49px;
+.teacher-layout .header-logo {
+    width: var(--teacher-header-logo-width, 103px);
+    height: var(--teacher-header-logo-height, 49px);
 }
 
-.teacher-overview .header-right {
+.teacher-layout .header-right {
     gap: 16px;
 }
 
-.teacher-overview .header-bell-icon {
+.teacher-layout .header-bell-icon {
     height: 19px;
 }
 
-.teacher-overview .header-profile-icon {
+.teacher-layout .header-profile-icon {
     width: 34px;
     height: 34px;
+}
+
+.teacher-layout--class > .refit-header :is(a, button):focus-visible {
+    outline: 2px solid var(--color-blue, #0099ff);
+    outline-offset: 4px;
+}
+
+@media (max-width: 1000px) {
+    .teacher-layout--class {
+        --teacher-header-gutter: 24px;
+    }
+}
+
+@media (max-width: 800px) {
+    .teacher-layout--overview {
+        --teacher-header-gutter: 24px;
+        --teacher-header-logo-width: auto;
+        --teacher-header-logo-height: 40px;
+    }
+}
+
+@media (max-width: 760px) {
+    .teacher-layout--class {
+        --teacher-header-gutter: 20px;
+        --teacher-header-logo-width: auto;
+        --teacher-header-logo-height: 40px;
+    }
+}
+
+.teacher-overview__calendar,
+.teacher-class__calendar {
+    min-width: 0;
+}
+
+.teacher-overview__calendar > div,
+.teacher-class__calendar > div {
+    width: 100%;
 }
 
 /* 메인 화면 */
@@ -48,13 +91,8 @@
     padding-bottom: 40px;
 }
 
-.teacher-overview__calendar,
 .teacher-overview__classes {
     min-width: 0;
-}
-
-.teacher-overview__calendar > div {
-    width: 100%;
 }
 
 /* 내 수업 제목과 만들기 버튼 */
@@ -142,7 +180,6 @@
 
 /* 팝업 */
 .teacher-overview .overview-modal {
-    box-sizing: border-box;
     position: fixed;
     inset: 0;
 
@@ -182,7 +219,6 @@
 }
 
 .overview-modal__input {
-    box-sizing: border-box;
     display: block;
 
     width: 100%;
@@ -280,15 +316,6 @@
 }
 
 @media (max-width: 800px) {
-    .teacher-overview .header-container {
-        padding: 0 24px;
-    }
-
-    .teacher-overview .header-logo {
-        width: auto;
-        height: 40px;
-    }
-
     .teacher-overview__main {
         grid-template-columns: minmax(0, 1fr);
         gap: 28px;

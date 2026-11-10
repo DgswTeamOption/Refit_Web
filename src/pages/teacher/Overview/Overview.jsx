@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import Header from '../../../components/Header/Header.jsx';
 import Calendar from '../../../components/Calendar/Calendar.jsx';
 import Button from '../../../components/Button/Button.jsx';
 import ClassBlock from '../../../components/ClassBlock/ClassBlock.jsx';
 import './Overview.css';
 
+const MAX_VISIBLE_CLASSES = 4;
 const INITIAL_CLASSES = [
     { id: 'english1', title: '영어1', color: 'peach' },
     { id: 'english2', title: '영어2', color: 'lavender' },
     { id: 'math1', title: '수학1', color: 'yellow' },
     { id: 'math2', title: '수학2', color: 'mint' },
 ];
+const CLASS_COLORS = [...new Set(INITIAL_CLASSES.map(({ color }) => color))];
 
 export default function Overview({ hidden, classHref }) {
     const [classes, setClasses] = useState(INITIAL_CLASSES);
@@ -61,11 +62,7 @@ export default function Overview({ hidden, classHref }) {
             return;
         }
 
-        // 기존 ClassBlock에서 지원하는 배경색
-        const colors = ['peach', 'lavender', 'yellow', 'mint'];
-        const randomColor = colors[
-            Math.floor(Math.random() * colors.length)
-            ];
+        const randomColor = CLASS_COLORS[Math.floor(Math.random() * CLASS_COLORS.length)];
 
         const newClass = {
             id: crypto.randomUUID(),
@@ -80,6 +77,7 @@ export default function Overview({ hidden, classHref }) {
         setTitleError('');
         closeModal();
     }
+
     function handleDeleteClass() {
         if (modal?.type !== 'delete') return;
 
@@ -88,14 +86,14 @@ export default function Overview({ hidden, classHref }) {
         setClasses((previous) => {
             // 현재 화면에 보이는 수업에서 선택한 수업 삭제
             const visible = previous
-                .slice(0, 4)
+                .slice(0, MAX_VISIBLE_CLASSES)
                 .filter((item) => item.id !== targetId);
 
             // 화면에 나오지 않는 수업들
-            const hidden = previous.slice(4);
+            const hidden = previous.slice(MAX_VISIBLE_CLASSES);
 
             // 숨겨진 수업 중 가장 최근에 만든 수업을 가져오기
-            if (visible.length < 4 && hidden.length > 0) {
+            if (visible.length < MAX_VISIBLE_CLASSES && hidden.length > 0) {
                 visible.push(hidden.pop());
             }
 
@@ -107,8 +105,6 @@ export default function Overview({ hidden, classHref }) {
 
     return (
         <div className="teacher-overview" hidden={hidden}>
-            <Header />
-
             <main className="teacher-overview__main">
                 <aside
                     className="teacher-overview__calendar"
@@ -136,7 +132,7 @@ export default function Overview({ hidden, classHref }) {
 
                     {classes.length > 0 ? (
                         <div className="teacher-overview__grid">
-                            {classes.slice(0, 4).map((item) => (
+                            {classes.slice(0, MAX_VISIBLE_CLASSES).map((item) => (
                                 <div key={item.id} className="teacher-overview__class-card">
                                     <ClassBlock
                                         title={item.title}

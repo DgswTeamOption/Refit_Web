@@ -1,38 +1,3 @@
-.teacher-class,
-.teacher-class * {
-    box-sizing: border-box;
-}
-
-.teacher-class {
-    min-height: 100vh;
-    background: #fff;
-    color: #151515;
-}
-
-.teacher-class .header-container {
-    max-width: none;
-    padding-left: max(24px, calc((100% - min(82.6%, 1248px)) / 2));
-    padding-right: 32px;
-}
-
-.teacher-class .header-logo {
-    width: 103px;
-    height: 49px;
-}
-
-.teacher-class .header-right {
-    gap: 16px;
-}
-
-.teacher-class .header-bell-icon {
-    height: 19px;
-}
-
-.teacher-class .header-profile-icon {
-    width: 34px;
-    height: 34px;
-}
-
 .teacher-class__main {
     width: 82.6%;
     max-width: 1248px;
@@ -98,13 +63,11 @@
     margin-top: 24px;
 }
 
-.teacher-class__calendar,
 .teacher-class__content {
     min-width: 0;
 }
 
 .teacher-class__calendar > div {
-    width: 100%;
     min-height: 388px;
     border: 1px solid #e8e8e8;
     border-radius: 15px;
@@ -292,10 +255,6 @@
         width: calc(100% - 48px);
     }
 
-    .teacher-class .header-container {
-        padding: 0 24px;
-    }
-
     .teacher-class__layout {
         grid-template-columns: minmax(260px, 1fr) minmax(0, 1.8fr);
         gap: 24px;
@@ -310,15 +269,6 @@
     .teacher-class__main {
         width: calc(100% - 40px);
         padding-top: 20px;
-    }
-
-    .teacher-class .header-container {
-        padding: 0 20px;
-    }
-
-    .teacher-class .header-logo {
-        width: auto;
-        height: 40px;
     }
 
     .teacher-class__title {
