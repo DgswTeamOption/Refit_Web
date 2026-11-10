@@ -53,4 +53,19 @@ function App() {
     );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Suspense fallback={null}>
+      <Routes>
+        <Route path="/" element={<LegacyRedirect />} />
+        <Route path="/login" element={<LoginRoute />} />
+        <Route path="/signup" element={<SignupRoute />} />
+        <Route path="/personal-info" element={<PersonalInfoRoute />} />
+        <Route path="/faq" element={<FaQRoute />} />
+        <Route path="/terms" element={<TermsRoute />} />
+        <Route path="/privacy" element={<PrivacyRoute />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Suspense>
+  );
+}

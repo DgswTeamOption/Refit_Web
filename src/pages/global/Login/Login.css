@@ -1,0 +1,194 @@
+.LoginPage{
+    background-color: var(--color-background);
+    display: flex;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+}
+.LoginPage .LoginWrap{
+    width: 37vw;
+    display: flex;
+    min-height: 44.63vw;
+    justify-content: center;
+    gap: 20px;
+    flex-direction: column;
+    box-sizing: border-box;
+    align-items: center;
+}
+.LoginPage .LoginWrap .logoImg{
+    width: 120px;
+}
+.LoginPage .LoginImg{
+    width: 37vw;
+    border-radius: 0px 30px 30px 0px;
+}
+.LoginPage .google-login-wrap {
+    width: 550px;
+}
+.LoginPage .google-login-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+    height: 46px;
+    border: 1px solid #DADCE0;
+    border-radius: 8px;
+    background-color: #FFFFFF;
+    color: #3C4043;
+    font-size: 20px;
+    font-weight: 500;
+}
+.LoginPage .google-login-button:hover {
+    background-color: #F8FAFD;
+}
+.LoginPage .google-login-icon {
+    position: absolute;
+    left: 18px;
+    width: 30px;
+    height: 30px;
+}
+.LoginWrap .LoginHead{
+    font-size: 32px;
+    font-weight: bold;
+}
+.LoginWrap .LoginTextWrap{
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    align-items: center;
+}
+.LoginWrap .LoginText{
+    color: var(--color-gray);
+    font-size: 16px;
+}
+.LoginLine {
+  display: flex;
+  width: 550px;
+  align-items: center;
+  text-align: center;
+  color: #888888;
+  font-size: 16px;
+  margin: 22px 0;
+}
+.LoginLine::before,
+.LoginLine::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.LoginLine::before {
+  margin-right: 12px;
+}
+
+.LoginLine::after {
+  margin-left: 12px;
+}
+
+
+.login-feedback {
+    min-height: 16px;
+    color: var(--color-blue);
+    font-size: 14px;
+}
+
+.login-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 17px;
+}
+
+.login-actions p {
+    color: var(--color-gray);
+    font-size: 16px;
+}
+
+.login-actions > button {
+    font-size: 16px;
+}
+
+.login-actions p button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-blue);
+    font-size: inherit;
+}
+
+@media (max-width: 1200px) {
+    .LoginPage {
+        box-sizing: border-box;
+        padding: 32px 24px;
+        overflow-x: hidden;
+    }
+
+    .LoginPage .LoginImg {
+        display: none;
+    }
+
+    .LoginPage .LoginWrap {
+        width: min(450px, 100%);
+        min-width: 0;
+        min-height: calc(100vh - 64px);
+        justify-content: center;
+        gap: 22px;
+    }
+
+    .LoginPage .LoginLine,
+    .LoginPage .LoginWrap .Label,
+    .LoginPage .login-actions,
+    .LoginPage .google-login-wrap {
+        width: 100%;
+        max-width: 550px;
+        align-self: center;
+    }
+
+    .LoginPage .LoginLine {
+        margin: 10px 0;
+    }
+
+    .LoginPage .LoginWrap .InputWrap {
+        width: 100%;
+    }
+
+    .LoginPage .LoginWrap .InputWrap > input {
+        flex: 1;
+        min-width: 0;
+        width: auto !important;
+    }
+
+    .LoginPage .login-actions > button {
+        width: 100% !important;
+    }
+
+    .LoginPage .google-login-button {
+        font-size: 17px;
+    }
+}
+
+@media (max-width: 480px) {
+    .LoginPage {
+        padding: 24px 20px;
+    }
+
+    .LoginPage .LoginWrap {
+        min-height: calc(100vh - 48px);
+        gap: 18px;
+    }
+
+    .LoginPage .LoginWrap .LoginHead {
+        font-size: 28px;
+    }
+
+    .LoginPage .LoginWrap .LoginText {
+        font-size: 16px;
+    }
+
+    .LoginPage .LoginWrap .login-code-button > button {
+        width: 100px !important;
+        padding: 0 8px;
+        font-size: 12px;
+    }
+}

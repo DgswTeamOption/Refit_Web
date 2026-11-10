@@ -1,0 +1,28 @@
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  min-height: 18px;
+  color: #999;
+  font-size: 12px;
+}
+
+.breadcrumb-nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.breadcrumb-nav-item + .breadcrumb-nav-item {
+  margin-left: 10px;
+}
+
+.breadcrumb-nav a {
+  color: #0099ff;
+  text-decoration: none;
+}
+
+.breadcrumb-nav-separator {
+  color: #999;
+  font-size: 18px;
+  line-height: 1;
+}

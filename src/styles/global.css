@@ -66,12 +66,15 @@
     padding: 0;
     margin: 0;
 }
+body {
+    background-color: #FFFFFF;
+}
 button{
     cursor: pointer;
 }
 :root {
   /* 기존 설정 */
-  --color-background: #FAFAFA;
+  --color-background: #FFFFFF;
   --color-gray: #767B81;
   --color-light-gray: #E3E3E3;
   --color-red: #FF0000;
