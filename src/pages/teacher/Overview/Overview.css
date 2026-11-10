@@ -240,21 +240,20 @@
 .setting-table th:nth-child(4),
 .setting-table td:nth-child(4) { width: 25%; }
 
-/* 6. 스케줄 관리 테이블 컬럼 비율 */
+/* 6. 스케줄 관리 테이블 컬럼 비율*/
 .schedule-table th:nth-child(1),
-.schedule-table td:nth-child(1) { width: 15%; }
-.schedule-table th:nth-child(2),
-.schedule-table td:nth-child(2),
-.schedule-table th:nth-child(3),
-.schedule-table td:nth-child(3),
-.schedule-table th:nth-child(4),
-.schedule-table td:nth-child(4),
-.schedule-table th:nth-child(5),
-.schedule-table td:nth-child(5),
-.schedule-table th:nth-child(6),
-.schedule-table td:nth-child(6) { width: 13%; }
-.schedule-table th:nth-child(7),
-.schedule-table td:nth-child(7) { width: 20%; }
+.schedule-table td:nth-child(1) { width: 14%; }
+
+.schedule-table th:nth-child(2), .schedule-table td:nth-child(2),
+.schedule-table th:nth-child(3), .schedule-table td:nth-child(3),
+.schedule-table th:nth-child(4), .schedule-table td:nth-child(4),
+.schedule-table th:nth-child(5), .schedule-table td:nth-child(5),
+.schedule-table th:nth-child(6), .schedule-table td:nth-child(6),
+.schedule-table th:nth-child(7), .schedule-table td:nth-child(7),
+.schedule-table th:nth-child(8), .schedule-table td:nth-child(8) { width: 9%; } 
+
+.schedule-table th:nth-child(9),
+.schedule-table td:nth-child(9) { width: 23%; }
 
 .student-table th,
 .absence-table th,

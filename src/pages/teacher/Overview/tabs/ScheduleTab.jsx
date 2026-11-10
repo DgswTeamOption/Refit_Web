@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import Button from "../../../../components/Button/Button";
 
+// 요일 옵션에 토, 일 추가
 const DAYS_OPTIONS = [
   { label: "월", key: "mon" },
   { label: "화", key: "tue" },
   { label: "수", key: "wed" },
   { label: "목", key: "thu" },
   { label: "금", key: "fri" },
+  { label: "토", key: "sat" },
+  { label: "일", key: "sun" },
 ];
 
 // 재사용 시간표 테이블 하위 컴포넌트
@@ -17,11 +20,13 @@ function ScheduleTable({ scheduleList, onEdit, onDelete }) {
         <thead>
           <tr>
             <th>학생</th>
-            <th>월요일</th>
-            <th>화요일</th>
-            <th>수요일</th>
-            <th>목요일</th>
-            <th>금요일</th>
+            <th>월</th>
+            <th>화</th>
+            <th>수</th>
+            <th>목</th>
+            <th>금</th>
+            <th>토</th>
+            <th>일</th>
             <th>관리</th>
           </tr>
         </thead>
@@ -34,6 +39,8 @@ function ScheduleTable({ scheduleList, onEdit, onDelete }) {
               <td>{item.wed}</td>
               <td>{item.thu}</td>
               <td>{item.fri}</td>
+              <td>{item.sat}</td>
+              <td>{item.sun}</td>
               <td>
                 <div className="action-buttons">
                   <Button text="수정" color="lightGray" width={60} onClick={() => onEdit(item)} />
@@ -56,9 +63,9 @@ export default function ScheduleTab() {
   const [scheduleTime, setScheduleTime] = useState("");
 
   const [scheduleList, setScheduleList] = useState([
-    { id: 1, studentName: "김민지", mon: "16:00", tue: "—", wed: "16:00", thu: "—", fri: "17:00" },
-    { id: 2, studentName: "박서준", mon: "15:00", tue: "15:00", wed: "15:00", thu: "15:00", fri: "15:00" },
-    { id: 3, studentName: "이서연", mon: "17:00", tue: "—", wed: "17:00", thu: "—", fri: "—" },
+    { id: 1, studentName: "김민지", mon: "16:00", tue: "—", wed: "16:00", thu: "—", fri: "17:00", sat: "10:00", sun: "—" },
+    { id: 2, studentName: "박서준", mon: "15:00", tue: "15:00", wed: "15:00", thu: "15:00", fri: "15:00", sat: "—", sun: "—" },
+    { id: 3, studentName: "이서연", mon: "17:00", tue: "—", wed: "17:00", thu: "—", fri: "—", sat: "14:00", sun: "14:00" },
   ]);
 
   const toggleDaySelection = (dayKey) => {
@@ -85,9 +92,11 @@ export default function ScheduleTab() {
     if (item.wed !== "—") activeDays.push("wed");
     if (item.thu !== "—") activeDays.push("thu");
     if (item.fri !== "—") activeDays.push("fri");
+    if (item.sat !== "—") activeDays.push("sat");
+    if (item.sun !== "—") activeDays.push("sun");
 
     setSelectedDays(activeDays);
-    const existingTime = [item.mon, item.tue, item.wed, item.thu, item.fri].find((t) => t !== "—");
+    const existingTime = [item.mon, item.tue, item.wed, item.thu, item.fri, item.sat, item.sun].find((t) => t !== "—");
     setScheduleTime(existingTime || "");
     setIsAdding(true);
   };
@@ -126,7 +135,7 @@ export default function ScheduleTab() {
           {
             id: Date.now(),
             studentName: scheduleStudent,
-            mon: "—", tue: "—", wed: "—", thu: "—", fri: "—",
+            mon: "—", tue: "—", wed: "—", thu: "—", fri: "—", sat: "—", sun: "—",
             ...dayUpdates,
           },
         ];
