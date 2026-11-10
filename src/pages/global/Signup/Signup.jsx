@@ -1,26 +1,24 @@
-import { useRef, useState } from "react";
-import { GoogleOAuthProvider } from "@react-oauth/google";
+import { useState } from "react";
 import Button from "../../../components/Button/Button";
 import Label from "../../../components/Label/Label";
 import GoogleLoginButton from "../../../components/GoogleLoginButton/GoogleLoginButton";
+import AuthLayout from "../../../components/AuthLayout/AuthLayout";
 import studentIcon from "../../../assets/Vector.svg";
 import teacherIcon from "../../../assets/Book.svg";
 import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
 import "../Login/Login.css";
 import "./Signup.css";
 
-const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
 export default function Signup({ onNavigate }) {
   const [step, setStep] = useState("information");
   const [role, setRole] = useState("student");
   const [message, setMessage] = useState("");
-  const formRef = useRef(null);
-
-  const readField = (id) => formRef.current?.querySelector(`#${id}`)?.value.trim() ?? "";
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
 
   const requestCode = () => {
-    if (!readField("signup-email").includes("@")) {
+    if (!email.trim().includes("@")) {
       setMessage("이메일 주소를 확인해 주세요.");
       return;
     }
@@ -29,7 +27,7 @@ export default function Signup({ onNavigate }) {
   };
 
   const continueToRole = () => {
-    if (!readField("signup-name") || !readField("signup-email").includes("@") || !readField("signup-code")) {
+    if (!name.trim() || !email.trim().includes("@") || !code.trim()) {
       setMessage("이름, 이메일, 인증코드를 입력해 주세요.");
       return;
     }
@@ -43,29 +41,26 @@ export default function Signup({ onNavigate }) {
   };
 
   return (
-    <div className={`LoginPage SignupPage ${step === "role" ? "is-role-selection" : ""}`}>
-      <div className="LoginWrap">
-        <img src="/logo.svg" alt="로고" className="logoImg" />
-
+    <AuthLayout className={`SignupPage ${step === "role" ? "is-role-selection" : ""}`}>
         {step === "information" ? (
-          <div className="signup-information" ref={formRef}>
+          <div className="signup-information">
             <div className="LoginTextWrap">
               <div className="LoginHead">회원가입</div>
               <div className="LoginText">이메일 인증을 통하여 가입하세요.</div>
             </div>
 
-            <GoogleOAuthProvider clientId={clientId}>
-              <GoogleLoginButton />
-            </GoogleOAuthProvider>
+            <GoogleLoginButton />
 
             <div className="LoginLine">또는</div>
-            <Label LabelText="이름" width={550} placeHolder="이름을 입력해주세요" id="signup-name" />
+            <Label LabelText="이름" width={550} placeHolder="이름을 입력해주세요" id="signup-name" value={name} onChange={(event) => setName(event.target.value)} />
             <Label
               LabelText="이메일"
               width={420}
               placeHolder="example@email.com"
               id="signup-email"
               type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
               inputButton={
                 <span className="signup-code-button">
                   <Button text="인증코드 받기" width={120} color="blue" onClick={requestCode} />
@@ -73,7 +68,7 @@ export default function Signup({ onNavigate }) {
               }
             />
             <p className="signup-feedback" role="status">{message}</p>
-            <Label LabelText="인증코드" width={550} placeHolder="6자리 숫자 입력" id="signup-code" />
+            <Label LabelText="인증코드" width={550} placeHolder="6자리 숫자 입력" id="signup-code" value={code} onChange={(event) => setCode(event.target.value)} />
 
             <div className="signup-actions">
               <Button text="회원가입" width={550} onClick={continueToRole} />
@@ -115,9 +110,6 @@ export default function Signup({ onNavigate }) {
             <GlobalNavigation onNavigate={onNavigate} />
           </div>
         )}
-      </div>
-
-      <img src="/Refit.github.webp" alt="" className="LoginImg" />
-    </div>
+    </AuthLayout>
   );
 }

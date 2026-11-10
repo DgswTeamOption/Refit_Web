@@ -1,4 +1,4 @@
-:is(.faq-site, .terms-site, .personal-site) {
+:is(.global-site, .faq-site, .terms-site, .personal-site) {
   min-height: 100vh;
   display: flex;
   flex-direction: column;

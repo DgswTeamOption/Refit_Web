@@ -1,8 +1,5 @@
-import Header from "../../../components/Header/Header";
-import Footer from "../../../components/Footer/Footer";
-import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
+import GlobalPageLayout from "../../../components/GlobalPageLayout/GlobalPageLayout";
 import Nav from "../../../components/Nav/Nav";
-import "../GlobalPages.css";
 import "./TermsOf.css";
 
 const policyText = "서비스 이용에 필요한 내용을 안내합니다. 본 화면은 원문 정책 내용을 확인할 수 있는 페이지입니다.";
@@ -20,8 +17,7 @@ export default function TermsOf({ documentType = "terms", onNavigate }) {
   const title = isPrivacy ? "개인정보 처리방침" : "이용약관";
 
   return (
-    <div className="terms-site">
-      <Header />
+    <GlobalPageLayout onNavigate={onNavigate}>
       <main className="terms-page">
         <Nav items={[{ text: "홈", link: "/" }, { text: title }]} />
         <div className="global-page-heading"><h1>{title}</h1></div>
@@ -36,9 +32,6 @@ export default function TermsOf({ documentType = "terms", onNavigate }) {
           ))}
         </article>
       </main>
-      <GlobalNavigation variant="footer" onNavigate={onNavigate}>
-        <Footer />
-      </GlobalNavigation>
-    </div>
+    </GlobalPageLayout>
   );
 }

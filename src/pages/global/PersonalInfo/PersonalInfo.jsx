@@ -1,10 +1,7 @@
 import { useRef, useState } from "react";
 import Button from "../../../components/Button/Button";
-import Header from "../../../components/Header/Header";
-import Footer from "../../../components/Footer/Footer";
-import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
+import GlobalPageLayout from "../../../components/GlobalPageLayout/GlobalPageLayout";
 import Nav from "../../../components/Nav/Nav";
-import "../GlobalPages.css";
 import "./PersonalInfo.css";
 
 export default function PersonalInfo({ onNavigate }) {
@@ -56,13 +53,12 @@ export default function PersonalInfo({ onNavigate }) {
   };
 
   return (
-    <div className="personal-site">
-      <Header />
+    <GlobalPageLayout onNavigate={onNavigate}>
       <main className={`personal-info-page ${mode}`}>
         <Nav
           items={[
             { text: "홈", link: "/" },
-            { text: "내 정보", link: mode === "view" ? undefined : "?page=personal-info" },
+            { text: "내 정보", link: mode === "view" ? undefined : "/personal-info" },
             ...(mode === "edit" ? [{ text: "정보 수정" }] : []),
             ...(mode === "delete" ? [{ text: "계정 삭제" }] : []),
           ]}
@@ -151,9 +147,6 @@ export default function PersonalInfo({ onNavigate }) {
         </section>
         )}
       </main>
-      <GlobalNavigation variant="footer" onNavigate={onNavigate}>
-        <Footer />
-      </GlobalNavigation>
-    </div>
+    </GlobalPageLayout>
   );
 }

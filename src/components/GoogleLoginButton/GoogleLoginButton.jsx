@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { useGoogleLogin } from '@react-oauth/google';
-function GoogleLoginButton() {
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
+
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+function GoogleLoginButtonContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(localStorage.getItem("token")));
   const startGoogleLogin = useGoogleLogin({
     onSuccess: ({ access_token: token }) => {
@@ -31,6 +34,14 @@ function GoogleLoginButton() {
         <button  onClick={handleLogout}>로그아웃</button>
       )}
     </div>
+  );
+}
+
+function GoogleLoginButton() {
+  return (
+    <GoogleOAuthProvider clientId={clientId}>
+      <GoogleLoginButtonContent />
+    </GoogleOAuthProvider>
   );
 }
 

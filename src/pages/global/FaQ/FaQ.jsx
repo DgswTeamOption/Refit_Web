@@ -1,9 +1,6 @@
 import { useMemo, useState } from "react";
-import Header from "../../../components/Header/Header";
-import Footer from "../../../components/Footer/Footer";
-import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
+import GlobalPageLayout from "../../../components/GlobalPageLayout/GlobalPageLayout";
 import Nav from "../../../components/Nav/Nav";
-import "../GlobalPages.css";
 import "./FaQ.css";
 
 const questions = [
@@ -24,8 +21,7 @@ export default function FaQ({ onNavigate }) {
   }, [query]);
 
   return (
-    <div className="faq-site">
-      <Header />
+    <GlobalPageLayout onNavigate={onNavigate}>
       <main className="faq-page">
         <Nav items={[{ text: "홈", link: "/" }, { text: "FAQ" }]} />
         <div className="global-page-heading"><h1>FAQ</h1></div>
@@ -53,9 +49,6 @@ export default function FaQ({ onNavigate }) {
           </div>
         </section>
       </main>
-      <GlobalNavigation variant="footer" onNavigate={onNavigate}>
-        <Footer />
-      </GlobalNavigation>
-    </div>
+    </GlobalPageLayout>
   );
 }

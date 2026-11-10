@@ -1,14 +1,14 @@
 import styled from "styled-components"
 import "./Label.css"
-function Label({LabelText="레이블",id,placeHolder="",type="text",inputButton=null,width=550,underText}){
+function Label({LabelText="레이블",id,placeHolder="",type="text",inputButton=null,width=550,underText,value,onChange}){
     return(<div className="Label">
         <label htmlFor={id}>{LabelText}</label>
         {(inputButton!==null)?
         <div className="InputWrap">
-            <InputContainer $width={width} id={id} type={type} placeholder={placeHolder}/>
+            <InputContainer $width={width} id={id} type={type} placeholder={placeHolder} value={value} onChange={onChange}/>
             {inputButton}
         </div>
-        :<InputContainer $width={width} id={id} type={type} placeholder={placeHolder}/>
+        :<InputContainer $width={width} id={id} type={type} placeholder={placeHolder} value={value} onChange={onChange}/>
         }
         {underText && <div className="inputUnder">{underText}</div>}
     </div>)
