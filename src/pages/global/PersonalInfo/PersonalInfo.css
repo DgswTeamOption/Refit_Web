@@ -1,0 +1,219 @@
+.personal-info-page .global-page-heading {
+  margin-top: 18px;
+}
+
+.personal-view {
+  width: min(826px, 100%);
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 16px;
+  margin: 58px auto 0;
+}
+
+.personal-photo-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+}
+
+.personal-photo-circle {
+  width: 100px;
+  height: 100px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #f1f1f1;
+  color: #999;
+  font-size: 13px;
+}
+
+.personal-photo-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.personal-photo-column > button {
+  border: 0;
+  background: transparent;
+  color: #0099ff;
+  font-size: 13px;
+}
+
+.personal-values {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.personal-value-row {
+  width: 100%;
+  min-height: 82px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 0 0 16px;
+  border-bottom: 1px solid #e3e3e3;
+}
+
+.personal-value-row + .personal-value-row {
+  padding-top: 30px;
+  min-height: 100px;
+}
+
+.personal-value-row span {
+  color: #999;
+  font-size: 13px;
+}
+
+.personal-value-row strong {
+  color: #151515;
+  font-size: 16px;
+}
+
+.personal-value-row p {
+  color: #151515;
+  font-size: 16px;
+}
+
+.personal-values > button:first-of-type {
+  margin-top: 34px;
+}
+
+.personal-delete-link {
+  margin-top: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #f04444;
+  font-size: 13px;
+}
+
+.personal-edit-form,
+.personal-delete-form {
+  width: min(900px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  margin: 42px auto 0;
+}
+
+.personal-edit-form label,
+.personal-delete-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #555;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.personal-edit-form label > input,
+.personal-delete-form label > input,
+.delete-email-field span > input {
+  width: 100%;
+  height: 48px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border: 1px solid #e3e3e3;
+  border-radius: 9px;
+  outline: none;
+  color: #151515;
+  font-size: 14px;
+}
+
+.personal-edit-form input:focus,
+.personal-delete-form input:focus {
+  border-color: #0099ff;
+}
+
+.personal-photo-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #555;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.personal-photo-edit > button {
+  width: 160px;
+  height: 120px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #e3e3e3;
+  border-radius: 10px;
+  background: #f7f7f7;
+  color: #999;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.personal-photo-edit img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.personal-form-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.personal-delete-form h2 {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.4;
+}
+
+.delete-description {
+  margin-top: -22px;
+  color: #888;
+  font-size: 14px;
+}
+
+.delete-email-field > span {
+  display: flex;
+  gap: 14px;
+}
+
+.delete-email-field span > input {
+  flex: 1;
+}
+
+.delete-email-field span > button {
+  flex-shrink: 0;
+  height: 44px;
+}
+
+.personal-form-message {
+  margin-top: -24px;
+  color: #0099ff;
+  font-size: 12px;
+}
+
+.personal-delete-form .personal-form-actions {
+  margin-top: -6px;
+}
+
+@media (max-width: 700px) {
+  .personal-view {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .personal-photo-column {
+    align-items: flex-start;
+  }
+
+  .delete-email-field > span {
+    flex-direction: column;
+  }
+}
