@@ -5,7 +5,7 @@ import { CalendarContainer } from './Calendar.styles';
 import CalendarBlock from './CalendarBlock';
 import './Calendar.css';
 
-function Calendar({ mode = 'class', onSelectDate, selectedDate }) {
+function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate }) {
     // 2026년 8월 기준 (Figma 시안 기준)
     const [year, setYear] = useState(2026);
     const [month, setMonth] = useState(7); // 0-indexed (7 = 8월)
@@ -33,8 +33,10 @@ function Calendar({ mode = 'class', onSelectDate, selectedDate }) {
 
     const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
+    const isClassEmpty = Array.isArray(classes) && classes.length === 0;
+
     // 시안(view1 vs view5/view10)에 따른 날짜별 도트 매핑
-    const classEvents = {
+    const classEvents = isClassEmpty ? {} : {
         4: ['lavender', 'mint'],
         6: ['lavender', 'mint'],
         11: ['peach', 'lavender', 'yellow'],
@@ -96,47 +98,45 @@ function Calendar({ mode = 'class', onSelectDate, selectedDate }) {
             </div>
 
             {/* 하단 범례 (모드에 따라 변경) */}
-            <div className="CalendarFoot">
-                {mode === 'class' ? (
-                    <>
-                        <div className="CalendarFootTag">
-                            <div className="CalendarCircle CalendarCirclePeach" />
-                            <div>영어1</div>
-                        </div>
-                        <div className="CalendarFootTag">
-                            <div className="CalendarCircle CalendarCircleLavender" />
-                            <div>영어2</div>
-                        </div>
-                        <div className="CalendarFootTag">
-                            <div className="CalendarCircle CalendarCircleYellow" />
-                            <div>수학1</div>
-                        </div>
-                        <div className="CalendarFootTag">
-                            <div className="CalendarCircle CalendarCircleMint" />
-                            <div>수학2</div>
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        <div className="CalendarFootTag">
-                            <div className="CalendarCircle CalendarCircleBlue" />
-                            <div>출석</div>
-                        </div>
-                        <div className="CalendarFootTag">
-                            <div className="CalendarCircle CalendarCircleRed" />
-                            <div>결석</div>
-                        </div>
-                        <div className="CalendarFootTag">
-                            <div className="CalendarCircle CalendarCircleYellow" />
-                            <div>보강</div>
-                        </div>
-                        <div className="CalendarFootTag">
-                            <div className="CalendarCircle CalendarCircleDarkGray" />
-                            <div>보강 대기중</div>
-                        </div>
-                    </>
-                )}
-            </div>
+            {mode === 'class' ? (
+                !isClassEmpty && (
+                    <div className="CalendarFoot">
+                        {(Array.isArray(classes) ? classes : [
+                            { id: 'eng1', title: '영어1', color: 'peach' },
+                            { id: 'eng2', title: '영어2', color: 'lavender' },
+                            { id: 'math1', title: '수학1', color: 'yellow' },
+                            { id: 'math2', title: '수학2', color: 'mint' },
+                        ]).map((cls) => {
+                            const formattedColor = cls.color[0].toUpperCase() + cls.color.slice(1);
+                            return (
+                                <div key={cls.id} className="CalendarFootTag">
+                                    <div className={`CalendarCircle CalendarCircle${formattedColor}`} />
+                                    <div>{cls.title}</div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )
+            ) : (
+                <div className="CalendarFoot">
+                    <div className="CalendarFootTag">
+                        <div className="CalendarCircle CalendarCircleBlue" />
+                        <div>출석</div>
+                    </div>
+                    <div className="CalendarFootTag">
+                        <div className="CalendarCircle CalendarCircleRed" />
+                        <div>결석</div>
+                    </div>
+                    <div className="CalendarFootTag">
+                        <div className="CalendarCircle CalendarCircleYellow" />
+                        <div>보강</div>
+                    </div>
+                    <div className="CalendarFootTag">
+                        <div className="CalendarCircle CalendarCircleDarkGray" />
+                        <div>보강 대기중</div>
+                    </div>
+                </div>
+            )}
         </CalendarContainer>
     );
 }

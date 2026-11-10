@@ -6,6 +6,7 @@ import profileIcon from '../../assets/profile.png';
 const Header = ({
     isLoggedIn = true,
     userName = '학생1',
+    initialNotifications = [],
     onLogoClick,
     onLoginClick,
     onSignupClick,
@@ -14,12 +15,8 @@ const Header = ({
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-    const [notifications, setNotifications] = useState([
-        { id: 1, title: '영어1', description: '오늘 수업이 있어요.', isUnread: true },
-        { id: 2, title: '수학1', description: '보강 신청이 수락됐어요.', isUnread: true },
-        { id: 3, title: '영어2', description: '새 공지가 등록됐어요.', isUnread: true },
-        { id: 4, title: '수학2', description: '결석 신청이 수락됐어요.', isUnread: true },
-    ]);
+    // 초기 로그인 시에는 알림이 없도록 빈 배열 기본값 적용
+    const [notifications, setNotifications] = useState(initialNotifications);
 
     const notificationRef = useRef(null);
     const profileRef = useRef(null);
@@ -73,6 +70,22 @@ const Header = ({
         );
     };
 
+<<<<<<< Updated upstream
+=======
+    const handleLogoClick = onLogoClick || (() => navigate(isLoggedIn ? '/student' : '/login'));
+    const handleLoginClick = onLoginClick || (() => navigate('/login'));
+    const handleSignupClick = onSignupClick || (() => navigate('/signup'));
+    const handleLogoutClick = () => {
+        if (onLogoutClick) {
+            onLogoutClick();
+        } else {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            navigate('/login');
+        }
+    };
+
+>>>>>>> Stashed changes
     return (
         <header className="refit-header">
             <div className="header-container">
@@ -90,11 +103,49 @@ const Header = ({
                     {/* 로그인 전 헤더 메뉴 (Header · 로그인 전) */}
                     {!isLoggedIn && (
                         <nav className="header-prelog-nav" aria-label="메인 메뉴">
+<<<<<<< Updated upstream
                             <a href="#intro" className="header-prelog-link">서비스 소개</a>
                             <a href="#features" className="header-prelog-link">기능</a>
                             <a href="#how-to" className="header-prelog-link">이용 방법</a>
                             <a href="#ai" className="header-prelog-link">Refit AI</a>
                             <a href="#faq" className="header-prelog-link">FAQ</a>
+=======
+                            <button
+                                type="button"
+                                className="header-prelog-link"
+                                onClick={() => navigate('/introduce')}
+                            >
+                                서비스 소개
+                            </button>
+                            <button
+                                type="button"
+                                className="header-prelog-link"
+                                onClick={() => navigate('/introduce')}
+                            >
+                                기능
+                            </button>
+                            <button
+                                type="button"
+                                className="header-prelog-link"
+                                onClick={() => navigate('/introduce')}
+                            >
+                                이용 방법
+                            </button>
+                            <button
+                                type="button"
+                                className="header-prelog-link"
+                                onClick={() => navigate('/introduce')}
+                            >
+                                Refit AI
+                            </button>
+                            <button
+                                type="button"
+                                className="header-prelog-link"
+                                onClick={() => navigate('/faq')}
+                            >
+                                FAQ
+                            </button>
+>>>>>>> Stashed changes
                         </nav>
                     )}
                 </div>
@@ -137,37 +188,45 @@ const Header = ({
                                     <div className="popup-card notification-popup" role="dialog" aria-label="알림 목록">
                                         <div className="notification-popup-header">
                                             <span className="notification-popup-title">알림</span>
-                                            <button
-                                                type="button"
-                                                className="mark-all-read-btn"
-                                                onClick={handleMarkAllRead}
-                                            >
-                                                모두 읽음
-                                            </button>
+                                            {notifications.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    className="mark-all-read-btn"
+                                                    onClick={handleMarkAllRead}
+                                                >
+                                                    모두 읽음
+                                                </button>
+                                            )}
                                         </div>
                                         <div className="notification-list">
-                                            {notifications.map((item) => (
-                                                <div
-                                                    key={item.id}
-                                                    className={`notification-item ${item.isUnread ? 'unread' : ''}`}
-                                                    onClick={() => handleNotificationClick(item.id)}
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter' || e.key === ' ') {
-                                                            handleNotificationClick(item.id);
-                                                        }
-                                                    }}
-                                                >
-                                                    <div className="notification-item-row">
-                                                        <span className={`unread-dot ${item.isUnread ? 'visible' : 'hidden'}`} />
-                                                        <div className="notification-item-content">
-                                                            <span className="notification-item-title">{item.title}</span>
-                                                            <p className="notification-item-desc">{item.description}</p>
+                                            {notifications.length > 0 ? (
+                                                notifications.map((item) => (
+                                                    <div
+                                                        key={item.id}
+                                                        className={`notification-item ${item.isUnread ? 'unread' : ''}`}
+                                                        onClick={() => handleNotificationClick(item.id)}
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                                handleNotificationClick(item.id);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <div className="notification-item-row">
+                                                            <span className={`unread-dot ${item.isUnread ? 'visible' : 'hidden'}`} />
+                                                            <div className="notification-item-content">
+                                                                <span className="notification-item-title">{item.title}</span>
+                                                                <p className="notification-item-desc">{item.description}</p>
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                ))
+                                            ) : (
+                                                <div style={{ padding: '24px 20px', textAlign: 'center', color: '#767B81', fontSize: '13px' }}>
+                                                    새로운 알림이 없습니다.
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     </div>
                                 )}
