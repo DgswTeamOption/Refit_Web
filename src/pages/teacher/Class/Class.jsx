@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SubNav from '../../../components/SubNav/SubNav.jsx';
 import Calendar from '../../../components/Calendar/Calendar.jsx';
 import Condition from '../../../components/Condition/Condition.jsx';
 import Button from '../../../components/Button/Button.jsx';
+import Nav from '../../../components/Nav/Nav.jsx';
 import Notices from './notices/Notices.jsx';
 import NoticesEditor from './notices/NoticesEditor.jsx';
 import NoticesList from './notices/NoticesList.jsx';
@@ -148,7 +150,8 @@ function ClassHome({ notices, onCreate, onOpen, onList }) {
     );
 }
 
-export default function Class({ classHref, onReload }) {
+export default function Class({ classHref = '/teacher/class/english1' }) {
+    const navigate = useNavigate();
     const [notices, setNotices] = useState(readNotices);
     const [view, setView] = useState({ type: 'home' });
     const selectedNotice = notices.find((notice) => notice.id === view.noticeId);
@@ -250,20 +253,26 @@ export default function Class({ classHref, onReload }) {
     return (
         <div className="teacher-class">
             <main className="teacher-class__main">
-                <nav className="teacher-class__breadcrumb" aria-label="현재 위치">
-                    <ol>
-                        <li><a href="#">홈</a></li>
-                        <li>
-                            <a href={classHref} onClick={onReload}>
-                                {CLASS_TITLE}
-                            </a>
-                        </li>
-                        <li aria-current="page">{VIEW_LABELS[view.type]}</li>
-                    </ol>
-                </nav>
+                <Nav
+                    label="현재 위치"
+                    items={[
+                        { text: '홈', link: '/teacher' },
+                        { text: CLASS_TITLE, onClick: () => setView({ type: 'home' }) },
+                        { text: VIEW_LABELS[view.type] },
+                    ]}
+                />
 
                 <h1 className="teacher-class__title">{CLASS_TITLE}</h1>
-                <SubNav defaultKey="main" />
+                <SubNav
+                    defaultKey="main"
+                    onChange={(key) => {
+                        if (key === 'main') {
+                            setView({ type: 'home' });
+                            return;
+                        }
+                        navigate(`${classHref}/management?tab=${key}`);
+                    }}
+                />
 
                 {body}
             </main>

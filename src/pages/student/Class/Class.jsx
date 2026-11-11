@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import './Class.css';
 import Calendar from '../../../components/Calendar/Calendar';
 import SubNav from '../../../components/SubNav/SubNav';
+import Nav from '../../../components/Nav/Nav';
 import {
     CLASS_TABS,
     CLASS_TITLES,
@@ -44,12 +45,17 @@ function Class({ classInfo, onGoHome }) {
         if (onGoHome) {
             onGoHome();
         } else {
-            navigate('/');
+            navigate('/student');
         }
     };
 
     const handleTabChange = (key) => {
         setActiveTab(key);
+        setSubView('tab');
+    };
+
+    const handleBreadcrumbClassClick = () => {
+        setActiveTab('main');
         setSubView('tab');
     };
 
@@ -93,24 +99,14 @@ function Class({ classInfo, onGoHome }) {
         <div className="class-page">
             <div className="class-container">
                 {/* 1. Breadcrumb 네비게이션 */}
-                <nav className="class-breadcrumb" aria-label="breadcrumb">
-                    <button type="button" className="breadcrumb-link" onClick={handleGoHome}>
-                        홈
-                    </button>
-                    <span className="breadcrumb-separator">›</span>
-                    <button
-                        type="button"
-                        className="breadcrumb-link"
-                        onClick={() => {
-                            setActiveTab('main');
-                            setSubView('tab');
-                        }}
-                    >
-                        {title}
-                    </button>
-                    <span className="breadcrumb-separator">›</span>
-                    <span className="breadcrumb-current">{getBreadcrumbLastText()}</span>
-                </nav>
+                <Nav
+                    label="현재 위치"
+                    items={[
+                        { text: '홈', onClick: handleGoHome },
+                        { text: title, onClick: handleBreadcrumbClassClick },
+                        { text: getBreadcrumbLastText() },
+                    ]}
+                />
 
                 {/* 2. 수업 메인 타이틀 */}
                 <h1 className="class-title">{title}</h1>
@@ -118,7 +114,8 @@ function Class({ classInfo, onGoHome }) {
                 {/* 3. SubNav 탭 바 */}
                 <div className="class-subnav-wrapper">
                     <SubNav
-                        tabs={CLASS_TABS}
+                        role="student"
+                        customTabs={CLASS_TABS}
                         defaultKey={activeTab}
                         onChange={handleTabChange}
                     />

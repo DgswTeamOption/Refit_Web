@@ -4,6 +4,7 @@
   min-height: 18px;
   color: #999;
   font-size: 12px;
+  line-height: 18px;
 }
 
 .breadcrumb-nav-item {
@@ -19,6 +20,25 @@
 .breadcrumb-nav a {
   color: #0099ff;
   text-decoration: none;
+}
+
+.breadcrumb-nav button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #0099ff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.breadcrumb-nav a:hover,
+.breadcrumb-nav button:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb-nav :is(a, button):focus-visible {
+  outline: 2px solid #0099ff;
+  outline-offset: 3px;
 }
 
 .breadcrumb-nav-separator {
