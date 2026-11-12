@@ -116,7 +116,6 @@ function Class({ classInfo, onGoHome }) {
                     <SubNav
                         role="student"
                         customTabs={CLASS_TABS}
-                        tabs={CLASS_TABS}
                         defaultKey={activeTab}
                         onChange={handleTabChange}
                     />
@@ -160,7 +159,7 @@ function Class({ classInfo, onGoHome }) {
                             <Calendar mode="attendance" />
                         </aside>
 
-                        <main className="class-content-area">
+                        <section className="class-content-area">
                             {activeTab === 'main' && (
                                 <ClassMain
                                     title={title}
@@ -185,7 +184,7 @@ function Class({ classInfo, onGoHome }) {
                                     onCancel={handleCancelMakeup}
                                 />
                             )}
-                        </main>
+                        </section>
                     </div>
                 )}
             </div>
