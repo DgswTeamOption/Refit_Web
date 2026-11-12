@@ -4,6 +4,8 @@ import './Overview.css';
 import Calendar from '../../../components/Calendar/Calendar';
 import ClassBlock from '../../../components/ClassBlock/ClassBlock';
 import Button from '../../../components/Button/Button';
+import JoinClassModal from './components/JoinClassModal';
+import LeaveClassModal from './components/LeaveClassModal';
 
 const SAMPLE_CLASSES = [
     { id: 'eng1', title: '영어1', color: 'peach' },
@@ -71,7 +73,7 @@ function Overview({ onSelectClass }) {
     };
 
     return (
-        <div className="overview-page">
+        <div className="student-overview-page">
             <div className="overview-container">
                 {/* 좌측 캘린더 영역 */}
                 <aside className="overview-calendar-aside">
@@ -131,81 +133,24 @@ function Overview({ onSelectClass }) {
             </div>
 
             {/* 1. 수업 참여하기 모달 (view3) */}
-            {isJoinModalOpen && (
-                <div className="overview-modal-overlay" onClick={() => setIsJoinModalOpen(false)}>
-                    <div
-                        className="overview-modal-card"
-                        onClick={(e) => e.stopPropagation()}
-                        role="dialog"
-                        aria-modal="true"
-                    >
-                        <h3 className="overview-modal-title">수업 참여하기</h3>
-                        <p className="overview-modal-desc">수업코드를 입력해주세요.</p>
-
-                        <form onSubmit={handleJoinSubmit}>
-                            <input
-                                type="text"
-                                className={`overview-modal-input ${joinError ? 'is-error' : ''}`}
-                                placeholder="ABC123"
-                                value={joinCode}
-                                onChange={(e) => {
-                                    setJoinCode(e.target.value);
-                                    setJoinError(false);
-                                }}
-                                autoFocus
-                            />
-                            {joinError && (
-                                <p className="overview-modal-error-text">존재하지 않는 코드입니다.</p>
-                            )}
-
-                            <div className="overview-modal-actions">
-                                <button
-                                    type="button"
-                                    className="overview-modal-btn btn-cancel"
-                                    onClick={() => setIsJoinModalOpen(false)}
-                                >
-                                    취소
-                                </button>
-                                <button type="submit" className="overview-modal-btn btn-confirm-blue">
-                                    참여하기
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <JoinClassModal
+                isOpen={isJoinModalOpen}
+                joinCode={joinCode}
+                joinError={joinError}
+                onChangeCode={(value) => {
+                    setJoinCode(value);
+                    setJoinError(false);
+                }}
+                onSubmit={handleJoinSubmit}
+                onClose={() => setIsJoinModalOpen(false)}
+            />
 
             {/* 2. 수업 나가기 모달 (view4) */}
-            {isLeaveModalOpen && (
-                <div className="overview-modal-overlay" onClick={() => setIsLeaveModalOpen(false)}>
-                    <div
-                        className="overview-modal-card"
-                        onClick={(e) => e.stopPropagation()}
-                        role="dialog"
-                        aria-modal="true"
-                    >
-                        <h3 className="overview-modal-title">수업에서 나가시겠어요?</h3>
-                        <p className="overview-modal-desc">수업 목록에서 더 이상 볼 수 없어요.</p>
-
-                        <div className="overview-modal-actions">
-                            <button
-                                type="button"
-                                className="overview-modal-btn btn-cancel"
-                                onClick={() => setIsLeaveModalOpen(false)}
-                            >
-                                취소
-                            </button>
-                            <button
-                                type="button"
-                                className="overview-modal-btn btn-confirm-red"
-                                onClick={handleConfirmLeave}
-                            >
-                                나가기
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <LeaveClassModal
+                isOpen={isLeaveModalOpen}
+                onConfirm={handleConfirmLeave}
+                onClose={() => setIsLeaveModalOpen(false)}
+            />
         </div>
     );
 }
