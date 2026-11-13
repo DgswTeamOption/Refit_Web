@@ -1,25 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Header.css';
 import bellIcon from '../../assets/bell.svg';
 import profileIcon from '../../assets/profile.png';
 
 const Header = ({
-    isLoggedIn = true,
+    isLoggedIn: isLoggedInProp,
     userName = '학생1',
+    initialNotifications = [],
     onLogoClick,
     onLoginClick,
     onSignupClick,
     onLogoutClick,
 }) => {
+    const navigate = useNavigate();
+
+    // 로그인 여부 판별: props로 전달 시 props 우선, 미전달 시 localStorage의 token 유무로 자동 판별 (기본값: false)
+    const isLoggedIn = isLoggedInProp !== undefined
+        ? isLoggedInProp
+        : Boolean(typeof window !== 'undefined' && localStorage.getItem('token'));
+
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-    const [notifications, setNotifications] = useState([
-        { id: 1, title: '영어1', description: '오늘 수업이 있어요.', isUnread: true },
-        { id: 2, title: '수학1', description: '보강 신청이 수락됐어요.', isUnread: true },
-        { id: 3, title: '영어2', description: '새 공지가 등록됐어요.', isUnread: true },
-        { id: 4, title: '수학2', description: '결석 신청이 수락됐어요.', isUnread: true },
-    ]);
+    // 초기 로그인 시에는 알림이 없도록 빈 배열 기본값 적용
+    const [notifications, setNotifications] = useState(initialNotifications);
 
     const notificationRef = useRef(null);
     const profileRef = useRef(null);
@@ -73,35 +78,89 @@ const Header = ({
         );
     };
 
+    const handleLogoClick = onLogoClick || (() => navigate(isLoggedIn ? '/student' : '/login'));
+    const handleLoginClick = onLoginClick || (() => navigate('/login'));
+    const handleSignupClick = onSignupClick || (() => navigate('/signup'));
+    const handleLogoutClick = () => {
+        if (onLogoutClick) {
+            onLogoutClick();
+        } else {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            navigate('/login');
+        }
+    };
+
     return (
         <header className="refit-header">
             <div className="header-container">
                 <div className="header-left">
                     <button
                         type="button"
-                        onClick={onLogoClick}
+                        onClick={handleLogoClick}
                         className="header-logo-link"
                         aria-label="Refit 홈으로 이동"
                         style={{ background: 'none', border: 'none', padding: 0 }}
                     >
                         <img src="/logo.svg" alt="Refit 로고" className="header-logo" />
                     </button>
+
+                    {/* 로그인 전 헤더 메뉴 (Header · 로그인 전) */}
+                    {!isLoggedIn && (
+                        <nav className="header-prelog-nav" aria-label="메인 메뉴">
+                            <button
+                                type="button"
+                                className="header-prelog-link"
+                                onClick={() => navigate('/introduce')}
+                            >
+                                서비스 소개
+                            </button>
+                            <button
+                                type="button"
+                                className="header-prelog-link"
+                                onClick={() => navigate('/introduce')}
+                            >
+                                기능
+                            </button>
+                            <button
+                                type="button"
+                                className="header-prelog-link"
+                                onClick={() => navigate('/introduce')}
+                            >
+                                이용 방법
+                            </button>
+                            <button
+                                type="button"
+                                className="header-prelog-link"
+                                onClick={() => navigate('/introduce')}
+                            >
+                                Refit AI
+                            </button>
+                            <button
+                                type="button"
+                                className="header-prelog-link"
+                                onClick={() => navigate('/faq')}
+                            >
+                                FAQ
+                            </button>
+                        </nav>
+                    )}
                 </div>
                 <div className="header-right">
-                    {/* 로그인 전: 로그인 및 회원가입 버튼 (headerBeforeLog.svg) */}
+                    {/* 로그인 전: 로그인 및 회원가입 버튼 */}
                     {!isLoggedIn ? (
                         <div className="header-auth-buttons">
                             <button
                                 type="button"
                                 className="header-login-btn"
-                                onClick={onLoginClick}
+                                onClick={handleLoginClick}
                             >
                                 로그인
                             </button>
                             <button
                                 type="button"
                                 className="header-signup-btn"
-                                onClick={onSignupClick}
+                                onClick={handleSignupClick}
                             >
                                 회원가입
                             </button>
@@ -126,37 +185,45 @@ const Header = ({
                                     <div className="popup-card notification-popup" role="dialog" aria-label="알림 목록">
                                         <div className="notification-popup-header">
                                             <span className="notification-popup-title">알림</span>
-                                            <button
-                                                type="button"
-                                                className="mark-all-read-btn"
-                                                onClick={handleMarkAllRead}
-                                            >
-                                                모두 읽음
-                                            </button>
+                                            {notifications.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    className="mark-all-read-btn"
+                                                    onClick={handleMarkAllRead}
+                                                >
+                                                    모두 읽음
+                                                </button>
+                                            )}
                                         </div>
                                         <div className="notification-list">
-                                            {notifications.map((item) => (
-                                                <div
-                                                    key={item.id}
-                                                    className={`notification-item ${item.isUnread ? 'unread' : ''}`}
-                                                    onClick={() => handleNotificationClick(item.id)}
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter' || e.key === ' ') {
-                                                            handleNotificationClick(item.id);
-                                                        }
-                                                    }}
-                                                >
-                                                    <div className="notification-item-row">
-                                                        <span className={`unread-dot ${item.isUnread ? 'visible' : 'hidden'}`} />
-                                                        <div className="notification-item-content">
-                                                            <span className="notification-item-title">{item.title}</span>
-                                                            <p className="notification-item-desc">{item.description}</p>
+                                            {notifications.length > 0 ? (
+                                                notifications.map((item) => (
+                                                    <div
+                                                        key={item.id}
+                                                        className={`notification-item ${item.isUnread ? 'unread' : ''}`}
+                                                        onClick={() => handleNotificationClick(item.id)}
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                                handleNotificationClick(item.id);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <div className="notification-item-row">
+                                                            <span className={`unread-dot ${item.isUnread ? 'visible' : 'hidden'}`} />
+                                                            <div className="notification-item-content">
+                                                                <span className="notification-item-title">{item.title}</span>
+                                                                <p className="notification-item-desc">{item.description}</p>
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                ))
+                                            ) : (
+                                                <div style={{ padding: '24px 20px', textAlign: 'center', color: '#767B81', fontSize: '13px' }}>
+                                                    새로운 알림이 없습니다.
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -185,7 +252,10 @@ const Header = ({
                                                 <button
                                                     type="button"
                                                     className="profile-menu-item"
-                                                    onClick={() => setIsProfileOpen(false)}
+                                                    onClick={() => {
+                                                        setIsProfileOpen(false);
+                                                        navigate('/personal-info');
+                                                    }}
                                                 >
                                                     정보수정
                                                 </button>
@@ -194,10 +264,7 @@ const Header = ({
                                                 <button
                                                     type="button"
                                                     className="profile-menu-item"
-                                                    onClick={() => {
-                                                        setIsProfileOpen(false);
-                                                        if (onLogoutClick) onLogoutClick();
-                                                    }}
+                                                    onClick={handleLogoutClick}
                                                 >
                                                     로그아웃
                                                 </button>

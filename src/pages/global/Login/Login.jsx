@@ -26,7 +26,10 @@ export default function Login({ onNavigate }) {
       return;
     }
 
-    onNavigate("personal-info");
+    localStorage.setItem("token", "student-auth-token");
+    localStorage.setItem("role", "student");
+    localStorage.setItem("userName", "학생1");
+    onNavigate("student");
   };
 
   return (

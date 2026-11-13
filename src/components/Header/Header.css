@@ -26,6 +26,33 @@
     align-items: center;
 }
 
+/* 로그인 전 헤더 중앙/좌측 네비게이션 메뉴 (Header · 로그인 전) */
+.header-prelog-nav {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    margin-left: 52px;
+}
+
+.header-prelog-link {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: #333333;
+    text-decoration: none;
+    letter-spacing: -0.2px;
+    transition: color 0.15s ease;
+    white-space: nowrap;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.header-prelog-link:hover {
+    color: var(--color-primary-blue, #0099FF);
+}
+
 .header-logo-link {
     display: flex;
     align-items: center;

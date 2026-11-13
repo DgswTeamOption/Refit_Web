@@ -1,4 +1,4 @@
-.overview-page {
+.student-overview-page {
     width: 100%;
     min-height: calc(100vh - 80px);
     background-color: #FFFFFF;
@@ -6,7 +6,7 @@
     box-sizing: border-box;
 }
 
-.overview-container {
+.student-overview-page .overview-container {
     max-width: 1352px;
     margin: 0 auto;
     display: flex;
@@ -15,25 +15,25 @@
 }
 
 /* 좌측 캘린더 사이드바 */
-.overview-calendar-aside {
+.student-overview-page .overview-calendar-aside {
     flex-shrink: 0;
     width: 360px;
 }
 
 /* 우측 내 수업 메인 콘텐츠 */
-.overview-content-section {
+.student-overview-page .overview-content-section {
     flex: 1;
     min-width: 0;
 }
 
-.overview-section-header {
+.student-overview-page .overview-section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
 }
 
-.overview-section-title {
+.student-overview-page .overview-section-title {
     font-size: 22px;
     font-weight: 700;
     color: #111111;
@@ -42,13 +42,13 @@
 }
 
 /* 2x2 수업 카드 그리드 */
-.overview-class-grid {
+.student-overview-page .overview-class-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
 }
 
-.overview-class-card-wrapper {
+.student-overview-page .overview-class-card-wrapper {
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -57,7 +57,7 @@
 }
 
 /* 수업이 없을 때 빈 상태 (view2) */
-.overview-empty-card {
+.student-overview-page .overview-empty-card {
     width: 100%;
     min-height: 440px;
     background-color: #FFFFFF;
@@ -71,7 +71,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
-.overview-empty-text {
+.student-overview-page .overview-empty-text {
     font-size: 16px;
     font-weight: 500;
     color: #767B81;
@@ -79,7 +79,7 @@
 }
 
 /* 모달 공통 스타일 */
-.overview-modal-overlay {
+.student-overview-page .overview-modal-overlay {
     position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.45);
@@ -87,10 +87,10 @@
     align-items: center;
     justify-content: center;
     z-index: 2000;
-    animation: modalFadeIn 0.15s ease-out;
+    animation: studentModalFadeIn 0.15s ease-out;
 }
 
-.overview-modal-card {
+.student-overview-page .overview-modal-card {
     background-color: #FFFFFF;
     border-radius: 18px;
     width: 440px;
@@ -98,10 +98,10 @@
     padding: 32px 28px 24px;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
     box-sizing: border-box;
-    animation: modalScaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: studentModalScaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.overview-modal-title {
+.student-overview-page .overview-modal-title {
     font-size: 20px;
     font-weight: 700;
     color: #111111;
@@ -109,14 +109,14 @@
     letter-spacing: -0.2px;
 }
 
-.overview-modal-desc {
+.student-overview-page .overview-modal-desc {
     font-size: 14px;
     color: #767B81;
     margin: 8px 0 0;
     letter-spacing: -0.2px;
 }
 
-.overview-modal-input {
+.student-overview-page .overview-modal-input {
     width: 100%;
     height: 48px;
     border: 1px solid #E3E3E3;
@@ -130,32 +130,32 @@
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.overview-modal-input:focus {
+.student-overview-page .overview-modal-input:focus {
     border-color: #0099FF;
     box-shadow: 0 0 0 3px rgba(0, 153, 255, 0.12);
 }
 
-.overview-modal-input.is-error {
+.student-overview-page .overview-modal-input.is-error {
     border-color: #F04444;
 }
 
-.overview-modal-input.is-error:focus {
+.student-overview-page .overview-modal-input.is-error:focus {
     box-shadow: 0 0 0 3px rgba(240, 68, 68, 0.12);
 }
 
-.overview-modal-error-text {
+.student-overview-page .overview-modal-error-text {
     font-size: 13px;
     color: #F04444;
     margin: 6px 0 0;
 }
 
-.overview-modal-actions {
+.student-overview-page .overview-modal-actions {
     display: flex;
     gap: 12px;
     margin-top: 24px;
 }
 
-.overview-modal-btn {
+.student-overview-page .overview-modal-btn {
     flex: 1;
     height: 46px;
     border-radius: 10px;
@@ -166,35 +166,35 @@
     transition: opacity 0.15s ease, transform 0.1s ease;
 }
 
-.overview-modal-btn:hover {
+.student-overview-page .overview-modal-btn:hover {
     opacity: 0.9;
 }
 
-.overview-modal-btn:active {
+.student-overview-page .overview-modal-btn:active {
     transform: scale(0.98);
 }
 
-.btn-cancel {
+.student-overview-page .btn-cancel {
     background-color: #F3F3F3;
     color: #333333;
 }
 
-.btn-confirm-blue {
+.student-overview-page .btn-confirm-blue {
     background-color: #0099FF;
     color: #FFFFFF;
 }
 
-.btn-confirm-red {
+.student-overview-page .btn-confirm-red {
     background-color: #F04444;
     color: #FFFFFF;
 }
 
-@keyframes modalFadeIn {
+@keyframes studentModalFadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
-@keyframes modalScaleUp {
+@keyframes studentModalScaleUp {
     from {
         opacity: 0;
         transform: scale(0.95);
@@ -207,12 +207,12 @@
 
 /* Responsive */
 @media (max-width: 1100px) {
-    .overview-container {
+    .student-overview-page .overview-container {
         flex-direction: column;
         gap: 32px;
     }
 
-    .overview-calendar-aside {
+    .student-overview-page .overview-calendar-aside {
         width: 100%;
         display: flex;
         justify-content: center;
@@ -220,11 +220,11 @@
 }
 
 @media (max-width: 768px) {
-    .overview-page {
+    .student-overview-page {
         padding: 24px 20px;
     }
 
-    .overview-class-grid {
+    .student-overview-page .overview-class-grid {
         grid-template-columns: 1fr;
     }
 }
