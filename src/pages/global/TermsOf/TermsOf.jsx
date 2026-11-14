@@ -1,4 +1,3 @@
-import GlobalPageLayout from "../../../components/GlobalPageLayout/GlobalPageLayout";
 import Nav from "../../../components/Nav/Nav";
 import "./TermsOf.css";
 
@@ -150,13 +149,12 @@ const PRIVACY_SECTIONS = [
   },
 ];
 
-export default function TermsOf({ documentType = "terms", onNavigate }) {
+export default function TermsOf({ documentType = "terms" }) {
   const isPrivacy = documentType === "privacy";
   const title = isPrivacy ? "개인정보 처리방침" : "이용약관";
   const sections = isPrivacy ? PRIVACY_SECTIONS : TERMS_SECTIONS;
 
   return (
-    <GlobalPageLayout onNavigate={onNavigate}>
       <main className="terms-page">
         <Nav items={[{ text: "홈", link: "/" }, { text: title }]} />
         <div className="global-page-heading"><h1>{title}</h1></div>
@@ -186,6 +184,5 @@ export default function TermsOf({ documentType = "terms", onNavigate }) {
           ))}
         </article>
       </main>
-    </GlobalPageLayout>
   );
 }

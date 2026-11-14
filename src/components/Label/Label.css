@@ -9,6 +9,15 @@
     color: var(--color-neutral-300);
     
 }
+.Label--compact {
+    gap: 9px;
+}
+.Label--compact label {
+    font-size: 14px;
+}
+.Label--compact .inputUnder {
+    font-size: 13px;
+}
 .Label .inputUnder{
     color: var(--color-red);
     font-size: 14px;

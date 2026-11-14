@@ -4,7 +4,6 @@ import Label from "../../../components/Label/Label";
 import GoogleLoginButton from "../../../components/GoogleLoginButton/GoogleLoginButton";
 import AuthLayout from "../../../components/AuthLayout/AuthLayout";
 import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
-import "./Login.css";
 
 export default function Login({ onNavigate }) {
   const [email, setEmail] = useState("");
@@ -17,7 +16,7 @@ export default function Login({ onNavigate }) {
       return;
     }
 
-    setMessage("인증코드를 보냈어요. 메일함을 확인해주세요.");
+    setMessage("인증코드를 보냈어요.");
   };
 
   const submitLogin = () => {
@@ -31,42 +30,46 @@ export default function Login({ onNavigate }) {
 
   return (
     <AuthLayout>
-        <div className="LoginTextWrap">
-          <div className="LoginHead">로그인</div>
-          <div className="LoginText">리핏을 사용하려면 로그인하세요</div>
-        </div>
+      <div className="login-form-content">
+        <h1 className="auth-heading">로그인</h1>
 
         <GoogleLoginButton />
 
-        <div className="LoginLine">또는</div>
+        <div className="auth-divider">또는</div>
         <Label
           LabelText="이메일"
-          width={420}
+          size="compact"
+          width={280}
           placeHolder="example@email.com"
           id="email"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           inputButton={
-            <span className="login-code-button">
-              <Button text="인증코드 받기" color="blue" width={120} onClick={requestCode} />
+            <span className="auth-code-button">
+              <Button text="인증코드 받기" color="blue" width={110} size="compact" onClick={requestCode} />
             </span>
           }
         />
-        {message && <p className="login-feedback" role="status">{message}</p>}
+        <p className="auth-feedback" role="status">{message}</p>
         <Label
           LabelText="인증코드"
+          size="compact"
+          width={420}
           placeHolder="6자리 숫자 입력"
           id="code"
           type="text"
           value={code}
           onChange={(event) => setCode(event.target.value)}
         />
-        <div className="login-actions">
-          <Button text="로그인" width={550} onClick={submitLogin} />
-          <p>계정이 없나요? <button type="button" onClick={() => onNavigate("signup")}>회원가입</button></p>
+        <div className="auth-actions">
+          <Button text="로그인" width={420} size="compact" onClick={submitLogin} />
+          <p>
+            계정이 없나요? <button type="button" onClick={() => onNavigate("signup")}>회원가입</button>
+          </p>
         </div>
-        <GlobalNavigation onNavigate={onNavigate} />
+      </div>
+      <GlobalNavigation onNavigate={onNavigate} />
     </AuthLayout>
   );
 }

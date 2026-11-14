@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import Button from "../../../components/Button/Button";
-import GlobalPageLayout from "../../../components/GlobalPageLayout/GlobalPageLayout";
 import Nav from "../../../components/Nav/Nav";
 import "./PersonalInfo.css";
 
@@ -53,7 +52,6 @@ export default function PersonalInfo({ onNavigate }) {
   };
 
   return (
-    <GlobalPageLayout onNavigate={onNavigate}>
       <main className={`personal-info-page ${mode}`}>
         <Nav
           items={[
@@ -158,6 +156,5 @@ export default function PersonalInfo({ onNavigate }) {
         </section>
         )}
       </main>
-    </GlobalPageLayout>
   );
 }

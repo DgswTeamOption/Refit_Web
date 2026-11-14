@@ -18,7 +18,7 @@ export const ButtonContainer = styled.button`
     }};
 
     width: ${props => props.$width}px;
-    height: 46px;
+    height: 36px;
 
     background-color: ${props => {
         const colorMap = {
@@ -36,7 +36,7 @@ export const ButtonContainer = styled.button`
 
     font-size: 15px;
     font-weight: bold;
-    border-radius: 10px;
+    border-radius: ${props => props.$size === "compact" ? "7px" : "10px"};
     border: none;
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s;

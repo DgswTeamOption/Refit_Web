@@ -1,5 +1,6 @@
-import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
-import Header from './components/Header/Header.jsx';
+import { useEffect } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import MainLayout from './components/MainLayout/MainLayout.jsx';
 import FaQ from './pages/global/FaQ/FaQ.jsx';
 import Login from './pages/global/Login/Login.jsx';
 import PersonalInfo from './pages/global/PersonalInfo/PersonalInfo.jsx';
@@ -60,64 +61,44 @@ function PersonalInfoRoute() {
 }
 
 function FaQRoute() {
-    return <FaQ onNavigate={useNavigatePage()} />;
+    return <FaQ />;
 }
 
 function TermsRoute({ documentType }) {
-    return <TermsOf documentType={documentType} onNavigate={useNavigatePage()} />;
+    return <TermsOf documentType={documentType} />;
 }
 
-function StudentRoute({ children }) {
-    const navigate = useNavigate();
+function ScrollToTop() {
+    const { pathname } = useLocation();
 
-    return (
-        <>
-            <Header onLogoClick={() => navigate('/student')} />
-            {children}
-        </>
-    );
-}
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [pathname]);
 
-function TeacherClassRoute() {
-    const { classId } = useParams();
-    const navigate = useNavigate();
-    const classHref = `/teacher/class/${classId}`;
-
-    return (
-        <>
-            <Header onLogoClick={() => navigate('/teacher')} />
-            <TeacherClass classHref={classHref} />
-        </>
-    );
-}
-
-function TeacherOverviewRoute() {
-    const navigate = useNavigate();
-
-    return (
-        <>
-            <Header onLogoClick={() => navigate('/teacher')} />
-            <TeacherOverview classHref="/teacher/class/english1" />
-        </>
-    );
+    return null;
 }
 
 export default function App() {
     return (
-        <Routes>
-            <Route path="/" element={<LegacyRedirect />} />
-            <Route path="/login" element={<LoginRoute />} />
-            <Route path="/signup" element={<SignupRoute />} />
-            <Route path="/personal-info" element={<PersonalInfoRoute />} />
-            <Route path="/faq" element={<FaQRoute />} />
-            <Route path="/terms" element={<TermsRoute documentType="terms" />} />
-            <Route path="/privacy" element={<TermsRoute documentType="privacy" />} />
-            <Route path="/student" element={<StudentRoute><StudentOverview /></StudentRoute>} />
-            <Route path="/class/:classId" element={<StudentRoute><StudentClass /></StudentRoute>} />
-            <Route path="/teacher" element={<TeacherOverviewRoute />} />
-            <Route path="/teacher/class/:classId/management" element={<TeacherHome />} />
-            <Route path="/teacher/class/:classId" element={<TeacherClassRoute />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+        <>
+            <ScrollToTop />
+            <Routes>
+                <Route path="/" element={<LegacyRedirect />} />
+                <Route path="/login" element={<LoginRoute />} />
+                <Route path="/signup" element={<SignupRoute />} />
+                <Route element={<MainLayout />}>
+                    <Route path="/personal-info" element={<PersonalInfoRoute />} />
+                    <Route path="/faq" element={<FaQRoute />} />
+                    <Route path="/terms" element={<TermsRoute documentType="terms" />} />
+                    <Route path="/privacy" element={<TermsRoute documentType="privacy" />} />
+                    <Route path="/student" element={<StudentOverview />} />
+                    <Route path="/class/:classId" element={<StudentClass />} />
+                    <Route path="/teacher" element={<TeacherOverview />} />
+                    <Route path="/teacher/class/:classId/management" element={<TeacherHome />} />
+                    <Route path="/teacher/class/:classId" element={<TeacherClass />} />
+                </Route>
+                <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+        </>
     );
 }

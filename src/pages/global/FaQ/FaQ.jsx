@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import GlobalPageLayout from "../../../components/GlobalPageLayout/GlobalPageLayout";
 import Nav from "../../../components/Nav/Nav";
 import "./FaQ.css";
 
@@ -26,7 +25,7 @@ const questions = [
   },
 ];
 
-export default function FaQ({ onNavigate }) {
+export default function FaQ() {
   const [query, setQuery] = useState("");
 
   const visibleQuestions = useMemo(() => {
@@ -39,7 +38,6 @@ export default function FaQ({ onNavigate }) {
   }, [query]);
 
   return (
-    <GlobalPageLayout onNavigate={onNavigate}>
       <main className="faq-page">
         <Nav items={[{ text: "홈", link: "/" }, { text: "FAQ" }]} />
         <div className="global-page-heading"><h1>FAQ</h1></div>
@@ -70,6 +68,5 @@ export default function FaQ({ onNavigate }) {
           </div>
         </section>
       </main>
-    </GlobalPageLayout>
   );
 }

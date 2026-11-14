@@ -114,7 +114,6 @@
 }
 
 .teacher-overview__create > button {
-    height: 42px;
     border-radius: 9px;
 }
 
@@ -164,7 +163,6 @@
 
 .teacher-overview__empty-content > button {
     max-width: 100%;
-    height: 42px;
     border-radius: 8px;
 }
 
@@ -267,9 +265,7 @@
 
 .teacher-overview .overview-modal__actions > button {
     width: 100%;
-    height: 42px;
     border-radius: 8px;
-    font-size: 13px;
 }
 
 .teacher-overview .overview-modal__actions > button:focus-visible {
@@ -356,14 +352,12 @@
 
 .teacher-overview .overview-modal__photo > button {
     width: 100%;
-    height: 74px;
 
     border: 1px solid #e8e8e8;
     border-radius: 8px;
     background: #f7f7f7;
 
     color: #888;
-    font-size: 13px;
     font-weight: 400;
 
     opacity: 1;

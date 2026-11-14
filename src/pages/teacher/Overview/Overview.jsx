@@ -1,20 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Calendar from '../../../components/Calendar/Calendar.jsx';
 import Button from '../../../components/Button/Button.jsx';
 import ClassBlock from '../../../components/ClassBlock/ClassBlock.jsx';
+import { INITIAL_TEACHER_CLASSES, readTeacherClasses, saveTeacherClasses } from '../classData.js';
 import './Overview.css';
 
 const MAX_VISIBLE_CLASSES = 4;
-const INITIAL_CLASSES = [
-    { id: 'english1', title: '영어1', color: 'peach' },
-    { id: 'english2', title: '영어2', color: 'lavender' },
-    { id: 'math1', title: '수학1', color: 'yellow' },
-    { id: 'math2', title: '수학2', color: 'mint' },
-];
-const CLASS_COLORS = [...new Set(INITIAL_CLASSES.map(({ color }) => color))];
+const CLASS_COLORS = [...new Set(INITIAL_TEACHER_CLASSES.map(({ color }) => color))];
 
-export default function Overview({ hidden, classHref }) {
-    const [classes, setClasses] = useState(INITIAL_CLASSES);
+export default function Overview({ hidden }) {
+    const [classes, setClasses] = useState(readTeacherClasses);
     const [modal, setModal] = useState(null);
     const [title, setTitle] = useState('');
     const [titleError, setTitleError] = useState('');
@@ -71,7 +67,11 @@ export default function Overview({ hidden, classHref }) {
         };
 
         // 입력한 제목과 랜덤 색상으로 수업 카드 추가
-        setClasses((previous) => [...previous, newClass]);
+        setClasses((previous) => {
+            const nextClasses = [newClass, ...previous];
+            saveTeacherClasses(nextClasses);
+            return nextClasses;
+        });
 
         setTitle('');
         setTitleError('');
@@ -97,7 +97,9 @@ export default function Overview({ hidden, classHref }) {
                 visible.push(hidden.pop());
             }
 
-            return [...visible, ...hidden];
+            const nextClasses = [...visible, ...hidden];
+            saveTeacherClasses(nextClasses);
+            return nextClasses;
         });
 
         closeModal();
@@ -139,13 +141,12 @@ export default function Overview({ hidden, classHref }) {
                                         color={item.color}
                                         onLeave={() => setModal({ type: 'delete', item })}
                                     />
-                                    {item.id === 'english1' && classHref && (
-                                        <a
-                                            className="teacher-overview__class-link"
-                                            href={classHref}
-                                            aria-label={`${item.title} 수업 열기`}
-                                        />
-                                    )}
+                                    <Link
+                                        className="teacher-overview__class-link"
+                                        to={'/teacher/class/' + item.id}
+                                        state={{ classTitle: item.title }}
+                                        aria-label={item.title + ' 수업 열기'}
+                                    />
                                 </div>
                             ))}
                         </div>

@@ -12,7 +12,7 @@
 .personal-button-wrap {
   display: flex;
   gap: 10px;
-  margin-top: 30px;
+  margin-top: 20px;
 }
 .personal-photo-column {
   display: flex;
@@ -80,8 +80,8 @@
 }
 
 .personal-value-row + .personal-value-row {
-  padding-top: 30px;
-  min-height: 100px;
+  padding-top: 18px;
+  min-height: 88px;
 }
 
 .personal-value-row span {
@@ -189,7 +189,6 @@
 
 .delete-email-field span > button {
   flex-shrink: 0;
-  height: 44px;
 }
 
 .personal-form-message {

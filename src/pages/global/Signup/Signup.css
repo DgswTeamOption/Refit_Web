@@ -1,67 +1,51 @@
-.SignupPage .LoginWrap {
-  gap: 24px;
-}
-
 .signup-information,
 .signup-role {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 17px;
-  align-items: center;
+  align-items: stretch;
+  width: 100%;
+  min-height: 0;
 }
 
-.SignupPage .LoginLine {
-  margin: 6px 0;
-}
-
-
-.signup-feedback {
-  min-height: 20px;
-  color: var(--color-blue);
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.signup-actions {
+.signup-form-content {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 17px;
+  width: 100%;
+  gap: 10px;
 }
 
-.signup-actions > p {
-  color: var(--color-gray);
-  font-size: 16px;
+.signup-form-content > .auth-feedback {
+  flex: 0 0 18px;
+  height: 18px;
+  margin: 0;
+  line-height: 18px;
 }
 
-.signup-actions > p button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-blue);
-  font-size: inherit;
-}
-
-.signup-role {
-  gap: 28px;
+.signup-role-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 14px;
 }
 
 .signup-role-options {
-  width: 100%;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 30px;
+  width: 100%;
+  gap: 10px;
 }
 
 .signup-role-card {
-  height: 220px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
+  min-width: 0;
+  height: 156px;
+  gap: 9px;
   border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  border-radius: 9px;
   background: #fff;
   color: #151515;
 }
@@ -73,77 +57,27 @@
 
 .signup-role-card img {
   width: auto;
-  height: 48px;
+  height: 30px;
 }
 
 .signup-role-card strong {
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .signup-role-card span {
   color: #888;
-  text-align: center;
-  font-size: 15px;
+  font-size: 11px;
   line-height: 1.4;
+  text-align: center;
 }
 
-@media (max-width: 800px) {
-  .SignupPage.is-role-selection .LoginWrap {
-    width: min(520px, calc(100vw - 48px));
-  }
-
-  .signup-role-options {
-    gap: 28px;
-  }
-
-  .SignupPage .signup-information .Label,
-  .SignupPage .signup-information .signup-actions,
-  .SignupPage .signup-role > button {
-    width: 100%;
-    max-width: 450px;
-    align-self: center;
-  }
-
-  .SignupPage .signup-information .Label .InputWrap {
-    width: 100%;
-  }
-
-  .SignupPage .signup-information .Label .InputWrap > input {
-    flex: 1;
-    min-width: 0;
-    width: auto !important;
-  }
-
-  .SignupPage .signup-information .Label > input {
-    width: 100% !important;
-  }
-
-  .SignupPage .signup-actions > button,
-  .SignupPage .signup-role > button {
-    width: 100% !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .SignupPage .LoginWrap,
-  .SignupPage.is-role-selection .LoginWrap {
-    width: 100%;
-    min-height: calc(100vh - 48px);
-    gap: 18px;
-  }
-
-  .signup-role-options {
-    gap: 12px;
-  }
-
+@media (max-width: 600px) {
   .signup-role-card {
-    height: 195px;
-    gap: 12px;
+    height: 120px;
+    gap: 8px;
   }
 
-  .SignupPage .signup-code-button > button {
-    width: 112px !important;
-    padding: 0 8px;
-    font-size: 12px;
+  .signup-role-card span {
+    font-size: 10px;
   }
 }

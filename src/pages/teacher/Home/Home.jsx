@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import Header from "../../../components/Header/Header";
+import React from "react";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import SubNav from "../../../components/SubNav/SubNav";
 import Nav from "../../../components/Nav/Nav";
 import StudentTab from "../Overview/tabs/StudentTab";
@@ -9,21 +8,23 @@ import AttendanceTab from "../Overview/tabs/AttendanceTab";
 import MakeupTab from "../Overview/tabs/MakeupTab";
 import MakeupSettingTab from "../Overview/tabs/MakeupSettingTab";
 import ScheduleTab from "../Overview/tabs/ScheduleTab";
+import { getTeacherClassTitle } from "../classData";
 import "./Home.css";
 
 export default function Home() {
   const { classId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { state } = useLocation();
   const activeClassId = classId ?? "english1";
-  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "makeup");
+  const activeTab = searchParams.get("tab") || "makeup";
+  const classTitle = getTeacherClassTitle(activeClassId, state?.classTitle);
 
   const handleTabChange = (key) => {
     if (key === "main") {
-      navigate(`/teacher/class/${activeClassId}`);
+      navigate("/teacher/class/" + activeClassId, { state: { classTitle } });
       return;
     }
-    setActiveTab(key);
     setSearchParams({ tab: key });
   };
 
@@ -47,21 +48,19 @@ export default function Home() {
 
   return (
     <div className="teacher-overview-page">
-      <Header onLogoClick={() => navigate("/teacher")} />
-
       <main className="teacher-overview-container">
         <Nav
           label="현재 위치"
           items={[
             { text: "홈", link: "/teacher" },
-            { text: "영어1", link: `/teacher/class/${activeClassId}` },
+            { text: classTitle, link: "/teacher/class/" + activeClassId },
             { text: getBreadcrumbCurrent() },
           ]}
         />
 
-        <h1 className="overview-title">영어1</h1>
+        <h1 className="overview-title">{classTitle}</h1>
 
-        <SubNav defaultKey={activeTab} onChange={handleTabChange} />
+        <SubNav activeKey={activeTab} onChange={handleTabChange} />
 
         <div className="overview-content">
           {activeTab === "student" && <StudentTab />}
