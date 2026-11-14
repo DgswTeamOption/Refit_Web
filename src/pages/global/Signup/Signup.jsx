@@ -36,7 +36,16 @@ export default function Signup({ onNavigate }) {
   };
 
   const completeSignup = () => {
-    onNavigate("login");
+    if (role === "student") {
+      localStorage.setItem("token", "student-auth-token");
+      localStorage.setItem("role", "student");
+      localStorage.setItem("userName", name.trim() || "학생1");
+      onNavigate("student");
+    } else {
+      localStorage.setItem("token", "teacher-auth-token");
+      localStorage.setItem("role", "teacher");
+      onNavigate("login");
+    }
   };
 
   return (

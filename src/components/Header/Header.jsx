@@ -5,7 +5,7 @@ import bellIcon from '../../assets/bell.svg';
 import profileIcon from '../../assets/profile.png';
 
 const Header = ({
-    isLoggedIn = true,
+    isLoggedIn: isLoggedInProp,
     userName = '학생1',
     initialNotifications = [],
     onLogoClick,
@@ -14,6 +14,9 @@ const Header = ({
     onLogoutClick,
 }) => {
     const navigate = useNavigate();
+    const isLoggedIn = isLoggedInProp !== undefined
+        ? isLoggedInProp
+        : Boolean(typeof window !== 'undefined' && localStorage.getItem('token'));
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -111,7 +114,7 @@ const Header = ({
                     )}
                 </div>
                 <div className="header-right">
-                    {/* 로그인 전: 로그인 및 회원가입 버튼 (headerBeforeLog.svg) */}
+                    {/* 로그인 전: 로그인 및 회원가입 버튼 */}
                     {!isLoggedIn ? (
                         <div className="header-auth-buttons">
                             <button
@@ -216,7 +219,10 @@ const Header = ({
                                                 <button
                                                     type="button"
                                                     className="profile-menu-item"
-                                                    onClick={() => setIsProfileOpen(false)}
+                                                    onClick={() => {
+                                                        setIsProfileOpen(false);
+                                                        navigate('/personal-info');
+                                                    }}
                                                 >
                                                     정보수정
                                                 </button>

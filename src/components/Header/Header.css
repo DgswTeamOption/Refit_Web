@@ -35,6 +35,7 @@
 }
 
 .header-prelog-link {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 15px;
     font-weight: 500;
     color: #333333;
@@ -42,10 +43,14 @@
     letter-spacing: -0.2px;
     transition: color 0.15s ease;
     white-space: nowrap;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
 }
 
 .header-prelog-link:hover {
-    color: var(--color-blue, #0099FF);
+    color: var(--color-primary-blue, #0099FF);
 }
 
 .header-logo-link {
