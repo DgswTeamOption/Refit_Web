@@ -1,12 +1,11 @@
 import { useState } from "react";
-import Button from "../../../components/Button/Button";
-import Label from "../../../components/Label/Label";
-import GoogleLoginButton from "../../../components/GoogleLoginButton/GoogleLoginButton";
 import AuthLayout from "../../../components/AuthLayout/AuthLayout";
+import Button from "../../../components/Button/Button";
+import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
+import GoogleLoginButton from "../../../components/GoogleLoginButton/GoogleLoginButton";
+import Label from "../../../components/Label/Label";
 import studentIcon from "../../../assets/Vector.svg";
 import teacherIcon from "../../../assets/Book.svg";
-import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
-import "../Login/Login.css";
 import "./Signup.css";
 
 export default function Signup({ onNavigate }) {
@@ -23,7 +22,7 @@ export default function Signup({ onNavigate }) {
       return;
     }
 
-    setMessage("인증코드를 보냈어요. 메일함을 확인해주세요.");
+    setMessage("인증코드를 보냈어요.");
   };
 
   const continueToRole = () => {
@@ -50,48 +49,60 @@ export default function Signup({ onNavigate }) {
   };
 
   return (
-    <AuthLayout className={`SignupPage ${step === "role" ? "is-role-selection" : ""}`}>
-        {step === "information" ? (
-          <div className="signup-information">
-            <div className="LoginTextWrap">
-              <div className="LoginHead">회원가입</div>
-              <div className="LoginText">이메일 인증을 통하여 가입하세요.</div>
-            </div>
-
+    <AuthLayout>
+      {step === "information" ? (
+        <div className="signup-information">
+          <div className="signup-form-content">
+            <h1 className="auth-heading">회원가입</h1>
             <GoogleLoginButton />
-
-            <div className="LoginLine">또는</div>
-            <Label LabelText="이름" width={550} placeHolder="이름을 입력해주세요" id="signup-name" value={name} onChange={(event) => setName(event.target.value)} />
+            <div className="auth-divider">또는</div>
+            <Label
+              LabelText="이름"
+              size="compact"
+              width={420}
+              placeHolder="이름을 입력해주세요"
+              id="signup-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
             <Label
               LabelText="이메일"
-              width={420}
+              size="compact"
+              width={280}
               placeHolder="example@email.com"
               id="signup-email"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               inputButton={
-                <span className="signup-code-button">
-                  <Button text="인증코드 받기" width={120} color="blue" onClick={requestCode} />
+                <span className="auth-code-button">
+                  <Button text="인증코드 받기" width={110} size="compact" color="blue" onClick={requestCode} />
                 </span>
               }
             />
-            <p className="signup-feedback" role="status">{message}</p>
-            <Label LabelText="인증코드" width={550} placeHolder="6자리 숫자 입력" id="signup-code" value={code} onChange={(event) => setCode(event.target.value)} />
-
-            <div className="signup-actions">
-              <Button text="회원가입" width={550} onClick={continueToRole} />
-              <p>이미 계정이 있나요? <button type="button" onClick={() => onNavigate("login")}>로그인</button></p>
+            <p className="auth-feedback" role="status">{message}</p>
+            <Label
+              LabelText="인증코드"
+              size="compact"
+              width={420}
+              placeHolder="6자리 숫자 입력"
+              id="signup-code"
+              value={code}
+              onChange={(event) => setCode(event.target.value)}
+            />
+            <div className="auth-actions">
+              <Button text="회원가입" width={420} size="compact" onClick={continueToRole} />
+              <p>
+                이미 계정이 있나요? <button type="button" onClick={() => onNavigate("login")}>로그인</button>
+              </p>
             </div>
-            <GlobalNavigation onNavigate={onNavigate} />
           </div>
-        ) : (
-          <div className="signup-role">
-            <div className="LoginTextWrap">
-              <div className="LoginHead">역할 선택</div>
-              <div className="LoginText">리핏 사용을 위해서 역할을 선택하세요</div>
-            </div>
-
+          <GlobalNavigation onNavigate={onNavigate} />
+        </div>
+      ) : (
+        <div className="signup-role">
+          <div className="signup-role-content">
+            <h1 className="auth-heading">역할 선택</h1>
             <div className="signup-role-options" role="group" aria-label="회원 역할">
               <button
                 type="button"
@@ -114,11 +125,11 @@ export default function Signup({ onNavigate }) {
                 <span>수업을 만들고<br />출석·보강을 관리해요</span>
               </button>
             </div>
-
-            <Button text="시작하기" width={550} onClick={completeSignup} />
-            <GlobalNavigation onNavigate={onNavigate} />
+            <Button text="시작하기" width={420} size="compact" onClick={completeSignup} />
           </div>
-        )}
+          <GlobalNavigation onNavigate={onNavigate} />
+        </div>
+      )}
     </AuthLayout>
   );
 }

@@ -14,12 +14,9 @@ const Header = ({
     onLogoutClick,
 }) => {
     const navigate = useNavigate();
-
-    // 로그인 여부 판별: props로 전달 시 props 우선, 미전달 시 localStorage의 token 유무로 자동 판별 (기본값: false)
     const isLoggedIn = isLoggedInProp !== undefined
         ? isLoggedInProp
         : Boolean(typeof window !== 'undefined' && localStorage.getItem('token'));
-
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -108,41 +105,11 @@ const Header = ({
                     {/* 로그인 전 헤더 메뉴 (Header · 로그인 전) */}
                     {!isLoggedIn && (
                         <nav className="header-prelog-nav" aria-label="메인 메뉴">
-                            <button
-                                type="button"
-                                className="header-prelog-link"
-                                onClick={() => navigate('/introduce')}
-                            >
-                                서비스 소개
-                            </button>
-                            <button
-                                type="button"
-                                className="header-prelog-link"
-                                onClick={() => navigate('/introduce')}
-                            >
-                                기능
-                            </button>
-                            <button
-                                type="button"
-                                className="header-prelog-link"
-                                onClick={() => navigate('/introduce')}
-                            >
-                                이용 방법
-                            </button>
-                            <button
-                                type="button"
-                                className="header-prelog-link"
-                                onClick={() => navigate('/introduce')}
-                            >
-                                Refit AI
-                            </button>
-                            <button
-                                type="button"
-                                className="header-prelog-link"
-                                onClick={() => navigate('/faq')}
-                            >
-                                FAQ
-                            </button>
+                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce')}>서비스 소개</button>
+                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce')}>기능</button>
+                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce')}>이용 방법</button>
+                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce')}>Refit AI</button>
+                            <button type="button" className="header-prelog-link" onClick={() => navigate('/faq')}>FAQ</button>
                         </nav>
                     )}
                 </div>
@@ -264,7 +231,10 @@ const Header = ({
                                                 <button
                                                     type="button"
                                                     className="profile-menu-item"
-                                                    onClick={handleLogoutClick}
+                                                    onClick={() => {
+                                                        setIsProfileOpen(false);
+                                                        handleLogoutClick();
+                                                    }}
                                                 >
                                                     로그아웃
                                                 </button>

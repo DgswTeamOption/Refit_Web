@@ -2,46 +2,14 @@
     width: 100%;
     min-height: calc(100vh - 80px);
     background-color: #FFFFFF;
-    padding: 32px 80px 60px;
+    padding: 22px 0 44px;
     box-sizing: border-box;
 }
 
 .class-container {
-    max-width: 1352px;
+    width: 82.6%;
+    max-width: 1248px;
     margin: 0 auto;
-}
-
-/* 1. Breadcrumb */
-.class-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    margin-bottom: 14px;
-}
-
-.breadcrumb-link {
-    background: none;
-    border: none;
-    padding: 0;
-    color: #0099FF;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-}
-
-.breadcrumb-link:hover {
-    text-decoration: underline;
-}
-
-.breadcrumb-separator {
-    color: #999999;
-    font-size: 12px;
-}
-
-.breadcrumb-current {
-    color: #767B81;
-    font-size: 13px;
 }
 
 /* 2. 수업 메인 타이틀 */
@@ -49,25 +17,26 @@
     font-size: 28px;
     font-weight: 700;
     color: #111111;
-    margin: 0 0 20px 0;
+    line-height: 36px;
+    margin: 14px 0 15px;
     letter-spacing: -0.3px;
 }
 
 /* 3. SubNav 탭 바 래퍼 (시안 간격 40px) */
 .class-subnav-wrapper {
-    margin-bottom: 40px;
+    margin-bottom: 24px;
 }
 
 /* 4. 본문 2컬럼 레이아웃 */
 .class-two-columns {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 420fr) minmax(0, 798fr);
     align-items: flex-start;
-    gap: 40px;
+    gap: 30px;
 }
 
 .class-calendar-aside {
-    flex-shrink: 0;
-    width: 360px;
+    min-width: 0;
 }
 
 .class-content-area {
@@ -277,14 +246,14 @@
 }
 
 .apply-two-columns {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 420fr) minmax(0, 798fr);
     align-items: flex-start;
-    gap: 40px;
+    gap: 30px;
 }
 
 .apply-calendar-column {
-    flex-shrink: 0;
-    width: 360px;
+    min-width: 0;
 }
 
 .apply-form-column {
@@ -528,23 +497,40 @@
 }
 
 /* Responsive */
-@media (max-width: 1100px) {
+@media (max-width: 1000px) {
+    .class-container {
+        width: calc(100% - 48px);
+    }
+
     .class-two-columns,
     .apply-two-columns {
-        flex-direction: column;
-        gap: 32px;
+        grid-template-columns: minmax(260px, 1fr) minmax(0, 1.8fr);
+        gap: 24px;
     }
 
     .class-calendar-aside,
     .apply-calendar-column {
-        width: 100%;
-        display: flex;
-        justify-content: center;
+        width: auto;
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 760px) {
     .class-page {
-        padding: 20px;
+        padding: 20px 0 44px;
+    }
+
+    .class-container {
+        width: calc(100% - 40px);
+    }
+
+    .class-two-columns,
+    .apply-two-columns {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+    }
+
+    .class-title {
+        font-size: 25px;
+        line-height: 32px;
     }
 }

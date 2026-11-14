@@ -28,10 +28,12 @@ function GoogleLoginButtonContent() {
             <path fill="#FBBC05" d="M13.1 27.8a12 12 0 0 1 0-7.6v-5.5H6.1a20 20 0 0 0 0 18.6l7-5.5z" />
             <path fill="#EA4335" d="M24 12.2c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 6.1 29.5 4 24 4 16.2 4 9.5 8.3 6.1 14.7l7 5.5c1.5-4.6 5.8-8 10.9-8z" />
           </svg>
-          <span>Google 계정으로 로그인</span>
+          <span>Google로 계속하기</span>
         </button>
       ) : (
-        <button type="button" onClick={handleLogout}>로그아웃</button>
+        <button type="button" className="google-login-button" onClick={handleLogout}>
+          로그아웃
+        </button>
       )}
     </div>
   );
@@ -52,7 +54,7 @@ function GoogleLoginButton() {
             <path fill="#FBBC05" d="M13.1 27.8a12 12 0 0 1 0-7.6v-5.5H6.1a20 20 0 0 0 0 18.6l7-5.5z" />
             <path fill="#EA4335" d="M24 12.2c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 6.1 29.5 4 24 4 16.2 4 9.5 8.3 6.1 14.7l7 5.5c1.5-4.6 5.8-8 10.9-8z" />
           </svg>
-          <span>Google 계정으로 로그인</span>
+          <span>Google로 계속하기</span>
         </button>
       </div>
     );

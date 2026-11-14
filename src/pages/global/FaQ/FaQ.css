@@ -12,7 +12,7 @@
   border-radius: 12px;
   outline: none;
   color: #444;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .faq-search input::placeholder {
@@ -38,7 +38,7 @@
 
 .faq-questions h2 {
   margin: 0 0 30px;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
 }
 
@@ -48,32 +48,54 @@
 }
 
 .faq-question-row {
-  min-height: 65px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   box-sizing: border-box;
-  padding: 0 24px;
   border: 1px solid #e3e3e3;
   border-radius: 12px;
   color: #555;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .faq-question-row + .faq-question-row {
   margin-top: -1px;
 }
 
-.faq-question-row span:last-child {
+.faq-question-row summary {
+  min-height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faq-question-row summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-question-chevron {
   color: #888;
-  font-size: 16px;
+  font-size: 18px;
+  transition: transform 0.2s;
+}
+
+.faq-question-row[open] .faq-question-chevron {
+  transform: rotate(180deg);
+}
+
+.faq-answer {
+  margin: 0;
+  padding: 0 24px 22px;
+  color: #777;
+  font-size: 15px;
+  line-height: 1.7;
 }
 
 .faq-no-results {
   padding: 24px;
   color: #888;
   text-align: center;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 @media (max-width: 768px) {
@@ -81,7 +103,9 @@
     margin-top: 26px;
   }
 
-  .faq-question-row {
-    padding: 0 16px;
+  .faq-question-row summary,
+  .faq-answer {
+    padding-right: 16px;
+    padding-left: 16px;
   }
 }
