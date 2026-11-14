@@ -116,16 +116,6 @@
   margin-left: 9px;
 }
 
-.auth-page .Label {
-  width: 100%;
-  gap: 6px;
-}
-
-.auth-page .Label label {
-  color: #555;
-  font-size: 12px;
-}
-
 .auth-page .Label > input,
 .auth-page .Label .InputWrap > input {
   height: 36px;

@@ -34,7 +34,7 @@ export const ButtonContainer = styled.button`
         return colorMap[props.$color] || "var(--color-white)";
     }};
 
-    font-size: 15px;
+    font-size: 12px;
     font-weight: bold;
     border-radius: ${props => props.$size === "compact" ? "7px" : "10px"};
     border: none;

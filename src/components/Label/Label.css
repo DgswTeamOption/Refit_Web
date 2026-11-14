@@ -6,7 +6,7 @@
 .Label label{
     font-size: 15px;
     font-weight: bold;
-    color: var(--color-neutral-300);
+    color: black;
     
 }
 .Label--compact {
