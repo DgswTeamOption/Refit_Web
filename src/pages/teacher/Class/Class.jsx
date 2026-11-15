@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import SubNav from '../../../components/SubNav/SubNav.jsx';
 import Calendar from '../../../components/Calendar/Calendar.jsx';
 import Condition from '../../../components/Condition/Condition.jsx';
 import Button from '../../../components/Button/Button.jsx';
+import Nav from '../../../components/Nav/Nav.jsx';
 import Notices from './notices/Notices.jsx';
 import NoticesEditor from './notices/NoticesEditor.jsx';
 import NoticesList from './notices/NoticesList.jsx';
+import { getTeacherClassTitle } from '../classData.js';
 import './Class.css';
 import './notices/notices.css';
 
@@ -49,8 +52,6 @@ const INITIAL_NOTICES = [
     },
 ];
 
-const CLASS_TITLE = '영어1';
-const NOTICE_STORAGE_KEY = 'refit:teacher:english1:notices';
 const NOTICE_DATE_FORMAT = new Intl.DateTimeFormat('ko-KR', {
     year: 'numeric',
     month: '2-digit',
@@ -65,16 +66,16 @@ const VIEW_LABELS = {
     create: '공지 작성',
 };
 
-function readNotices() {
+function readNotices(classId) {
     try {
-        const storedNotices = JSON.parse(sessionStorage.getItem(NOTICE_STORAGE_KEY));
+        const storedNotices = JSON.parse(sessionStorage.getItem('refit:teacher:' + classId + ':notices'));
         return Array.isArray(storedNotices) ? storedNotices : INITIAL_NOTICES;
     } catch {
         return INITIAL_NOTICES;
     }
 }
 
-function ClassHome({ notices, onCreate, onOpen, onList }) {
+function ClassHome({ classTitle, notices, onCreate, onOpen, onList }) {
     return (
         <div className="teacher-class__layout">
             <aside className="teacher-class__calendar" aria-label="수업 달력">
@@ -108,7 +109,7 @@ function ClassHome({ notices, onCreate, onOpen, onList }) {
                         {RECENT_ATTENDANCE.map((item) => (
                             <tr key={item.date}>
                                 <td>{item.date}</td>
-                                <td>{CLASS_TITLE}</td>
+                                <td>{classTitle}</td>
                                 <td><Condition status={item.status} /></td>
                             </tr>
                         ))}
@@ -148,19 +149,23 @@ function ClassHome({ notices, onCreate, onOpen, onList }) {
     );
 }
 
-export default function Class({ classHref, onReload }) {
-    const [notices, setNotices] = useState(readNotices);
+export default function Class() {
+    const navigate = useNavigate();
+    const { classId = 'english1' } = useParams();
+    const { state } = useLocation();
+    const classTitle = getTeacherClassTitle(classId, state?.classTitle);
+    const [notices, setNotices] = useState(() => readNotices(classId));
     const [view, setView] = useState({ type: 'home' });
     const selectedNotice = notices.find((notice) => notice.id === view.noticeId);
     const bodyView = view.type === 'delete' ? 'detail' : view.type;
 
     useEffect(() => {
         try {
-            sessionStorage.setItem(NOTICE_STORAGE_KEY, JSON.stringify(notices));
+            sessionStorage.setItem('refit:teacher:' + classId + ':notices', JSON.stringify(notices));
         } catch {
             // Keep the current in-memory notices if browser storage is unavailable.
         }
-    }, [notices]);
+    }, [classId, notices]);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -203,6 +208,7 @@ export default function Class({ classHref, onReload }) {
     if (view.type === 'home') {
         body = (
             <ClassHome
+                classTitle={classTitle}
                 notices={notices}
                 onCreate={() => setView({ type: 'create', from: 'home' })}
                 onOpen={showDetail}
@@ -250,20 +256,29 @@ export default function Class({ classHref, onReload }) {
     return (
         <div className="teacher-class">
             <main className="teacher-class__main">
-                <nav className="teacher-class__breadcrumb" aria-label="현재 위치">
-                    <ol>
-                        <li><a href="#">홈</a></li>
-                        <li>
-                            <a href={classHref} onClick={onReload}>
-                                {CLASS_TITLE}
-                            </a>
-                        </li>
-                        <li aria-current="page">{VIEW_LABELS[view.type]}</li>
-                    </ol>
-                </nav>
+                <Nav
+                    label="현재 위치"
+                    items={[
+                        { text: '홈', link: '/teacher' },
+                        { text: classTitle, onClick: () => setView({ type: 'home' }) },
+                        { text: VIEW_LABELS[view.type] },
+                    ]}
+                />
 
-                <h1 className="teacher-class__title">{CLASS_TITLE}</h1>
-                <SubNav defaultKey="main" />
+                <h1 className="teacher-class__title">{classTitle}</h1>
+                <SubNav
+                    defaultKey="main"
+                    onChange={(key) => {
+                        if (key === 'main') {
+                            setView({ type: 'home' });
+                            return;
+                        }
+                        navigate(
+                            '/teacher/class/' + classId + '/management?tab=' + key,
+                            { state: { classTitle } },
+                        );
+                    }}
+                />
 
                 {body}
             </main>

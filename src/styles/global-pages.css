@@ -1,4 +1,4 @@
-:is(.global-site, .faq-site, .terms-site, .personal-site) {
+.global-site {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -22,7 +22,7 @@
 
 :is(.faq-page, .terms-page, .personal-info-page) .global-page-heading h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   line-height: 1.25;
 }

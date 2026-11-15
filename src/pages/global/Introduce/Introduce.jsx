@@ -1,4 +1,3 @@
-import GlobalPageLayout from "../../../components/GlobalPageLayout/GlobalPageLayout";
 import Nav from "../../../components/Nav/Nav";
 import "./Introduce.css";
 
@@ -17,10 +16,9 @@ const featureItems = [
   },
 ];
 
-export default function Introduce({ onNavigate }) {
+export default function Introduce() {
   return (
-    <GlobalPageLayout onNavigate={onNavigate}>
-      <main className="introduce-page">
+    <main className="introduce-page">
         <Nav items={[{ text: "홈", link: "/" }, { text: "서비스 소개" }]} />
         <div className="global-page-heading">
           <h1>서비스 소개</h1>
@@ -42,7 +40,6 @@ export default function Introduce({ onNavigate }) {
             </div>
           ))}
         </section>
-      </main>
-    </GlobalPageLayout>
+    </main>
   );
 }

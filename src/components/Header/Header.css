@@ -30,8 +30,8 @@
 .header-prelog-nav {
     display: flex;
     align-items: center;
-    gap: 32px;
-    margin-left: 52px;
+    gap: 36px;
+    margin-left: 56px;
 }
 
 .header-prelog-link {
@@ -408,5 +408,9 @@
     .notification-popup {
         right: -40px;
         width: 280px;
+    }
+
+    .header-prelog-nav {
+        display: none;
     }
 }

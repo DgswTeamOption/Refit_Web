@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import Button from "../../../components/Button/Button";
-import GlobalPageLayout from "../../../components/GlobalPageLayout/GlobalPageLayout";
 import Nav from "../../../components/Nav/Nav";
 import "./PersonalInfo.css";
 
@@ -53,7 +52,6 @@ export default function PersonalInfo({ onNavigate }) {
   };
 
   return (
-    <GlobalPageLayout onNavigate={onNavigate}>
       <main className={`personal-info-page ${mode}`}>
         <Nav
           items={[
@@ -74,10 +72,6 @@ export default function PersonalInfo({ onNavigate }) {
             <div className="personal-photo-circle">
               {photo ? <img src={photo} alt="프로필 사진" /> : <span>사진</span>}
             </div>
-            <button type="button" onClick={() => fileInputRef.current?.click()}>
-              사진 변경
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} hidden />
           </div>
           <div className="personal-values">
             <div className="personal-value-row">
@@ -88,36 +82,51 @@ export default function PersonalInfo({ onNavigate }) {
               <span>이메일</span>
               <p>{email}</p>
             </div>
-            <Button text="정보 수정" width={150} color="lightGray" onClick={startEditing} />
-            <button className="personal-delete-link" type="button" onClick={() => { setDeleteEmail(email); setMode("delete"); }}>
-              계정 삭제
-            </button>
+            <div className="personal-button-wrap">
+              <Button text="정보 수정" width={150} color="lightGray" onClick={startEditing} />
+              <Button text="계정 삭제" width={150} color="red" onClick={() => { setDeleteEmail(email); setMode("delete"); }}/>
+            </div>
           </div>
         </section>
       )}
 
       {mode === "edit" && (
-        <form className="personal-edit-form" onSubmit={(event) => { event.preventDefault(); saveChanges(); }}>
-          <label>
-            이름
-            <input value={draftName} onChange={(event) => setDraftName(event.target.value)} />
-          </label>
-          <label>
-            이메일
-            <input type="email" value={draftEmail} onChange={(event) => setDraftEmail(event.target.value)} />
-          </label>
-          <div className="personal-photo-edit">
-            <span>프로필 사진</span>
-            <button type="button" onClick={() => fileInputRef.current?.click()}>
-              {photo ? <img src={photo} alt="선택한 프로필 사진" /> : "사진 선택"}
+        <section className="personal-view personal-edit-view" aria-label="정보 수정">
+          <div className="personal-photo-column">
+            <button
+              className="personal-photo-select"
+              type="button"
+              aria-label="프로필 사진 선택"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {photo ? <img src={photo} alt="선택한 프로필 사진" /> : <span>사진 선택</span>}
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} hidden />
           </div>
-          <div className="personal-form-actions">
-            <Button text="저장" width={160} onClick={saveChanges} />
-            <Button text="취소" width={160} color="lightGray" onClick={() => setMode("view")} />
+          <div className="personal-values">
+            <label className="personal-value-row personal-edit-row">
+              <span>이름</span>
+              <input
+                className="personal-value-input"
+                value={draftName}
+                onChange={(event) => setDraftName(event.target.value)}
+              />
+            </label>
+            <label className="personal-value-row personal-edit-row">
+              <span>이메일</span>
+              <input
+                className="personal-value-input"
+                type="email"
+                value={draftEmail}
+                onChange={(event) => setDraftEmail(event.target.value)}
+              />
+            </label>
+            <div className="personal-button-wrap">
+              <Button text="저장" width={150} onClick={saveChanges} />
+              <Button text="취소" width={150} color="lightGray" onClick={() => setMode("view")} />
+            </div>
           </div>
-        </form>
+        </section>
       )}
 
         {mode === "delete" && (
@@ -147,6 +156,5 @@ export default function PersonalInfo({ onNavigate }) {
         </section>
         )}
       </main>
-    </GlobalPageLayout>
   );
 }
