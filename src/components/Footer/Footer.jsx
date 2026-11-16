@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Footer.css';
 import githubIcon from '../../assets/github.svg';
 
@@ -23,9 +24,9 @@ const Footer = () => {
                 <div className="footer-top">
                     {/* Brand Section */}
                     <div className="footer-brand">
-                        <a href="/" className="footer-logo-link" aria-label="Refit 홈으로 이동">
+                        <Link to="/" className="footer-logo-link" aria-label="Refit 홈으로 이동">
                             <img src="/logo.svg" alt="Refit 로고" className="footer-logo" />
-                        </a>
+                        </Link>
                         <p className="footer-slogan">
                             빈틈을 채우는 스마트한<br />
                             보강 관리, Refit과 함께하세요.

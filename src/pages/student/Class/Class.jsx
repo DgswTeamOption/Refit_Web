@@ -4,6 +4,7 @@ import './Class.css';
 import Calendar from '../../../components/Calendar/Calendar';
 import SubNav from '../../../components/SubNav/SubNav';
 import studentApi from '../../../api/studentApi';
+import Nav from '../../../components/Nav/Nav';
 import {
     CLASS_TABS,
     CLASS_TITLES,
@@ -250,24 +251,14 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
         <div className="class-page">
             <div className="class-container">
                 {/* 1. Breadcrumb 네비게이션 */}
-                <nav className="class-breadcrumb" aria-label="breadcrumb">
-                    <button type="button" className="breadcrumb-link" onClick={handleGoHome}>
-                        홈
-                    </button>
-                    <span className="breadcrumb-separator">›</span>
-                    <button
-                        type="button"
-                        className="breadcrumb-link"
-                        onClick={() => {
-                            setActiveTab('main');
-                            setSubView('tab');
-                        }}
-                    >
-                        {classTitle}
-                    </button>
-                    <span className="breadcrumb-separator">›</span>
-                    <span className="breadcrumb-current">{breadcrumbLastText}</span>
-                </nav>
+                <Nav
+                    label="현재 위치"
+                    items={[
+                        { text: '홈', onClick: handleGoHome },
+                        { text: title, onClick: handleBreadcrumbClassClick },
+                        { text: getBreadcrumbLastText() },
+                    ]}
+                />
 
                 {/* 2. 수업 메인 타이틀 */}
                 <h1 className="class-title">{classTitle}</h1>
@@ -275,6 +266,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                 {/* 3. SubNav 탭 바 */}
                 <div className="class-subnav-wrapper">
                     <SubNav
+                        role="student"
                         customTabs={CLASS_TABS}
                         defaultKey={activeTab}
                         onChange={handleTabChange}

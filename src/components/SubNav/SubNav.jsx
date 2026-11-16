@@ -19,19 +19,20 @@ export const TEACHER_TABS = [
 
 export default function SubNav({
   role = "teacher", // "student" 또는 "teacher"
-  customTabs,       
+  customTabs,
   defaultKey,
+  activeKey: controlledActiveKey,
   onChange,
 }) {
- 
   const tabs = customTabs || (role === "student" ? STUDENT_TABS : TEACHER_TABS);
 
-  const [activeKey, setActiveKey] = useState(defaultKey ?? tabs[0].key);
+  const [internalActiveKey, setInternalActiveKey] = useState(defaultKey ?? tabs[0].key);
+  const activeKey = controlledActiveKey ?? internalActiveKey;
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const tabsRef = useRef({});
 
   const select = (key) => {
-    setActiveKey(key);
+    if (controlledActiveKey === undefined) setInternalActiveKey(key);
     onChange?.(key);
   };
 
