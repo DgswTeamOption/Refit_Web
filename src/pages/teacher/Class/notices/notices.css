@@ -13,9 +13,7 @@
 .teacher-class__notice-toolbar > button,
 .notices-list__toolbar > button,
 .notices-actions > button {
-    height: 42px;
     border-radius: 9px;
-    font-size: 14px;
 }
 
 .teacher-class__notice-list {

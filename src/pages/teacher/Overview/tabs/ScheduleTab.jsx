@@ -1,18 +1,102 @@
 import React, { useState } from "react";
 import Button from "../../../../components/Button/Button";
 
-// 요일 옵션에 토, 일 추가
 const DAYS_OPTIONS = [
-  { label: "월", key: "mon" },
-  { label: "화", key: "tue" },
-  { label: "수", key: "wed" },
-  { label: "목", key: "thu" },
-  { label: "금", key: "fri" },
-  { label: "토", key: "sat" },
-  { label: "일", key: "sun" },
+  { label: "월", fullLabel: "월요일", key: "mon" },
+  { label: "화", fullLabel: "화요일", key: "tue" },
+  { label: "수", fullLabel: "수요일", key: "wed" },
+  { label: "목", fullLabel: "목요일", key: "thu" },
+  { label: "금", fullLabel: "금요일", key: "fri" },
+  { label: "토", fullLabel: "토요일", key: "sat" },
+  { label: "일", fullLabel: "일요일", key: "sun" },
 ];
 
-// 재사용 시간표 테이블 하위 컴포넌트
+const SCHEDULE_STYLES = `
+  .form-section .schedule-top-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .form-section .schedule-top-row .form-control {
+    width: 200px;
+  }
+
+  .form-section .day-select-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .form-section .day-time-item {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .form-section .time-input-box {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 94px;
+    height: 38px;
+    border: 1px solid #e3e3e3;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .form-section .time-input-box:focus-within {
+    border-color: #0099ff;
+  }
+
+  .form-section .time-placeholder {
+    position: absolute;
+    left: 12px;
+    font-size: 13px;
+    color: #999;
+    pointer-events: none;
+  }
+
+  .form-section .day-time-input {
+    width: 100%;
+    height: 100%;
+    padding: 0 10px;
+    border: 0;
+    background: transparent;
+    font-size: 13px;
+    color: #151515;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .form-section .time-input-box.is-empty .day-time-input::-webkit-datetime-edit {
+    opacity: 0;
+  }
+
+  .form-section .time-input-box.is-empty .day-time-input:focus::-webkit-datetime-edit {
+    opacity: 1;
+  }
+
+  .form-section .time-input-box.is-empty:focus-within .time-placeholder {
+    display: none;
+  }
+
+  .form-section .day-time-input::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+`;
+
 function ScheduleTable({ scheduleList, onEdit, onDelete }) {
   return (
     <div className="table-wrapper">
@@ -20,13 +104,9 @@ function ScheduleTable({ scheduleList, onEdit, onDelete }) {
         <thead>
           <tr>
             <th>학생</th>
-            <th>월</th>
-            <th>화</th>
-            <th>수</th>
-            <th>목</th>
-            <th>금</th>
-            <th>토</th>
-            <th>일</th>
+            {DAYS_OPTIONS.map((d) => (
+              <th key={d.key}>{d.fullLabel}</th>
+            ))}
             <th>관리</th>
           </tr>
         </thead>
@@ -59,8 +139,7 @@ export default function ScheduleTab() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [scheduleStudent, setScheduleStudent] = useState("");
-  const [selectedDays, setSelectedDays] = useState([]);
-  const [scheduleTime, setScheduleTime] = useState("");
+  const [daySchedules, setDaySchedules] = useState({});
 
   const [scheduleList, setScheduleList] = useState([
     { id: 1, studentName: "김민지", mon: "16:00", tue: "—", wed: "16:00", thu: "—", fri: "17:00", sat: "10:00", sun: "—" },
@@ -69,16 +148,27 @@ export default function ScheduleTab() {
   ]);
 
   const toggleDaySelection = (dayKey) => {
-    setSelectedDays((prev) =>
-      prev.includes(dayKey) ? prev.filter((k) => k !== dayKey) : [...prev, dayKey]
-    );
+    setDaySchedules((prev) => {
+      if (Object.prototype.hasOwnProperty.call(prev, dayKey)) {
+        const next = { ...prev };
+        delete next[dayKey];
+        return next;
+      }
+      return { ...prev, [dayKey]: "" };
+    });
+  };
+
+  const handleDayTimeChange = (dayKey, time) => {
+    setDaySchedules((prev) => ({
+      ...prev,
+      [dayKey]: time,
+    }));
   };
 
   const handleOpenForm = () => {
     setEditingId(null);
     setScheduleStudent("");
-    setSelectedDays([]);
-    setScheduleTime("");
+    setDaySchedules({});
     setIsAdding(true);
   };
 
@@ -86,44 +176,44 @@ export default function ScheduleTab() {
     setEditingId(item.id);
     setScheduleStudent(item.studentName);
 
-    const activeDays = [];
-    if (item.mon !== "—") activeDays.push("mon");
-    if (item.tue !== "—") activeDays.push("tue");
-    if (item.wed !== "—") activeDays.push("wed");
-    if (item.thu !== "—") activeDays.push("thu");
-    if (item.fri !== "—") activeDays.push("fri");
-    if (item.sat !== "—") activeDays.push("sat");
-    if (item.sun !== "—") activeDays.push("sun");
+    const existingSchedules = {};
+    DAYS_OPTIONS.forEach((d) => {
+      if (item[d.key] && item[d.key] !== "—") {
+        existingSchedules[d.key] = item[d.key];
+      }
+    });
 
-    setSelectedDays(activeDays);
-    const existingTime = [item.mon, item.tue, item.wed, item.thu, item.fri, item.sat, item.sun].find((t) => t !== "—");
-    setScheduleTime(existingTime || "");
+    setDaySchedules(existingSchedules);
     setIsAdding(true);
   };
 
   const handleRegister = () => {
-    if (!scheduleStudent || selectedDays.length === 0 || !scheduleTime) return;
+    const selectedKeys = Object.keys(daySchedules);
+    const hasEmptyTime = selectedKeys.some((key) => !daySchedules[key]);
+
+    if (!scheduleStudent.trim() || selectedKeys.length === 0 || hasEmptyTime) {
+      alert("학생 이름, 요일, 그리고 선택한 요일의 수업 시간을 모두 입력해주세요.");
+      return;
+    }
+
+    const dayUpdates = {};
+    DAYS_OPTIONS.forEach((d) => {
+      dayUpdates[d.key] = daySchedules[d.key] || "—";
+    });
 
     if (editingId) {
       setScheduleList((prev) =>
-        prev.map((item) => {
-          if (item.id === editingId) {
-            const updated = { ...item, studentName: scheduleStudent };
-            DAYS_OPTIONS.forEach((d) => {
-              updated[d.key] = selectedDays.includes(d.key) ? scheduleTime : "—";
-            });
-            return updated;
-          }
-          return item;
-        })
+        prev.map((item) =>
+          item.id === editingId
+            ? { ...item, studentName: scheduleStudent.trim(), ...dayUpdates }
+            : item
+        )
       );
     } else {
       setScheduleList((prev) => {
-        const existingIndex = prev.findIndex((item) => item.studentName === scheduleStudent);
-        const dayUpdates = {};
-        DAYS_OPTIONS.forEach((d) => {
-          dayUpdates[d.key] = selectedDays.includes(d.key) ? scheduleTime : "—";
-        });
+        const existingIndex = prev.findIndex(
+          (item) => item.studentName === scheduleStudent.trim()
+        );
 
         if (existingIndex > -1) {
           return prev.map((item, idx) =>
@@ -134,8 +224,7 @@ export default function ScheduleTab() {
           ...prev,
           {
             id: Date.now(),
-            studentName: scheduleStudent,
-            mon: "—", tue: "—", wed: "—", thu: "—", fri: "—", sat: "—", sun: "—",
+            studentName: scheduleStudent.trim(),
             ...dayUpdates,
           },
         ];
@@ -151,6 +240,7 @@ export default function ScheduleTab() {
 
   return (
     <>
+      <style>{SCHEDULE_STYLES}</style>
       {!isAdding ? (
         <section className="schedule-section">
           <h2 className="section-title">요일별 시간표</h2>
@@ -163,47 +253,52 @@ export default function ScheduleTab() {
         <>
           <section className="form-section">
             <h2 className="form-title">{editingId ? "학생 시간표 수정" : "학생 시간표 등록"}</h2>
-            <div className="form-row">
-              <div className="form-group">
-                <label>학생</label>
-                <input
-                  type="text"
-                  placeholder="학생 이름 입력"
-                  value={scheduleStudent}
-                  onChange={(e) => setScheduleStudent(e.target.value)}
-                  className="form-control"
-                />
-              </div>
-              <div className="form-group">
-                <label>요일</label>
-                <div className="day-select-group">
-                  {DAYS_OPTIONS.map((d) => {
-                    const isSelected = selectedDays.includes(d.key);
-                    return (
-                      <button
-                        key={d.key}
-                        type="button"
-                        className={`day-chip ${isSelected ? "is-selected" : ""}`}
-                        onClick={() => toggleDaySelection(d.key)}
-                      >
-                        {d.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="form-group">
-                <label>수업 시간</label>
-                <input
-                  type="time"
-                  value={scheduleTime}
-                  onChange={(e) => setScheduleTime(e.target.value)}
-                  className="form-control"
-                />
-              </div>
-              <div className="form-submit">
-                <Button text={editingId ? "수정" : "등록"} color="blue" width={90} onClick={handleRegister} />
-              </div>
+            <div className="schedule-top-row">
+              <input
+                type="text"
+                placeholder="학생 이름 입력"
+                value={scheduleStudent}
+                onChange={(e) => setScheduleStudent(e.target.value)}
+                className="form-control"
+              />
+              <Button
+                text={editingId ? "수정" : "등록"}
+                color="blue"
+                width={100}
+                onClick={handleRegister}
+              />
+            </div>
+
+            <div className="day-select-group">
+              {DAYS_OPTIONS.map((d) => {
+                const isSelected = Object.prototype.hasOwnProperty.call(daySchedules, d.key);
+                const timeValue = daySchedules[d.key] || "";
+
+                return (
+                  <div key={d.key} className="day-time-item">
+                    <button
+                      type="button"
+                      className={`day-chip ${isSelected ? "is-selected" : ""}`}
+                      onClick={() => toggleDaySelection(d.key)}
+                    >
+                      {d.label}
+                    </button>
+
+                    {isSelected && (
+                      <div className={`time-input-box ${!timeValue ? "is-empty" : ""}`}>
+                        {!timeValue && <span className="time-placeholder">시간 선택</span>}
+                        <input
+                          type="time"
+                          value={timeValue}
+                          onClick={(e) => e.currentTarget.showPicker?.()}
+                          onChange={(e) => handleDayTimeChange(d.key, e.target.value)}
+                          className="day-time-input"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </section>
 
