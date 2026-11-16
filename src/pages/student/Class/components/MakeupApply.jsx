@@ -9,12 +9,13 @@ import { formatToKoreanDate } from '../constants';
  * - 날짜 선택 필수 검증
  * - 시작 시간 < 종료 시간 유효성 검증
  */
-function MakeupApply({ items = [], onSubmit, onCancel }) {
+function MakeupApply({ items = [], availableSlots = [], onSubmit, onCancel }) {
     const [makeupDate, setMakeupDate] = useState('');
     const [makeupDay, setMakeupDay] = useState(null);
     const [makeupStartTime, setMakeupStartTime] = useState('');
     const [makeupEndTime, setMakeupEndTime] = useState('');
     const [makeupReason, setMakeupReason] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const isTimeInvalid = Boolean(
         makeupStartTime && makeupEndTime && makeupStartTime >= makeupEndTime
@@ -26,28 +27,39 @@ function MakeupApply({ items = [], onSubmit, onCancel }) {
         setMakeupDate(`2026-08-${dayStr}`);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!makeupDate || !makeupDate.trim() || isTimeInvalid) return;
+        if (!makeupDate || !makeupDate.trim() || isTimeInvalid || isSubmitting) return;
 
         const timeStr = makeupStartTime && makeupEndTime
             ? `${makeupStartTime} ~ ${makeupEndTime}`
             : (makeupStartTime || makeupEndTime || '16:00 ~ 17:00');
 
-        onSubmit({
-            id: Date.now(),
-            date: formatToKoreanDate(makeupDate),
-            time: timeStr,
-            reason: makeupReason.trim() || '기타 사유',
-            status: '대기중',
-            canCancel: true,
-        });
+        const startPart = makeupStartTime || '16:00';
+        const isoMakeupTime = new Date(`${makeupDate}T${startPart}:00`).toISOString();
+        const defaultScheduleId = availableSlots[0]?.schedule_id ?? 0;
 
-        setMakeupDate('');
-        setMakeupDay(null);
-        setMakeupStartTime('');
-        setMakeupEndTime('');
-        setMakeupReason('');
+        setIsSubmitting(true);
+        try {
+            await onSubmit({
+                id: Date.now(),
+                rawDate: makeupDate,
+                isoMakeupTime,
+                scheduleId: defaultScheduleId,
+                date: formatToKoreanDate(makeupDate),
+                time: timeStr,
+                reason: makeupReason.trim() || '기타 사유',
+                status: '대기중',
+                canCancel: true,
+            });
+            setMakeupDate('');
+            setMakeupDay(null);
+            setMakeupStartTime('');
+            setMakeupEndTime('');
+            setMakeupReason('');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -76,6 +88,7 @@ function MakeupApply({ items = [], onSubmit, onCancel }) {
                             required
                             className="apply-input"
                             value={makeupDate}
+                            disabled={isSubmitting}
                             onChange={(e) => {
                                 setMakeupDate(e.target.value);
                                 if (e.target.value.includes('-')) {
@@ -95,6 +108,7 @@ function MakeupApply({ items = [], onSubmit, onCancel }) {
                                 required
                                 className={`apply-input apply-time-input ${isTimeInvalid ? 'input-error' : ''}`}
                                 value={makeupStartTime}
+                                disabled={isSubmitting}
                                 onChange={(e) => setMakeupStartTime(e.target.value)}
                             />
                             <span className="apply-time-tilde">~</span>
@@ -104,6 +118,7 @@ function MakeupApply({ items = [], onSubmit, onCancel }) {
                                 required
                                 className={`apply-input apply-time-input ${isTimeInvalid ? 'input-error' : ''}`}
                                 value={makeupEndTime}
+                                disabled={isSubmitting}
                                 onChange={(e) => setMakeupEndTime(e.target.value)}
                             />
                         </div>
@@ -121,16 +136,17 @@ function MakeupApply({ items = [], onSubmit, onCancel }) {
                             className="apply-textarea"
                             placeholder="사유를 입력해주세요"
                             value={makeupReason}
+                            disabled={isSubmitting}
                             onChange={(e) => setMakeupReason(e.target.value)}
                         />
 
                         <div className="apply-submit-btn-wrap">
                             <Button
-                                text="신청하기"
+                                text={isSubmitting ? '신청 중...' : '신청하기'}
                                 color="blue"
                                 width={140}
                                 type="submit"
-                                disabled={isTimeInvalid}
+                                disabled={isTimeInvalid || isSubmitting}
                             />
                         </div>
                     </form>

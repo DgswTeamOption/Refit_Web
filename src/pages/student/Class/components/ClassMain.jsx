@@ -7,7 +7,26 @@ import Condition from '../../../../components/Condition/Condition';
  * - 최근 출석 테이블
  * - 공지사항 프리뷰 카드 및 더보기 링크
  */
-function ClassMain({ title, notices = [], onViewMoreNotices, onSelectNotice }) {
+function ClassMain({
+    title,
+    attendanceList = [],
+    attendanceStats = null,
+    notices = [],
+    onViewMoreNotices,
+    onSelectNotice,
+}) {
+    const presentCount = attendanceStats?.presentCount ?? 3;
+    const totalCount = attendanceStats?.totalCount ?? 9;
+    const absentCount = attendanceStats?.absentCount ?? 5;
+
+    const recentRows = attendanceList.length > 0
+        ? attendanceList.slice(0, 5)
+        : [
+            { id: 'sample-1', date: '2026년 8월 27일', className: title, status: '출석' },
+            { id: 'sample-2', date: '2026년 8월 25일', className: title, status: '결석' },
+            { id: 'sample-3', date: '2026년 8월 20일', className: title, status: '보강' },
+        ];
+
     return (
         <div className="class-main-tab-content">
             {/* 이번달 출석 현황 */}
@@ -15,8 +34,12 @@ function ClassMain({ title, notices = [], onViewMoreNotices, onSelectNotice }) {
                 <div className="attendance-status-header">
                     <h2 className="content-section-title">이번달 출석 현황</h2>
                     <div className="attendance-pills">
-                        <span className="attendance-pill pill-present">출석 3/9</span>
-                        <span className="attendance-pill pill-absent">결석 5</span>
+                        <span className="attendance-pill pill-present">
+                            출석 {presentCount}/{totalCount}
+                        </span>
+                        <span className="attendance-pill pill-absent">
+                            결석 {absentCount}
+                        </span>
                     </div>
                 </div>
 
@@ -32,27 +55,15 @@ function ClassMain({ title, notices = [], onViewMoreNotices, onSelectNotice }) {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>2026년 8월 27일</td>
-                                <td>{title}</td>
-                                <td style={{ textAlign: 'right' }}>
-                                    <Condition status="출석" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>2026년 8월 25일</td>
-                                <td>{title}</td>
-                                <td style={{ textAlign: 'right' }}>
-                                    <Condition status="결석" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>2026년 8월 20일</td>
-                                <td>{title}</td>
-                                <td style={{ textAlign: 'right' }}>
-                                    <Condition status="보강" />
-                                </td>
-                            </tr>
+                            {recentRows.map((row) => (
+                                <tr key={row.id}>
+                                    <td>{row.date}</td>
+                                    <td>{row.className || title}</td>
+                                    <td style={{ textAlign: 'right' }}>
+                                        <Condition status={row.status} />
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>

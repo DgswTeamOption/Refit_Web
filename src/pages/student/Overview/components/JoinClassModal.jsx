@@ -7,6 +7,8 @@ export default function JoinClassModal({
     isOpen,
     joinCode,
     joinError,
+    errorMessage = '존재하지 않는 코드입니다.',
+    isSubmitting = false,
     onChangeCode,
     onSubmit,
     onClose,
@@ -28,13 +30,14 @@ export default function JoinClassModal({
                     <input
                         type="text"
                         className={`overview-modal-input ${joinError ? 'is-error' : ''}`}
-                        placeholder="ABC123"
+                        placeholder="VswqGQtd"
                         value={joinCode}
                         onChange={(e) => onChangeCode(e.target.value)}
+                        disabled={isSubmitting}
                         autoFocus
                     />
                     {joinError && (
-                        <p className="overview-modal-error-text">존재하지 않는 코드입니다.</p>
+                        <p className="overview-modal-error-text">{errorMessage}</p>
                     )}
 
                     <div className="overview-modal-actions">
@@ -42,11 +45,16 @@ export default function JoinClassModal({
                             type="button"
                             className="overview-modal-btn btn-cancel"
                             onClick={onClose}
+                            disabled={isSubmitting}
                         >
                             취소
                         </button>
-                        <button type="submit" className="overview-modal-btn btn-confirm-blue">
-                            참여하기
+                        <button
+                            type="submit"
+                            className="overview-modal-btn btn-confirm-blue"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? '참여 중...' : '참여하기'}
                         </button>
                     </div>
                 </form>

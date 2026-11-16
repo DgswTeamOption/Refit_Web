@@ -11,6 +11,7 @@ function AbsenceApply({ items = [], onSubmit, onCancel }) {
     const [absenceDate, setAbsenceDate] = useState('');
     const [absenceDay, setAbsenceDay] = useState(null);
     const [absenceReason, setAbsenceReason] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSelectDateFromCalendar = (day) => {
         setAbsenceDay(day);
@@ -18,21 +19,26 @@ function AbsenceApply({ items = [], onSubmit, onCancel }) {
         setAbsenceDate(`2026-08-${dayStr}`);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!absenceDate || !absenceDate.trim()) return;
+        if (!absenceDate || !absenceDate.trim() || isSubmitting) return;
 
-        onSubmit({
-            id: Date.now(),
-            date: formatToKoreanDate(absenceDate),
-            reason: absenceReason.trim() || '기타 사유',
-            status: '대기중',
-            canCancel: true,
-        });
-
-        setAbsenceDate('');
-        setAbsenceDay(null);
-        setAbsenceReason('');
+        setIsSubmitting(true);
+        try {
+            await onSubmit({
+                id: Date.now(),
+                rawDate: absenceDate,
+                date: formatToKoreanDate(absenceDate),
+                reason: absenceReason.trim() || '기타 사유',
+                status: '대기중',
+                canCancel: true,
+            });
+            setAbsenceDate('');
+            setAbsenceDay(null);
+            setAbsenceReason('');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -61,6 +67,7 @@ function AbsenceApply({ items = [], onSubmit, onCancel }) {
                             required
                             className="apply-input"
                             value={absenceDate}
+                            disabled={isSubmitting}
                             onChange={(e) => {
                                 setAbsenceDate(e.target.value);
                                 if (e.target.value.includes('-')) {
@@ -78,11 +85,18 @@ function AbsenceApply({ items = [], onSubmit, onCancel }) {
                             className="apply-textarea"
                             placeholder="사유를 입력해주세요"
                             value={absenceReason}
+                            disabled={isSubmitting}
                             onChange={(e) => setAbsenceReason(e.target.value)}
                         />
 
                         <div className="apply-submit-btn-wrap">
-                            <Button text="신청하기" color="blue" width={140} type="submit" />
+                            <Button
+                                text={isSubmitting ? '신청 중...' : '신청하기'}
+                                color="blue"
+                                width={140}
+                                type="submit"
+                                disabled={isSubmitting}
+                            />
                         </div>
                     </form>
                 </div>
