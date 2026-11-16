@@ -156,7 +156,6 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
         setActiveTab('main');
         setSubView('tab');
     }, []);
-
     const handleOpenNoticeDetail = useCallback(async (notice) => {
         setSelectedNotice(notice);
         setSubView('notice-detail');
