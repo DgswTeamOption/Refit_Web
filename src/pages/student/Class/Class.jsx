@@ -170,68 +170,62 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
         }
     };
 
-    // 결석 신청하기
+    // 결석 신청하기 (실패 시 로컬 상태 변경 없이 에러 전달)
     const handleSubmitAbsence = async (newAbsence) => {
         if (isValidClassId) {
-            try {
-                const created = await studentApi.requestAbsence(numericClassId, {
-                    reason: newAbsence.reason,
-                    absence_date: newAbsence.rawDate,
-                });
-                setAbsenceList((prev) => [mapAbsenceFromApi(created), ...prev]);
-                setSubView('tab');
-                return;
-            } catch {
-                // 서버 오류 시 임시 상태 반영
-            }
+            const created = await studentApi.requestAbsence(numericClassId, {
+                reason: newAbsence.reason,
+                absence_date: newAbsence.rawDate,
+            });
+            setAbsenceList((prev) => [mapAbsenceFromApi(created), ...prev]);
+            setSubView('tab');
+            return;
         }
         setAbsenceList((prev) => [newAbsence, ...prev]);
         setSubView('tab');
     };
 
-    // 보강 신청하기
+    // 보강 신청하기 (실패 시 로컬 상태 변경 없이 에러 전달)
     const handleSubmitMakeup = async (newMakeup) => {
         if (isValidClassId) {
-            try {
-                const created = await studentApi.requestMakeup({
-                    class_id: numericClassId,
-                    schedule_id: newMakeup.scheduleId || 0,
-                    makeup_time: newMakeup.isoMakeupTime,
-                });
-                const mapped = mapMakeupFromApi(created);
-                setMakeupList((prev) => [
-                    { ...mapped, time: newMakeup.time, reason: newMakeup.reason },
-                    ...prev,
-                ]);
-                setSubView('tab');
-                return;
-            } catch {
-                // 서버 오류 시 임시 상태 반영
-            }
+            const created = await studentApi.requestMakeup({
+                class_id: numericClassId,
+                schedule_id: newMakeup.scheduleId,
+                makeup_time: newMakeup.isoMakeupTime,
+            });
+            const mapped = mapMakeupFromApi(created);
+            setMakeupList((prev) => [
+                { ...mapped, time: newMakeup.time, reason: newMakeup.reason },
+                ...prev,
+            ]);
+            setSubView('tab');
+            return;
         }
         setMakeupList((prev) => [newMakeup, ...prev]);
         setSubView('tab');
     };
 
-    // 결석 취소하기
+    // 결석 취소하기 (실패 시 목록 유지 및 오류 안내)
     const handleCancelAbsence = async (id) => {
         if (isValidClassId) {
             try {
                 await studentApi.cancelAbsence(id);
-            } catch {
-                // 서버 미연결 시에도 화면에서 제거
+            } catch (err) {
+                alert(err?.message || '결석 신청 취소에 실패했습니다.');
+                return;
             }
         }
         setAbsenceList((prev) => prev.filter((item) => item.id !== id));
     };
 
-    // 보강 취소하기
+    // 보강 취소하기 (실패 시 목록 유지 및 오류 안내)
     const handleCancelMakeup = async (id) => {
         if (isValidClassId) {
             try {
                 await studentApi.cancelMakeup(id);
-            } catch {
-                // 서버 미연결 시에도 화면에서 제거
+            } catch (err) {
+                alert(err?.message || '보강 신청 취소에 실패했습니다.');
+                return;
             }
         }
         setMakeupList((prev) => prev.filter((item) => item.id !== id));
@@ -301,6 +295,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                     <MakeupApply
                         items={makeupList}
                         availableSlots={availableMakeupSlots}
+                        isServerMode={isValidClassId}
                         onSubmit={handleSubmitMakeup}
                         onCancel={handleCancelMakeup}
                     />
