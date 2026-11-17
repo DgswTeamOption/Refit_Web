@@ -5,6 +5,7 @@ import Header from '../Header/Header.jsx';
 import '../../styles/global-pages.css';
 
 const PAGE_PATHS = {
+    introduce: '/introduce',
     faq: '/faq',
     terms: '/terms',
     privacy: '/privacy',
@@ -20,7 +21,7 @@ export default function MainLayout() {
 
     return (
         <div className="global-site">
-            <Header onLogoClick={() => navigate(homePath)} />
+            <Header showServiceMenu={pathname.replace(/\/$/, '') !== '/introduce'} onLogoClick={() => navigate(homePath)} />
             <Outlet />
             {showFooter && (
                 <GlobalNavigation

@@ -42,6 +42,11 @@
   align-items: stretch;
   width: 100%;
   gap: 10px;
+  transform: translateY(-12px);
+}
+
+.signup-information > .signup-form-content {
+  transform: translateY(-12px);
 }
 
 .auth-logo {
@@ -317,6 +322,11 @@
   .auth-panel-content {
     width: calc(100% - 48px);
     padding: 32px 0 24px;
+  }
+
+  .login-form-content,
+  .signup-information > .signup-form-content {
+    transform: translateY(-8px);
   }
 
   .auth-panel-content > .global-navigation-links,
