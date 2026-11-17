@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import './Class.css';
 import Calendar from '../../../components/Calendar/Calendar';
 import SubNav from '../../../components/SubNav/SubNav';
-import studentApi from '../../../api/studentApi';
 import Nav from '../../../components/Nav/Nav';
+import studentApi from '../../../api/studentApi';
 import {
     CLASS_TABS,
     CLASS_TITLES,
@@ -29,85 +29,79 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
     const location = useLocation();
     const { classId } = useParams();
 
+    // 이전 화면에서 넘겨준 수업 정보가 있으면 바로 사용
     const initialClassInfo = propClassInfo || location.state?.classInfo;
     const fallbackTitle = initialClassInfo?.title || CLASS_TITLES[classId] || '영어1';
     const [classTitle, setClassTitle] = useState(fallbackTitle);
 
-    // 활성 탭: 'main' | 'absence' | 'makeup'
+    // 현재 선택된 탭 ('main' | 'absence' | 'makeup') 및 서브 화면
     const [activeTab, setActiveTab] = useState('main');
-
-    // 서브 화면: 'tab' | 'absence-apply' | 'makeup-apply' | 'notice-list' | 'notice-detail'
     const [subView, setSubView] = useState('tab');
+
+    // 공지, 출석, 결석, 보강 데이터 상태
     const [notices, setNotices] = useState(NOTICES_DATA);
     const [selectedNotice, setSelectedNotice] = useState(NOTICES_DATA[0]);
-
-    // 출석 현황, 결석 및 보강 신청 내역 상태
     const [attendanceList, setAttendanceList] = useState([]);
     const [attendanceStats, setAttendanceStats] = useState(null);
     const [absenceList, setAbsenceList] = useState(INITIAL_ABSENCE_LIST);
     const [makeupList, setMakeupList] = useState(INITIAL_MAKEUP_LIST);
     const [availableMakeupSlots, setAvailableMakeupSlots] = useState([]);
 
-    const numericClassId = useMemo(() => {
-        const parsed = Number(classId);
-        return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-    }, [classId]);
+    const numericClassId = Number(classId);
+    const isValidClassId = Number.isInteger(numericClassId) && numericClassId > 0;
 
-    // 서버 데이터 일괄 조회 (숫자 classId일 때 백엔드 API와 동기화)
+    // 수업 상세 정보 및 목록 데이터 불러오기
     useEffect(() => {
-        if (!numericClassId) return undefined;
+        if (!isValidClassId) return;
 
-        const controller = new AbortController();
+        let isMounted = true;
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth() + 1;
 
-        const fetchClassData = async () => {
+        async function fetchClassData() {
+            // 실패한 요청만 null로 처리해 나머지 데이터가 정상 표시되도록 함
             const [
-                detailRes,
-                noticesRes,
-                attendanceRes,
-                statsRes,
-                absencesRes,
-                makeupsRes,
-                availabilityRes,
-            ] = await Promise.allSettled([
-                studentApi.getClassDetail(numericClassId, { year, month }, controller.signal),
-                studentApi.getNotices(numericClassId, controller.signal),
-                studentApi.getMyAttendance(numericClassId, { year, month }, controller.signal),
-                studentApi.getAttendanceStats(numericClassId, { year, month }, controller.signal),
-                studentApi.getMyAbsences(numericClassId, controller.signal),
-                studentApi.getMakeups(numericClassId, undefined, controller.signal),
-                studentApi.getMakeupAvailability({ class_id: numericClassId }, controller.signal),
+                detail,
+                noticesData,
+                attendanceData,
+                statsData,
+                absencesData,
+                makeupsData,
+                availabilityData,
+            ] = await Promise.all([
+                studentApi.getClassDetail(numericClassId, { year, month }).catch(() => null),
+                studentApi.getNotices(numericClassId).catch(() => null),
+                studentApi.getMyAttendance(numericClassId, { year, month }).catch(() => null),
+                studentApi.getAttendanceStats(numericClassId, { year, month }).catch(() => null),
+                studentApi.getMyAbsences(numericClassId).catch(() => null),
+                studentApi.getMakeups(numericClassId).catch(() => null),
+                studentApi.getMakeupAvailability({ class_id: numericClassId }).catch(() => null),
             ]);
 
-            if (controller.signal.aborted) return;
+            if (!isMounted) return;
 
-            const resolvedTitle =
-                detailRes.status === 'fulfilled' && detailRes.value?.name
-                    ? detailRes.value.name
-                    : fallbackTitle;
-
-            if (detailRes.status === 'fulfilled' && detailRes.value?.name) {
-                setClassTitle(detailRes.value.name);
+            const currentTitle = detail?.name || fallbackTitle;
+            if (detail?.name) {
+                setClassTitle(detail.name);
             }
 
-            if (noticesRes.status === 'fulfilled' && Array.isArray(noticesRes.value)) {
-                const mappedNotices = noticesRes.value.map(mapNoticeFromApi);
-                if (mappedNotices.length > 0) {
-                    setNotices(mappedNotices);
-                    setSelectedNotice(mappedNotices[0]);
+            if (Array.isArray(noticesData)) {
+                const mapped = noticesData.map(mapNoticeFromApi);
+                if (mapped.length > 0) {
+                    setNotices(mapped);
+                    setSelectedNotice(mapped[0]);
                 }
             }
 
-            if (attendanceRes.status === 'fulfilled' && Array.isArray(attendanceRes.value)) {
+            if (Array.isArray(attendanceData)) {
                 setAttendanceList(
-                    attendanceRes.value.map((item) => mapAttendanceFromApi(item, resolvedTitle))
+                    attendanceData.map((item) => mapAttendanceFromApi(item, currentTitle))
                 );
             }
 
-            if (statsRes.status === 'fulfilled' && Array.isArray(statsRes.value) && statsRes.value[0]) {
-                const stat = statsRes.value[0];
+            if (Array.isArray(statsData) && statsData[0]) {
+                const stat = statsData[0];
                 const presentCount = (stat.present_count ?? 0) + (stat.late_count ?? 0);
                 const absentCount = stat.absent_count ?? 0;
                 setAttendanceStats({
@@ -117,64 +111,68 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                 });
             }
 
-            if (absencesRes.status === 'fulfilled' && Array.isArray(absencesRes.value)) {
-                setAbsenceList(absencesRes.value.map(mapAbsenceFromApi));
+            if (Array.isArray(absencesData)) {
+                setAbsenceList(absencesData.map(mapAbsenceFromApi));
             }
 
-            if (makeupsRes.status === 'fulfilled' && Array.isArray(makeupsRes.value)) {
-                setMakeupList(makeupsRes.value.map(mapMakeupFromApi));
+            if (Array.isArray(makeupsData)) {
+                setMakeupList(makeupsData.map(mapMakeupFromApi));
             }
 
-            if (availabilityRes.status === 'fulfilled' && Array.isArray(availabilityRes.value)) {
-                setAvailableMakeupSlots(availabilityRes.value);
+            if (Array.isArray(availabilityData)) {
+                setAvailableMakeupSlots(availabilityData);
             }
-        };
+        }
 
         fetchClassData();
-        return () => controller.abort();
-    }, [numericClassId, fallbackTitle]);
+        return () => {
+            isMounted = false;
+        };
+    }, [isValidClassId, numericClassId, fallbackTitle]);
 
-    // 뷰나 탭이 전환되면 항상 화면 최상단으로 스크롤 이동
+    // 화면 전환 시 항상 최상단으로 스크롤 이동
     useEffect(() => {
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }, [subView, activeTab]);
 
-    const handleGoHome = useCallback(() => {
+    const handleGoHome = () => {
         if (onGoHome) {
             onGoHome();
         } else {
             navigate('/student');
         }
-    }, [navigate, onGoHome]);
+    };
 
-    const handleTabChange = useCallback((key) => {
+    const handleTabChange = (key) => {
         setActiveTab(key);
         setSubView('tab');
-    }, []);
+    };
 
-    const handleBreadcrumbClassClick = useCallback(() => {
+    const handleBreadcrumbClassClick = () => {
         setActiveTab('main');
         setSubView('tab');
-    }, []);
-    const handleOpenNoticeDetail = useCallback(async (notice) => {
+    };
+
+    // 공지 상세 보기
+    const handleOpenNoticeDetail = async (notice) => {
         setSelectedNotice(notice);
         setSubView('notice-detail');
 
-        if (numericClassId && notice?.id) {
+        if (isValidClassId && notice?.id) {
             try {
                 const detail = await studentApi.getNoticeDetail(numericClassId, notice.id);
                 if (detail) {
                     setSelectedNotice(mapNoticeFromApi(detail));
                 }
             } catch {
-                // 상세 조회 실패 시 목록에서 전달된 데이터 유지
+                // 상세 조회 실패 시 기존 목록 데이터 유지
             }
         }
-    }, [numericClassId]);
+    };
 
-    // 결석 신청 (POST /api/class/absences/{classId})
-    const handleSubmitAbsence = useCallback(async (newAbsence) => {
-        if (numericClassId) {
+    // 결석 신청하기
+    const handleSubmitAbsence = async (newAbsence) => {
+        if (isValidClassId) {
             try {
                 const created = await studentApi.requestAbsence(numericClassId, {
                     reason: newAbsence.reason,
@@ -184,16 +182,16 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                 setSubView('tab');
                 return;
             } catch {
-                // 서버 미연결/오류 시 로컬 상태 반영 Fallback
+                // 서버 오류 시 임시 상태 반영
             }
         }
         setAbsenceList((prev) => [newAbsence, ...prev]);
         setSubView('tab');
-    }, [numericClassId]);
+    };
 
-    // 보강 신청 (POST /api/makeups/request)
-    const handleSubmitMakeup = useCallback(async (newMakeup) => {
-        if (numericClassId) {
+    // 보강 신청하기
+    const handleSubmitMakeup = async (newMakeup) => {
+        if (isValidClassId) {
             try {
                 const created = await studentApi.requestMakeup({
                     class_id: numericClassId,
@@ -208,66 +206,65 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                 setSubView('tab');
                 return;
             } catch {
-                // 서버 미연결/오류 시 로컬 상태 반영 Fallback
+                // 서버 오류 시 임시 상태 반영
             }
         }
         setMakeupList((prev) => [newMakeup, ...prev]);
         setSubView('tab');
-    }, [numericClassId]);
+    };
 
-    // 결석 취소 (DELETE /api/class/absences/{absenceId})
-    const handleCancelAbsence = useCallback(async (id) => {
-        if (numericClassId) {
+    // 결석 취소하기
+    const handleCancelAbsence = async (id) => {
+        if (isValidClassId) {
             try {
                 await studentApi.cancelAbsence(id);
             } catch {
-                // 서버 미연결 시에도 로컬 목록 갱신
+                // 서버 미연결 시에도 화면에서 제거
             }
         }
         setAbsenceList((prev) => prev.filter((item) => item.id !== id));
-    }, [numericClassId]);
+    };
 
-    // 보강 취소 (PATCH /api/makeups/cancel/{makeupId})
-    const handleCancelMakeup = useCallback(async (id) => {
-        if (numericClassId) {
+    // 보강 취소하기
+    const handleCancelMakeup = async (id) => {
+        if (isValidClassId) {
             try {
                 await studentApi.cancelMakeup(id);
             } catch {
-                // 서버 미연결 시에도 로컬 목록 갱신
+                // 서버 미연결 시에도 화면에서 제거
             }
         }
         setMakeupList((prev) => prev.filter((item) => item.id !== id));
-    }, [numericClassId]);
+    };
 
-    // Breadcrumb 마지막 텍스트 계산
-    const breadcrumbLastText = useMemo(() => {
+    // 현재 위치(Breadcrumb) 마지막 글자 결정
+    const getBreadcrumbLastText = () => {
         if (subView === 'notice-list') return '공지 목록';
         if (subView === 'notice-detail') return '수업 공지';
         if (subView === 'absence-apply') return '결석 신청';
         if (subView === 'makeup-apply') return '보강 신청';
-        if (activeTab === 'main') return '수업 홈';
         if (activeTab === 'absence') return '결석 일정';
         if (activeTab === 'makeup') return '보강 일정';
         return '수업 홈';
-    }, [subView, activeTab]);
+    };
 
     return (
         <div className="class-page">
             <div className="class-container">
-                {/* 1. Breadcrumb 네비게이션 */}
+                {/* 1. 현재 위치 네비게이션 */}
                 <Nav
                     label="현재 위치"
                     items={[
                         { text: '홈', onClick: handleGoHome },
                         { text: classTitle, onClick: handleBreadcrumbClassClick },
-                        { text: breadcrumbLastText },
+                        { text: getBreadcrumbLastText() },
                     ]}
                 />
 
-                {/* 2. 수업 메인 타이틀 */}
+                {/* 2. 수업 제목 */}
                 <h1 className="class-title">{classTitle}</h1>
 
-                {/* 3. SubNav 탭 바 */}
+                {/* 3. 상단 탭 바 */}
                 <div className="class-subnav-wrapper">
                     <SubNav
                         role="student"
@@ -277,7 +274,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                     />
                 </div>
 
-                {/* 4. 본문 서브 뷰 렌더링 */}
+                {/* 4. 서브 화면 (공지 목록/상세, 결석/보강 신청) */}
                 {subView === 'notice-list' && (
                     <NoticeList
                         notices={notices}
@@ -309,7 +306,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                     />
                 )}
 
-                {/* 5. 기본 탭 화면 (2컬럼: 좌측 캘린더 + 우측 탭별 콘텐츠) */}
+                {/* 5. 기본 탭 화면 (좌측 달력 + 우측 탭 콘텐츠) */}
                 {subView === 'tab' && (
                     <div className="class-two-columns">
                         <aside className="class-calendar-aside">

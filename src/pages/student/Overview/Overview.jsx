@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Overview.css';
 import Calendar from '../../../components/Calendar/Calendar';
@@ -10,7 +10,8 @@ import studentApi from '../../../api/studentApi';
 
 const CLASS_COLORS = ['peach', 'lavender', 'yellow', 'mint'];
 
-function mapClassItem(item, index = 0) {
+// 서버에서 받은 수업 데이터를 화면 카드용 객체로 변환
+function formatClassItem(item, index = 0) {
     return {
         id: item.id ?? item.classroomId,
         title: item.name || item.title || '수업',
@@ -23,8 +24,11 @@ function mapClassItem(item, index = 0) {
 
 function Overview({ onSelectClass }) {
     const navigate = useNavigate();
+
     const [classes, setClasses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    // 모달 및 입력 상태
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
     const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
     const [targetClass, setTargetClass] = useState(null);
@@ -33,42 +37,44 @@ function Overview({ onSelectClass }) {
     const [joinErrorMessage, setJoinErrorMessage] = useState('존재하지 않는 코드입니다.');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // 처음 화면에 들어올 때 내 수업 목록 불러오기
     useEffect(() => {
-        const controller = new AbortController();
+        let isMounted = true;
 
-        const fetchClasses = async () => {
+        async function fetchMyClasses() {
             setIsLoading(true);
             try {
-                const data = await studentApi.getMyClasses(controller.signal);
-                const list = Array.isArray(data) ? data : [];
-                setClasses(list.map((item, idx) => mapClassItem(item, idx)));
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    setClasses([]);
-                }
-            } finally {
-                if (!controller.signal.aborted) {
-                    setIsLoading(false);
-                }
-            }
-        };
+                const data = await studentApi.getMyClasses();
+                if (!isMounted) return;
 
-        fetchClasses();
-        return () => controller.abort();
+                const list = Array.isArray(data) ? data : [];
+                setClasses(list.map((item, idx) => formatClassItem(item, idx)));
+            } catch {
+                if (isMounted) setClasses([]);
+            } finally {
+                if (isMounted) setIsLoading(false);
+            }
+        }
+
+        fetchMyClasses();
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     // 수업 참여 모달 열기
-    const handleOpenJoinModal = useCallback(() => {
+    const handleOpenJoinModal = () => {
         setJoinCode('');
         setJoinError(false);
         setJoinErrorMessage('존재하지 않는 코드입니다.');
         setIsJoinModalOpen(true);
-    }, []);
+    };
 
-    // 수업 참여 처리 (POST /api/class/join)
+    // 수업 코드로 참여하기
     const handleJoinSubmit = async (e) => {
         e.preventDefault();
         const trimmed = joinCode.trim();
+
         if (!trimmed) {
             setJoinError(true);
             setJoinErrorMessage('수업코드를 입력해주세요.');
@@ -77,9 +83,10 @@ function Overview({ onSelectClass }) {
 
         setIsSubmitting(true);
         setJoinError(false);
+
         try {
             const joined = await studentApi.joinClass(trimmed);
-            setClasses((prev) => [...prev, mapClassItem(joined, prev.length)]);
+            setClasses((prev) => [...prev, formatClassItem(joined, prev.length)]);
             setIsJoinModalOpen(false);
         } catch (err) {
             setJoinError(true);
@@ -90,12 +97,12 @@ function Overview({ onSelectClass }) {
     };
 
     // 수업 나가기 모달 열기
-    const handleOpenLeaveModal = useCallback((classItem) => {
+    const handleOpenLeaveModal = (classItem) => {
         setTargetClass(classItem);
         setIsLeaveModalOpen(true);
-    }, []);
+    };
 
-    // 수업 나가기 확정 (DELETE /api/class/{classroomId}/leave)
+    // 수업 나가기 확정
     const handleConfirmLeave = async () => {
         if (!targetClass) return;
 
@@ -112,12 +119,13 @@ function Overview({ onSelectClass }) {
         }
     };
 
-    const handleCardClick = useCallback((cls) => {
+    // 수업 카드 클릭 시 상세 페이지로 이동
+    const handleCardClick = (cls) => {
         if (onSelectClass) {
             onSelectClass(cls);
         }
         navigate(`/class/${cls.id}`, { state: { classInfo: cls } });
-    }, [navigate, onSelectClass]);
+    };
 
     return (
         <div className="student-overview-page">
@@ -181,7 +189,7 @@ function Overview({ onSelectClass }) {
                 </section>
             </div>
 
-            {/* 1. 수업 참여하기 모달 (view3) */}
+            {/* 수업 참여하기 모달 */}
             <JoinClassModal
                 isOpen={isJoinModalOpen}
                 joinCode={joinCode}
@@ -196,7 +204,7 @@ function Overview({ onSelectClass }) {
                 onClose={() => setIsJoinModalOpen(false)}
             />
 
-            {/* 2. 수업 나가기 모달 (view4) */}
+            {/* 수업 나가기 모달 */}
             <LeaveClassModal
                 isOpen={isLeaveModalOpen}
                 onConfirm={handleConfirmLeave}

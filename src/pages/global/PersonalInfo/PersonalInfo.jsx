@@ -3,13 +3,32 @@ import Button from "../../../components/Button/Button";
 import Nav from "../../../components/Nav/Nav";
 import "./PersonalInfo.css";
 
+function DefaultProfileIcon() {
+  return (
+    <svg
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ width: "100%", height: "100%", borderRadius: "50%", display: "block" }}
+      aria-hidden="true"
+    >
+      <circle cx="60" cy="60" r="60" fill="#DBDBDB" />
+      <circle cx="60" cy="43.5" r="19.5" fill="#FFFFFF" />
+      <path
+        d="M22.5 103.5C29.4 82.8 43.5 72 60 72C76.5 72 90.6 82.8 97.5 103.5C87.3 113.7 74.4 120 60 120C45.6 120 32.7 113.7 22.5 103.5Z"
+        fill="#FFFFFF"
+      />
+    </svg>
+  );
+}
+
 export default function PersonalInfo({ onNavigate }) {
   const [mode, setMode] = useState("view");
-  const [name, setName] = useState("학생1");
+  const [name, setName] = useState(() => localStorage.getItem("userName") || "학생1");
   const [email, setEmail] = useState("student@email.com");
   const [draftName, setDraftName] = useState(name);
   const [draftEmail, setDraftEmail] = useState(email);
-  const [photo, setPhoto] = useState("");
+  const [photo, setPhoto] = useState(() => localStorage.getItem("profileImage") || "");
   const [deleteEmail, setDeleteEmail] = useState(email);
   const [verificationCode, setVerificationCode] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -24,8 +43,16 @@ export default function PersonalInfo({ onNavigate }) {
 
   const saveChanges = () => {
     if (!draftName.trim() || !draftEmail.includes("@")) return;
-    setName(draftName.trim());
+    const trimmedName = draftName.trim();
+    setName(trimmedName);
     setEmail(draftEmail.trim());
+    localStorage.setItem("userName", trimmedName);
+    if (photo) {
+      localStorage.setItem("profileImage", photo);
+    } else {
+      localStorage.removeItem("profileImage");
+    }
+    window.dispatchEvent(new Event("profileUpdated"));
     setMode("view");
   };
 
@@ -48,7 +75,14 @@ export default function PersonalInfo({ onNavigate }) {
   const handlePhotoChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    setPhoto(URL.createObjectURL(file));
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setPhoto(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -70,7 +104,7 @@ export default function PersonalInfo({ onNavigate }) {
         <section className="personal-view" aria-label="내 정보">
           <div className="personal-photo-column">
             <div className="personal-photo-circle">
-              {photo ? <img src={photo} alt="프로필 사진" /> : <span>사진</span>}
+              {photo ? <img src={photo} alt="프로필 사진" /> : <DefaultProfileIcon />}
             </div>
           </div>
           <div className="personal-values">
@@ -96,10 +130,11 @@ export default function PersonalInfo({ onNavigate }) {
             <button
               className="personal-photo-select"
               type="button"
-              aria-label="프로필 사진 선택"
+              aria-label="프로필 수정"
               onClick={() => fileInputRef.current?.click()}
             >
-              {photo ? <img src={photo} alt="선택한 프로필 사진" /> : <span>사진 선택</span>}
+              {photo ? <img src={photo} alt="선택한 프로필 사진" /> : <DefaultProfileIcon />}
+              <span className="personal-photo-edit-overlay">프로필 수정</span>
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} hidden />
           </div>

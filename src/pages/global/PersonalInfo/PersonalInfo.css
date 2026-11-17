@@ -41,8 +41,10 @@
 }
 
 .personal-photo-select {
+  position: relative;
   width: 140px;
   height: 140px;
+  padding: 0;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -59,6 +61,24 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.personal-photo-edit-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(17, 17, 17, 0.42);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  transition: background-color 0.15s ease;
+}
+
+.personal-photo-select:hover .personal-photo-edit-overlay {
+  background-color: rgba(17, 17, 17, 0.58);
 }
 
 .personal-values {

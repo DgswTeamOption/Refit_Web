@@ -2,11 +2,29 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Header.css';
 import bellIcon from '../../assets/bell.svg';
-import profileIcon from '../../assets/profile.png';
+
+function DefaultProfileAvatar({ className = 'header-profile-icon' }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 40 40"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+        >
+            <circle cx="20" cy="20" r="20" fill="#DBDBDB" />
+            <circle cx="20" cy="14.5" r="6.5" fill="#FFFFFF" />
+            <path
+                d="M7.5 34.5C9.8 27.6 14.5 24 20 24C25.5 24 30.2 27.6 32.5 34.5C29.1 37.9 24.8 40 20 40C15.2 40 10.9 37.9 7.5 34.5Z"
+                fill="#FFFFFF"
+            />
+        </svg>
+    );
+}
 
 const Header = ({
     isLoggedIn: isLoggedInProp,
-    userName = '학생1',
+    userName: userNameProp,
     initialNotifications = [],
     onLogoClick,
     onLoginClick,
@@ -16,9 +34,18 @@ const Header = ({
     const navigate = useNavigate();
     const isLoggedIn = isLoggedInProp !== undefined
         ? isLoggedInProp
-        : Boolean(typeof window !== 'undefined' && localStorage.getItem('token'));
+        : Boolean(typeof window !== 'undefined' && (localStorage.getItem('accessToken') || localStorage.getItem('token')));
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+    // 프로필 사진 및 이름 상태 (정보수정에서 변경 시 실시간 동기화)
+    const [profileImage, setProfileImage] = useState(() =>
+        typeof window !== 'undefined' ? (localStorage.getItem('profileImage') || '') : ''
+    );
+    const [storedName, setStoredName] = useState(() =>
+        typeof window !== 'undefined' ? (localStorage.getItem('userName') || '') : ''
+    );
+    const userName = storedName || userNameProp || '학생1';
 
     // 초기 로그인 시에는 알림이 없도록 빈 배열 기본값 적용
     const [notifications, setNotifications] = useState(initialNotifications);
@@ -27,6 +54,20 @@ const Header = ({
     const profileRef = useRef(null);
 
     const unreadCount = notifications.filter((item) => item.isUnread).length;
+
+    useEffect(() => {
+        const syncProfile = () => {
+            setProfileImage(localStorage.getItem('profileImage') || '');
+            setStoredName(localStorage.getItem('userName') || '');
+        };
+
+        window.addEventListener('profileUpdated', syncProfile);
+        window.addEventListener('storage', syncProfile);
+        return () => {
+            window.removeEventListener('profileUpdated', syncProfile);
+            window.removeEventListener('storage', syncProfile);
+        };
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -82,6 +123,7 @@ const Header = ({
         if (onLogoutClick) {
             onLogoutClick();
         } else {
+            localStorage.removeItem('accessToken');
             localStorage.removeItem('token');
             localStorage.removeItem('role');
             navigate('/login');
@@ -205,7 +247,11 @@ const Header = ({
                                     aria-label="사용자 프로필"
                                     aria-expanded={isProfileOpen}
                                 >
-                                    <img src={profileIcon} alt="프로필 아이콘" className="header-profile-icon" />
+                                    {profileImage ? (
+                                        <img src={profileImage} alt="프로필 사진" className="header-profile-icon" />
+                                    ) : (
+                                        <DefaultProfileAvatar className="header-profile-icon" />
+                                    )}
                                 </button>
 
                                 {isProfileOpen && (
