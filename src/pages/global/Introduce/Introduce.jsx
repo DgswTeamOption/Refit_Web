@@ -63,7 +63,7 @@ export default function Introduce() {
             <section className="ri-inside ri-small">
                 <div className="ri-wrap">
                     <Heading section="inside" />
-                    <div className="ri-inside-device"><IntroPhone /></div>
+                    <div className="ri-inside-device"><IntroPhone name="student" /></div>
                 </div>
             </section>
             <FinalCta />
