@@ -88,7 +88,6 @@ function Features() {
                         <h3><span className="ri-wide">학생별 보강 현황까지</span><span className="ri-small">학생별 결석·보강 확인</span></h3>
                         <p className="ri-wide">학생을 검색하고, 결석·보강 필요 일수를 확인하세요</p>
                         <Screen className="ri-product" name="students" mobile="mobileStudents" alt="학생 검색과 학생별 결석·보강 필요 횟수" />
-                        <small className="ri-wide">결석 정보와 보강 기록을 학생별로 이어서 확인</small>
                     </article>
                 </div>
             </div>

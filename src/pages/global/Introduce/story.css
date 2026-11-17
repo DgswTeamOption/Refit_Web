@@ -21,10 +21,10 @@
 }
 .ri-problem {
     --ri-ink: #fff;
-    --ri-muted: #d3e2e9;
-    --ri-accent: #ffcc40;
+    --ri-muted: #fff;
+    --ri-accent: #ffd000;
     color: var(--ri-ink);
-    background: #0e2737;
+    background: #292929;
     min-height: clamp(650px, 61.8vw, 890px);
     padding-block: clamp(80px, 7.65vw, 110px) 80px;
 }
@@ -68,10 +68,10 @@
     background: #e9f5ff;
 }
 .ri-messages > li:last-child .ri-message {
-    background: #ffcc40;
+    background: #ffd000;
 }
 .ri-messages > li:last-child small {
-    color: #644e13;
+    color: #403000;
 }
 .ri-solution {
     --ri-ink: #fff;

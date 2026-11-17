@@ -23,7 +23,7 @@
 }
 
 .ri-nfc {
-    --ri-ink: #f4f9fc; --ri-muted: #cee1eb; --ri-accent: #ffcf53;
+    --ri-ink: #fff; --ri-muted: #fff; --ri-accent: #ffcf53;
     background: var(--ri-dark); color: var(--ri-ink);
 }
 .ri-nfc-stage { min-height: 100svh; display: grid; align-items: center; background: var(--ri-dark); }
@@ -34,7 +34,7 @@
 }
 .ri-nfc-interaction { display: contents; }
 .ri-nfc-copy { grid-area: copy; }
-.ri-nfc-steps { display: grid; gap: .85rem; margin: 2.2rem 0 0; padding: 0; list-style: none; color: #d5e3ea; }
+.ri-nfc-steps { display: grid; gap: .85rem; margin: 2.2rem 0 0; padding: 0; list-style: none; color: #fff; }
 .ri-nfc-steps li { display: flex; gap: .8em; align-items: baseline; }
 .ri-nfc-steps strong { min-width: 3.2em; color: var(--ri-yellow); font-size: .875rem; }
 .ri-nfc-devices { grid-area: devices; position: relative; min-width: 0; height: min(72svh, 675px); perspective: 1150px; }

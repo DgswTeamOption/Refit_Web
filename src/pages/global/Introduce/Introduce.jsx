@@ -22,7 +22,7 @@ export default function Introduce() {
     useLayoutEffect(() => {
         const media = gsap.matchMedia();
         media.add('(prefers-reduced-motion: no-preference)', () => {
-            const lenis = new Lenis({ lerp: 0.12, syncTouch: false });
+            const lenis = new Lenis({ lerp: 0.05, syncTouch: false });
             scroller.current = lenis;
             const tick = seconds => lenis.raf(seconds * 1000);
             lenis.on('scroll', ScrollTrigger.update);
