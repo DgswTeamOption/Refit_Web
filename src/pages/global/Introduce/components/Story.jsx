@@ -30,7 +30,7 @@ const steps = [
 
 function Problem() {
     return (
-        <section className="ri-problem">
+        <section id="problem" className="ri-problem">
             <div className="ri-wrap">
                 <div className="ri-problem__layout">
                     <Heading section="problem" />

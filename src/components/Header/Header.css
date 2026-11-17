@@ -190,6 +190,10 @@
     display: block;
 }
 
+.header-profile-icon.has-photo {
+    object-fit: cover;
+}
+
 /* 팝업 공통 카드 스타일 */
 .popup-card {
     position: absolute;

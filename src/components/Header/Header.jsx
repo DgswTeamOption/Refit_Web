@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 import './Header.css';
 import bellIcon from '../../assets/bell.svg';
 import profileIcon from '../../assets/profile.png';
 import { clearAuthSession } from '../../utils/auth';
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
 const Header = ({
     isLoggedIn: isLoggedInProp,
@@ -21,12 +24,53 @@ const Header = ({
         : Boolean(typeof window !== 'undefined' && (localStorage.getItem('accessToken') || localStorage.getItem('token')));
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [profileImageUrl, setProfileImageUrl] = useState('');
+    const accessToken = typeof window !== 'undefined'
+        ? localStorage.getItem('accessToken') || localStorage.getItem('token')
+        : null;
 
     // 초기 로그인 시에는 알림이 없도록 빈 배열 기본값 적용
     const [notifications, setNotifications] = useState(initialNotifications);
 
     const notificationRef = useRef(null);
     const profileRef = useRef(null);
+
+    useEffect(() => {
+        setProfileImageUrl('');
+        if (!isLoggedIn || !accessToken) return undefined;
+
+        const controller = new AbortController();
+
+        const loadProfileImage = async () => {
+            try {
+                const claims = jwtDecode(accessToken);
+                const rawUserId = claims.userId ?? claims.user_id ?? claims.uid ?? claims.id ?? claims.user?.id ?? claims.sub;
+                const userId = typeof rawUserId === 'number' ? String(rawUserId) : rawUserId;
+                if (typeof userId !== 'string' || !/^\d+$/.test(userId)) return;
+
+                const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+                    headers: { Authorization: `Bearer ${accessToken}` },
+                    signal: controller.signal,
+                });
+                if (!response.ok) return;
+
+                const result = await response.json();
+                const profile = result?.data ?? result;
+                const imageUrl = profile?.profileImageUrl
+                    ?? profile?.profile_image_url
+                    ?? profile?.profileImage
+                    ?? profile?.profile_image
+                    ?? '';
+
+                if (typeof imageUrl === 'string') setProfileImageUrl(imageUrl.trim());
+            } catch (error) {
+                if (error?.name !== 'AbortError') setProfileImageUrl('');
+            }
+        };
+
+        loadProfileImage();
+        return () => controller.abort();
+    }, [accessToken, isLoggedIn]);
 
     const unreadCount = notifications.filter((item) => item.isUnread).length;
 
@@ -206,7 +250,12 @@ const Header = ({
                                     aria-label="사용자 프로필"
                                     aria-expanded={isProfileOpen}
                                 >
-                                    <img src={profileIcon} alt="프로필 아이콘" className="header-profile-icon" />
+                                    <img
+                                        src={profileImageUrl || profileIcon}
+                                        alt={profileImageUrl ? '프로필 사진' : '프로필 아이콘'}
+                                        className={`header-profile-icon ${profileImageUrl ? 'has-photo' : ''}`}
+                                        onError={() => setProfileImageUrl('')}
+                                    />
                                 </button>
 
                                 {isProfileOpen && (
