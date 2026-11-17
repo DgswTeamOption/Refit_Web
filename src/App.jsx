@@ -19,6 +19,8 @@ const TeacherOverview = lazy(() => import('./pages/teacher/Overview/Overview.jsx
 const PAGE_PATHS = {
     login: '/login',
     signup: '/signup',
+    student: '/student',
+    teacher: '/teacher',
     'personal-info': '/personal-info',
     faq: '/faq',
     terms: '/terms',

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Header.css';
 import bellIcon from '../../assets/bell.svg';
 import profileIcon from '../../assets/profile.png';
+import { clearAuthSession } from '../../utils/auth';
 
 const Header = ({
     isLoggedIn: isLoggedInProp,
@@ -17,7 +18,7 @@ const Header = ({
     const navigate = useNavigate();
     const isLoggedIn = isLoggedInProp !== undefined
         ? isLoggedInProp
-        : Boolean(typeof window !== 'undefined' && localStorage.getItem('token'));
+        : Boolean(typeof window !== 'undefined' && (localStorage.getItem('accessToken') || localStorage.getItem('token')));
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -83,8 +84,7 @@ const Header = ({
         if (onLogoutClick) {
             onLogoutClick();
         } else {
-            localStorage.removeItem('token');
-            localStorage.removeItem('role');
+            clearAuthSession();
             navigate('/login');
         }
     };

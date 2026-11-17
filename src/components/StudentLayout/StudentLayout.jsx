@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
 import GlobalNavigation from '../GlobalNavigation/GlobalNavigation';
+import { clearAuthSession } from '../../utils/auth';
 
 /**
  * 학생 화면 전용 레이아웃 (로그인 전용 헤더 + 컨텐츠 + 푸터)
@@ -18,8 +19,7 @@ export default function StudentLayout() {
         userName={userName}
         onLogoClick={() => navigate('/student')}
         onLogoutClick={() => {
-          localStorage.removeItem('token');
-          localStorage.removeItem('role');
+          clearAuthSession();
           navigate('/login');
         }}
       />

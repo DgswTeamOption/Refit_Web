@@ -69,6 +69,18 @@
   width: 100%;
 }
 
+.auth-page .google-login-widget {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.auth-page .google-login-widget > div,
+.auth-page .google-login-widget iframe {
+  max-width: 100%;
+}
+
 .auth-page .google-login-button {
   position: relative;
   display: flex;
