@@ -8,6 +8,7 @@ const Header = ({
     isLoggedIn: isLoggedInProp,
     userName = '학생1',
     initialNotifications = [],
+    showServiceMenu = true,
     onLogoClick,
     onLoginClick,
     onSignupClick,
@@ -103,12 +104,12 @@ const Header = ({
                     </button>
 
                     {/* 로그인 전 헤더 메뉴 (Header · 로그인 전) */}
-                    {!isLoggedIn && (
+                    {!isLoggedIn && showServiceMenu && (
                         <nav className="header-prelog-nav" aria-label="메인 메뉴">
-                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce')}>서비스 소개</button>
-                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce')}>기능</button>
-                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce')}>이용 방법</button>
-                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce')}>Refit AI</button>
+                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce#overview')}>서비스 소개</button>
+                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce#features')}>기능</button>
+                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce#start')}>이용 방법</button>
+                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce#ai')}>Refit AI</button>
                             <button type="button" className="header-prelog-link" onClick={() => navigate('/faq')}>FAQ</button>
                         </nav>
                     )}
