@@ -24,6 +24,7 @@ const Header = ({
         : Boolean(typeof window !== 'undefined' && (localStorage.getItem('accessToken') || localStorage.getItem('token')));
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [profileName, setProfileName] = useState(userName);
     const [profileImageUrl, setProfileImageUrl] = useState('');
     const accessToken = typeof window !== 'undefined'
         ? localStorage.getItem('accessToken') || localStorage.getItem('token')
@@ -36,12 +37,13 @@ const Header = ({
     const profileRef = useRef(null);
 
     useEffect(() => {
+        setProfileName(userName || '학생1');
         setProfileImageUrl('');
         if (!isLoggedIn || !accessToken) return undefined;
 
         const controller = new AbortController();
 
-        const loadProfileImage = async () => {
+        const loadProfile = async () => {
             try {
                 const claims = jwtDecode(accessToken);
                 const rawUserId = claims.userId ?? claims.user_id ?? claims.uid ?? claims.id ?? claims.user?.id ?? claims.sub;
@@ -56,21 +58,26 @@ const Header = ({
 
                 const result = await response.json();
                 const profile = result?.data ?? result;
+                const name = profile?.name ?? profile?.userName ?? profile?.username ?? '';
                 const imageUrl = profile?.profileImageUrl
                     ?? profile?.profile_image_url
                     ?? profile?.profileImage
                     ?? profile?.profile_image
                     ?? '';
 
+                if (typeof name === 'string' && name.trim()) setProfileName(name.trim());
                 if (typeof imageUrl === 'string') setProfileImageUrl(imageUrl.trim());
             } catch (error) {
-                if (error?.name !== 'AbortError') setProfileImageUrl('');
+                if (error?.name !== 'AbortError') {
+                    setProfileName(userName || '학생1');
+                    setProfileImageUrl('');
+                }
             }
         };
 
-        loadProfileImage();
+        loadProfile();
         return () => controller.abort();
-    }, [accessToken, isLoggedIn]);
+    }, [accessToken, isLoggedIn, userName]);
 
     const unreadCount = notifications.filter((item) => item.isUnread).length;
 
@@ -261,7 +268,7 @@ const Header = ({
                                 {isProfileOpen && (
                                     <div className="popup-card profile-popup" role="dialog" aria-label="프로필 메뉴">
                                         <div className="profile-popup-header">
-                                            <span className="profile-popup-name">{userName}</span>
+                                            <span className="profile-popup-name">{profileName}</span>
                                         </div>
                                         <div className="profile-popup-divider" />
                                         <ul className="profile-popup-menu">

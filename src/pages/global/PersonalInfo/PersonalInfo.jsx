@@ -189,6 +189,11 @@ export default function PersonalInfo({ onNavigate }) {
           token: accessToken,
           body: formData,
         });
+        const profileImageId = Number(uploadedFile?.fileId);
+
+        if (!Number.isSafeInteger(profileImageId) || profileImageId <= 0) {
+          throw new Error("프로필 이미지 파일 ID를 받지 못했습니다.");
+        }
 
         if (!uploadedFile?.imageUrl) {
           throw new Error("프로필 사진 주소를 받지 못했습니다.");
@@ -198,7 +203,7 @@ export default function PersonalInfo({ onNavigate }) {
           const updatedProfile = await apiRequest("/api/setting/profile-image", {
             method: "PATCH",
             token: accessToken,
-            body: { profileImageUrl: uploadedFile.imageUrl },
+            body: { profileImageId },
           });
           nextProfile = normalizeProfile(updatedProfile, { ...nextProfile, photo: uploadedFile.imageUrl });
           setProfile(nextProfile);
