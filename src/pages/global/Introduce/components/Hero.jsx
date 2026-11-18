@@ -32,7 +32,7 @@ export default function Hero() {
                     <Heading section="hero" />
                     <div className="ri-hero-actions">
                         <StartLink />
-                        <Link to="#features">기능 둘러보기 <span aria-hidden="true">↓</span></Link>
+                        <Link to="#problem">기능 둘러보기 <span aria-hidden="true">↓</span></Link>
                     </div>
                 </div>
                 <div className="ri-hero-stage">

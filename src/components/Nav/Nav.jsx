@@ -1,14 +1,20 @@
 import { Link } from "react-router-dom";
+import { normalizeRole } from "../../utils/auth.js";
 import "./Nav.css";
 
 export default function Nav({ items = [], label = "현재 위치", className = "" }) {
+  const role = typeof window !== "undefined"
+    ? normalizeRole(localStorage.getItem("role"))
+    : "";
+  const roleHomePath = role === "teacher" ? "/teacher" : role === "student" ? "/student" : "/";
+
   return (
     <nav className={`breadcrumb-nav ${className}`.trim()} aria-label={label}>
       {items.map((item, index) => (
         <span className="breadcrumb-nav-item" key={`${item.text}-${index}`}>
           {index > 0 && <span className="breadcrumb-nav-separator" aria-hidden="true">›</span>}
           {item.link ? (
-            <Link to={item.link}>{item.text}</Link>
+            <Link to={item.text === "홈" && item.link === "/" ? roleHomePath : item.link}>{item.text}</Link>
           ) : item.onClick ? (
             <button type="button" onClick={item.onClick}>{item.text}</button>
           ) : (

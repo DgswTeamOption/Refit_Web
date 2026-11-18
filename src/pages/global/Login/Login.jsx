@@ -4,39 +4,94 @@ import Label from "../../../components/Label/Label";
 import GoogleLoginButton from "../../../components/GoogleLoginButton/GoogleLoginButton";
 import AuthLayout from "../../../components/AuthLayout/AuthLayout";
 import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
+import { authApiRequest, resolveAuthenticatedUser, saveAuthSession } from "../../../utils/auth";
 
 export default function Login({ onNavigate }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const requestCode = () => {
-    if (!email.includes("@")) {
+  async function requestCode() {
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail.includes("@")) {
       setMessage("이메일 주소를 확인해 주세요.");
       return;
     }
 
-    setMessage("인증코드를 보냈어요.");
-  };
+    setIsSendingCode(true);
+    setMessage("");
+    try {
+      await authApiRequest("/api/user/email/send-code", {
+        body: { email_id: normalizedEmail },
+      });
+      setMessage("인증코드를 보냈어요.");
+    } catch (error) {
+      setMessage(error.message || "인증코드를 보내지 못했습니다.");
+    } finally {
+      setIsSendingCode(false);
+    }
+  }
 
-  const submitLogin = () => {
-    if (!email.includes("@") || !code) {
+  async function signInWithTokens(tokens) {
+    const user = await resolveAuthenticatedUser(tokens.accessToken);
+    saveAuthSession(tokens, user);
+    onNavigate(user.role);
+  }
+
+  async function handleGoogleIdToken(idToken) {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setMessage("");
+    try {
+      const tokens = await authApiRequest("/api/auth/google/login", {
+        body: { idToken },
+      });
+      await signInWithTokens(tokens);
+    } catch (error) {
+      setMessage(error.status === 401
+        ? "Google 인증 토큰을 서버가 거부했습니다. 서버가 허용하는 Google Client ID 목록을 확인해 주세요."
+        : error.message || "Google 로그인에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function submitLogin() {
+    const normalizedEmail = email.trim();
+    const normalizedCode = code.trim();
+    if (!normalizedEmail.includes("@") || !normalizedCode) {
       setMessage("이메일과 인증코드를 입력해 주세요.");
       return;
     }
 
-    localStorage.setItem("token", "student-auth-token");
-    localStorage.setItem("role", "student");
-    localStorage.setItem("userName", "학생1");
-    onNavigate("student");
-  };
+    setIsSubmitting(true);
+    setMessage("");
+    try {
+      const tokens = await authApiRequest("/api/auth/login", {
+        body: {
+          email_id: normalizedEmail,
+          verificationToken: normalizedCode,
+        },
+      });
+      await signInWithTokens(tokens);
+    } catch (error) {
+      setMessage(error.message || "로그인에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <AuthLayout>
       <div className="login-form-content">
         <h1 className="auth-heading">로그인</h1>
 
-        <GoogleLoginButton />
+        <GoogleLoginButton
+          onIdToken={handleGoogleIdToken}
+          onError={(error) => setMessage(error.message)}
+        />
 
         <div className="auth-divider">또는</div>
         <Label
@@ -50,7 +105,14 @@ export default function Login({ onNavigate }) {
           onChange={(event) => setEmail(event.target.value)}
           inputButton={
             <span className="auth-code-button">
-              <Button text="인증코드 받기" color="blue" width={110} size="compact" onClick={requestCode} />
+              <Button
+                text={isSendingCode ? "전송 중..." : "인증코드 받기"}
+                color="blue"
+                width={110}
+                size="compact"
+                onClick={requestCode}
+                disabled={isSendingCode || isSubmitting}
+              />
             </span>
           }
         />
@@ -66,7 +128,13 @@ export default function Login({ onNavigate }) {
           onChange={(event) => setCode(event.target.value)}
         />
         <div className="auth-actions">
-          <Button text="로그인" width={420} size="compact" onClick={submitLogin} />
+          <Button
+            text={isSubmitting ? "로그인 중..." : "로그인"}
+            width={420}
+            size="compact"
+            onClick={submitLogin}
+            disabled={isSubmitting || isSendingCode}
+          />
           <p>
             계정이 없나요? <button type="button" onClick={() => onNavigate("signup")}>회원가입</button>
           </p>

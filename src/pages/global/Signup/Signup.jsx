@@ -6,6 +6,7 @@ import GoogleLoginButton from "../../../components/GoogleLoginButton/GoogleLogin
 import Label from "../../../components/Label/Label";
 import studentIcon from "../../../assets/Vector.svg";
 import teacherIcon from "../../../assets/Book.svg";
+import { authApiRequest, normalizeRole, saveAuthSession } from "../../../utils/auth";
 import "./Signup.css";
 
 export default function Signup({ onNavigate }) {
@@ -15,38 +16,122 @@ export default function Signup({ onNavigate }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [googleIdToken, setGoogleIdToken] = useState("");
+  const [googleSignupProfile, setGoogleSignupProfile] = useState(null);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const requestCode = () => {
-    if (!email.trim().includes("@")) {
+  async function requestCode() {
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail.includes("@")) {
       setMessage("이메일 주소를 확인해 주세요.");
       return;
     }
 
-    setMessage("인증코드를 보냈어요.");
-  };
+    setIsSendingCode(true);
+    setMessage("");
+    try {
+      await authApiRequest("/api/user/email/send-code", {
+        body: { email_id: normalizedEmail },
+      });
+      setMessage("인증코드를 보냈어요.");
+    } catch (error) {
+      setMessage(error.message || "인증코드를 보내지 못했습니다.");
+    } finally {
+      setIsSendingCode(false);
+    }
+  }
 
-  const continueToRole = () => {
+  function continueToRole() {
     if (!name.trim() || !email.trim().includes("@") || !code.trim()) {
       setMessage("이름, 이메일, 인증코드를 입력해 주세요.");
       return;
     }
 
+    // The register endpoint validates verificationToken, so do not consume the
+    // same one-time code with /verify-code before submitting registration.
     setMessage("");
     setStep("role");
-  };
+  }
 
-  const completeSignup = () => {
-    if (role === "student") {
-      localStorage.setItem("token", "student-auth-token");
-      localStorage.setItem("role", "student");
-      localStorage.setItem("userName", name.trim() || "학생1");
-      onNavigate("student");
-    } else {
-      localStorage.setItem("token", "teacher-auth-token");
-      localStorage.setItem("role", "teacher");
-      onNavigate("login");
+  function handleGoogleIdToken(idToken) {
+    setGoogleIdToken(idToken);
+    setGoogleSignupProfile(null);
+    setMessage("");
+    setStep("role");
+  }
+
+  async function completeGoogleSignup() {
+    if (!googleIdToken) {
+      setMessage("Google 인증을 다시 진행해 주세요.");
+      setStep("information");
+      return;
     }
-  };
+
+    setIsSubmitting(true);
+    setMessage("");
+    try {
+      let registeredProfile = googleSignupProfile;
+      if (!registeredProfile) {
+        try {
+          registeredProfile = await authApiRequest("/api/auth/google/register", {
+            body: { idToken: googleIdToken, role: role.toUpperCase() },
+          });
+        } catch (error) {
+          if (error.status === 401) {
+            setGoogleIdToken("");
+            setGoogleSignupProfile(null);
+            setStep("information");
+            setMessage("Google 인증은 완료됐지만 서버가 ID 토큰을 거부했습니다. 서버가 쉼표로 구분된 Google Client ID를 각각 허용하는지 확인해 주세요.");
+            return;
+          }
+          throw error;
+        }
+        setGoogleSignupProfile(registeredProfile);
+      }
+
+      // Google registration returns the account profile; login returns the
+      // access and refresh tokens used by the rest of the app.
+      const tokens = await authApiRequest("/api/auth/google/login", {
+        body: { idToken: googleIdToken },
+      });
+      const registeredRole = normalizeRole(registeredProfile?.role) || role;
+      saveAuthSession(tokens, { role: registeredRole, name: registeredProfile?.name || name });
+      onNavigate("login");
+    } catch (error) {
+      setMessage(error.message || "Google 회원가입에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function completeEmailSignup() {
+    setIsSubmitting(true);
+    setMessage("");
+    try {
+      const data = await authApiRequest("/api/auth/register", {
+        body: {
+          email_id: email.trim(),
+          name: name.trim(),
+          role: role.toUpperCase(),
+          verificationToken: code.trim(),
+        },
+      });
+
+      const registeredRole = normalizeRole(data?.role);
+      if (!registeredRole) throw new Error("회원 역할 정보를 받지 못했습니다.");
+      onNavigate(registeredRole);
+    } catch (error) {
+      setMessage(error.message || "회원가입에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function completeSignup() {
+    if (googleIdToken) return completeGoogleSignup();
+    return completeEmailSignup();
+  }
 
   return (
     <AuthLayout>
@@ -54,7 +139,10 @@ export default function Signup({ onNavigate }) {
         <div className="signup-information">
           <div className="signup-form-content">
             <h1 className="auth-heading">회원가입</h1>
-            <GoogleLoginButton />
+            <GoogleLoginButton
+              onIdToken={handleGoogleIdToken}
+              onError={(error) => setMessage(error.message)}
+            />
             <div className="auth-divider">또는</div>
             <Label
               LabelText="이름"
@@ -76,7 +164,14 @@ export default function Signup({ onNavigate }) {
               onChange={(event) => setEmail(event.target.value)}
               inputButton={
                 <span className="auth-code-button">
-                  <Button text="인증코드 받기" width={110} size="compact" color="blue" onClick={requestCode} />
+                  <Button
+                    text={isSendingCode ? "전송 중..." : "인증코드 받기"}
+                    width={110}
+                    size="compact"
+                    color="blue"
+                    onClick={requestCode}
+                    disabled={isSendingCode || isSubmitting}
+                  />
                 </span>
               }
             />
@@ -91,7 +186,13 @@ export default function Signup({ onNavigate }) {
               onChange={(event) => setCode(event.target.value)}
             />
             <div className="auth-actions">
-              <Button text="회원가입" width={420} size="compact" onClick={continueToRole} />
+              <Button
+                text={isSubmitting ? "확인 중..." : "회원가입"}
+                width={420}
+                size="compact"
+                onClick={continueToRole}
+                disabled={isSubmitting || isSendingCode}
+              />
               <p>
                 이미 계정이 있나요? <button type="button" onClick={() => onNavigate("login")}>로그인</button>
               </p>
@@ -108,6 +209,7 @@ export default function Signup({ onNavigate }) {
                 type="button"
                 className={`signup-role-card ${role === "student" ? "selected" : ""}`}
                 aria-pressed={role === "student"}
+                disabled={Boolean(googleSignupProfile)}
                 onClick={() => setRole("student")}
               >
                 <img src={studentIcon} alt="" />
@@ -118,6 +220,7 @@ export default function Signup({ onNavigate }) {
                 type="button"
                 className={`signup-role-card ${role === "teacher" ? "selected" : ""}`}
                 aria-pressed={role === "teacher"}
+                disabled={Boolean(googleSignupProfile)}
                 onClick={() => setRole("teacher")}
               >
                 <img src={teacherIcon} alt="" />
@@ -125,7 +228,17 @@ export default function Signup({ onNavigate }) {
                 <span>수업을 만들고<br />출석·보강을 관리해요</span>
               </button>
             </div>
-            <Button text="시작하기" width={420} size="compact" onClick={completeSignup} />
+            <Button
+              text={isSubmitting ? "가입 중..." : googleSignupProfile ? "로그인 다시 시도" : "시작하기"}
+              width={420}
+              size="compact"
+              onClick={completeSignup}
+              disabled={isSubmitting || isSendingCode}
+            />
+            <p className="auth-feedback" role="status">{message}</p>
+            <p className="signup-role-switch">
+              이미 계정이 있나요? <button type="button" onClick={() => onNavigate("login")}>로그인</button>
+            </p>
           </div>
           <GlobalNavigation onNavigate={onNavigate} />
         </div>

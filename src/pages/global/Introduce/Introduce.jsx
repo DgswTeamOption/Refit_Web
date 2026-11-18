@@ -45,7 +45,7 @@ export default function Introduce() {
             window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
             return;
         }
-        if (!['overview', 'features', 'start', 'ai', 'nfc'].includes(id)) return;
+        if (!['overview', 'problem', 'features', 'start', 'ai', 'nfc'].includes(id)) return;
         const frame = requestAnimationFrame(() => {
             const target = document.getElementById(id);
             if (!target) return;
