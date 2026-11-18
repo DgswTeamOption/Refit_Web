@@ -219,6 +219,9 @@ export default function PersonalInfo({ onNavigate }) {
         }
       }
 
+      if (nextProfile.name) {
+        localStorage.setItem("userName", nextProfile.name);
+      }
       setDraftName(nextProfile.name);
       setPendingPhoto(null);
       setPhotoPreview("");

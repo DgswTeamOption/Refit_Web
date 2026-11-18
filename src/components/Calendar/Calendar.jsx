@@ -6,9 +6,8 @@ import CalendarBlock from './CalendarBlock';
 import './Calendar.css';
 
 function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate }) {
-    // 2026년 8월 기준 (Figma 시안 기준)
-    const [year, setYear] = useState(2026);
-    const [month, setMonth] = useState(7); // 0-indexed (7 = 8월)
+    const [year, setYear] = useState(() => new Date().getFullYear());
+    const [month, setMonth] = useState(() => new Date().getMonth()); // 0-indexed
 
     const firstDayIndex = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
@@ -32,10 +31,8 @@ function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate }
     };
 
     const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
-
     const isClassEmpty = Array.isArray(classes) && classes.length === 0;
 
-    // 시안(view1 vs view5/view10)에 따른 날짜별 도트 매핑
     const classEvents = isClassEmpty ? {} : {
         4: ['lavender', 'mint'],
         6: ['lavender', 'mint'],
@@ -59,6 +56,15 @@ function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate }
     };
 
     const activeEvents = mode === 'attendance' ? attendanceEvents : classEvents;
+
+    const checkSelected = (date) => {
+        if (typeof selectedDate === 'string' && selectedDate.includes('-')) {
+            const monthStr = String(month + 1).padStart(2, '0');
+            const dayStr = String(date).padStart(2, '0');
+            return selectedDate === `${year}-${monthStr}-${dayStr}`;
+        }
+        return selectedDate === date;
+    };
 
     return (
         <CalendarContainer>
@@ -91,8 +97,8 @@ function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate }
                         key={date}
                         date={date}
                         colors={activeEvents[date] || []}
-                        onClick={onSelectDate}
-                        isSelected={selectedDate === date}
+                        onClick={onSelectDate ? (day) => onSelectDate(day, year, month + 1) : undefined}
+                        isSelected={checkSelected(date)}
                     />
                 ))}
             </div>

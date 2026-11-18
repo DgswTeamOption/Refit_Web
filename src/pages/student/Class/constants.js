@@ -1,4 +1,4 @@
-// 수업 상세 페이지 관련 상수 및 목업 데이터
+// 수업 상세 페이지 관련 상수, 목업 Fallback 데이터 및 API 매퍼
 
 export const CLASS_TABS = [
     { key: 'main', label: '메인' },
@@ -71,11 +71,100 @@ export const INITIAL_MAKEUP_LIST = [
 // YYYY-MM-DD -> YYYY년 M월 D일 포맷팅 (년도 포함)
 export const formatToKoreanDate = (dateStr) => {
     if (!dateStr) return '';
-    if (dateStr.includes('-')) {
-        const parts = dateStr.split('-');
+    const datePart = String(dateStr).split('T')[0];
+    if (datePart.includes('-')) {
+        const parts = datePart.split('-');
         if (parts.length === 3) {
             return `${parts[0]}년 ${parseInt(parts[1], 10)}월 ${parseInt(parts[2], 10)}일`;
         }
     }
     return dateStr;
+};
+
+// ISO 문자열 -> YYYY. MM. DD
+export const formatToDotDate = (isoStr) => {
+    if (!isoStr) return '';
+    const datePart = String(isoStr).split('T')[0];
+    const parts = datePart.split('-');
+    if (parts.length === 3) {
+        return `${parts[0]}. ${parts[1]}. ${parts[2]}`;
+    }
+    return isoStr;
+};
+
+// ISO 문자열 -> HH:mm
+export const formatToTime = (isoStr) => {
+    if (!isoStr) return '';
+    const parsed = new Date(isoStr);
+    if (Number.isNaN(parsed.getTime())) return '';
+    const hh = String(parsed.getHours()).padStart(2, '0');
+    const mm = String(parsed.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+};
+
+export const mapNoticeFromApi = (item) => {
+    const contentText = typeof item.content === 'string' ? item.content : '';
+    const paragraphs = Array.isArray(item.content)
+        ? item.content
+        : contentText.split('\n').filter((line) => line.trim() !== '');
+
+    return {
+        id: item.noticeId ?? item.id,
+        author: item.writerName || '선생님',
+        date: formatToDotDate(item.createdAt || item.updatedAt) || '최근',
+        title: item.title || '',
+        excerpt: paragraphs[0] || contentText || '',
+        content: paragraphs.length > 0 ? paragraphs : ['내용이 없습니다.'],
+    };
+};
+
+const ATTENDANCE_STATUS_MAP = {
+    PRESENT: '출석',
+    LATE: '지각',
+    ABSENT: '결석',
+    MAKEUP: '보강',
+};
+
+export const mapAttendanceFromApi = (item, classTitle) => ({
+    id: item.id,
+    date: formatToKoreanDate(item.attendance_date || item.checked_at),
+    className: classTitle,
+    status: ATTENDANCE_STATUS_MAP[item.status] || item.status || '출석',
+});
+
+const APPROVAL_STATUS_MAP = {
+    PENDING: '대기중',
+    APPROVED: '수락됨',
+    REJECTED: '거절됨',
+    CANCELED: '취소됨',
+    0: '대기중',
+    1: '수락됨',
+    2: '거절됨',
+    3: '취소됨',
+};
+
+export const mapAbsenceFromApi = (item) => {
+    const statusLabel = APPROVAL_STATUS_MAP[item.status] || item.status || '대기중';
+    return {
+        id: item.id,
+        date: formatToKoreanDate(item.absence_date || item.created_at),
+        reason: item.reason || '기타 사유',
+        status: statusLabel,
+        canCancel: statusLabel === '대기중',
+    };
+};
+
+export const mapMakeupFromApi = (item) => {
+    const rawStatus = item.approval_status ?? item.status;
+    const statusLabel = APPROVAL_STATUS_MAP[rawStatus] || '대기중';
+    const timeStr = item.makeup_time ? formatToTime(item.makeup_time) : '';
+
+    return {
+        id: item.id,
+        date: formatToKoreanDate(item.makeup_time || item.created_at),
+        time: timeStr || '시간 미정',
+        reason: item.reason || '보강 신청',
+        status: statusLabel,
+        canCancel: statusLabel === '대기중',
+    };
 };

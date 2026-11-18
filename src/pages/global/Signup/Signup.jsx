@@ -6,7 +6,7 @@ import GoogleLoginButton from "../../../components/GoogleLoginButton/GoogleLogin
 import Label from "../../../components/Label/Label";
 import studentIcon from "../../../assets/Vector.svg";
 import teacherIcon from "../../../assets/Book.svg";
-import { authApiRequest, normalizeRole, saveAuthSession } from "../../../utils/auth";
+import { authApiRequest, clearAuthSession, normalizeRole, saveAuthSession } from "../../../utils/auth";
 import "./Signup.css";
 
 export default function Signup({ onNavigate }) {
@@ -120,7 +120,10 @@ export default function Signup({ onNavigate }) {
 
       const registeredRole = normalizeRole(data?.role);
       if (!registeredRole) throw new Error("회원 역할 정보를 받지 못했습니다.");
-      onNavigate(registeredRole);
+
+      // 이전 계정의 토큰/이름이 남아있지 않도록 세션 초기화 후 로그인 화면으로 이동
+      clearAuthSession();
+      onNavigate("login");
     } catch (error) {
       setMessage(error.message || "회원가입에 실패했습니다.");
     } finally {

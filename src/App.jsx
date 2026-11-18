@@ -27,6 +27,8 @@ const PAGE_PATHS = {
     privacy: '/privacy',
     introduce: '/introduce',
     'service-intro': '/introduce',
+    student: '/student',
+    teacher: '/teacher',
 };
 
 const LEGACY_PAGE_PATHS = {
