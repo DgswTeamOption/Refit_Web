@@ -1,102 +1,61 @@
-// 기본 API 주소는 .env의 VITE_API_BASE_URL을 사용하며, 미설정 시 Vite 프록시(/api)를 사용합니다.
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+// .env의 VITE_API_BASE_URL을 읽어오며, 미설정 시 Vite /api 프록시를 사용합니다.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
-let tokenProvider = () => (
-    typeof window !== 'undefined' ? window.localStorage.getItem('accessToken') : null
-);
+let accessToken = null;
 
-export function setTokenProvider(provider) {
-    if (typeof provider === 'function') {
-        tokenProvider = provider;
-    }
-}
+export const setAccessToken = (token) => {
+    accessToken = token || null;
+};
 
-function buildUrl(path, params) {
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-    const base = `${API_BASE_URL}${normalizedPath}`;
+export const clearAccessToken = () => {
+    accessToken = null;
+};
 
-    if (!params || typeof params !== 'object') {
-        return base;
-    }
+async function request(method, path, { params, body, token, signal } = {}) {
+    const query = params
+        ? new URLSearchParams(
+              Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+          ).toString()
+        : '';
+    const url = `${BASE_URL}${path}${query ? `?${query}` : ''}`;
 
-    const searchParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-            searchParams.append(key, String(value));
-        }
-    });
-
-    const query = searchParams.toString();
-    return query ? `${base}?${query}` : base;
-}
-
-export class ApiError extends Error {
-    constructor(message, status, data = null) {
-        super(message);
-        this.name = 'ApiError';
-        this.status = status;
-        this.data = data;
-    }
-}
-
-export async function apiRequest(path, options = {}) {
-    const {
-        method = 'GET',
-        params,
-        body,
-        headers: customHeaders = {},
-        token: customToken,
-        signal,
-    } = options;
-
-    const accessToken = customToken ?? tokenProvider();
-    const headers = { ...customHeaders };
-
+    const headers = {};
     if (body !== undefined && !(body instanceof FormData)) {
         headers['Content-Type'] = 'application/json';
     }
-
-    if (accessToken) {
-        headers.Authorization = `Bearer ${accessToken}`;
+    const authToken = token ?? accessToken;
+    if (authToken) {
+        headers.Authorization = `Bearer ${authToken}`;
     }
 
-    const response = await fetch(buildUrl(path, params), {
+    const response = await fetch(url, {
         method,
         headers,
         credentials: 'include',
-        body: body === undefined
-            ? undefined
-            : (body instanceof FormData ? body : JSON.stringify(body)),
+        body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
         signal,
     });
 
-    const contentType = response.headers.get('content-type') || '';
-    const payload = contentType.includes('application/json')
-        ? await response.json().catch(() => null)
-        : await response.text().catch(() => null);
+    const text = await response.text();
+    const payload = text ? JSON.parse(text) : null;
 
-    if (!response.ok) {
-        const message = payload?.error?.message || payload?.message || `요청에 실패했습니다. (${response.status})`;
-        throw new ApiError(message, response.status, payload);
+    if (!response.ok || payload?.success === false) {
+        const error = new Error(
+            payload?.error?.message || payload?.message || `요청 실패 (${response.status})`
+        );
+        error.status = payload?.error?.status || response.status;
+        throw error;
     }
 
-    if (payload && typeof payload === 'object' && 'success' in payload) {
-        if (!payload.success) {
-            const message = payload.error?.message || '요청 처리 중 오류가 발생했습니다.';
-            throw new ApiError(message, payload.error?.status || response.status, payload);
-        }
-        return payload.data;
-    }
-
-    return payload;
+    return payload && 'data' in payload ? payload.data : payload;
 }
 
 export const apiClient = {
-    get: (path, options) => apiRequest(path, { ...options, method: 'GET' }),
-    post: (path, body, options) => apiRequest(path, { ...options, method: 'POST', body }),
-    put: (path, body, options) => apiRequest(path, { ...options, method: 'PUT', body }),
-    patch: (path, body, options) => apiRequest(path, { ...options, method: 'PATCH', body }),
-    delete: (path, options) => apiRequest(path, { ...options, method: 'DELETE' }),
+    get: (path, options) => request('GET', path, options),
+    post: (path, body, options) => request('POST', path, { ...options, body }),
+    put: (path, body, options) => request('PUT', path, { ...options, body }),
+    patch: (path, body, options) => request('PATCH', path, { ...options, body }),
+    delete: (path, options) => request('DELETE', path, options),
 };
 
 export default apiClient;

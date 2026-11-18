@@ -3,8 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import './Header.css';
 import bellIcon from '../../assets/bell.svg';
-import profileIcon from '../../assets/profile.png';
 import { clearAuthSession } from '../../utils/auth';
+
+function DefaultProfileAvatar({ className = 'header-profile-icon' }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 40 40"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+        >
+            <circle cx="20" cy="20" r="20" fill="#DBDBDB" />
+            <circle cx="20" cy="14.5" r="6.5" fill="#FFFFFF" />
+            <path
+                d="M7.5 34.5C9.8 27.6 14.5 24 20 24C25.5 24 30.2 27.6 32.5 34.5C29.1 37.9 24.8 40 20 40C15.2 40 10.9 37.9 7.5 34.5Z"
+                fill="#FFFFFF"
+            />
+        </svg>
+    );
+}
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
@@ -257,12 +275,16 @@ const Header = ({
                                     aria-label="사용자 프로필"
                                     aria-expanded={isProfileOpen}
                                 >
-                                    <img
-                                        src={profileImageUrl || profileIcon}
-                                        alt={profileImageUrl ? '프로필 사진' : '프로필 아이콘'}
-                                        className={`header-profile-icon ${profileImageUrl ? 'has-photo' : ''}`}
-                                        onError={() => setProfileImageUrl('')}
-                                    />
+                                    {profileImageUrl ? (
+                                        <img
+                                            src={profileImageUrl}
+                                            alt="프로필 사진"
+                                            className="header-profile-icon has-photo"
+                                            onError={() => setProfileImageUrl('')}
+                                        />
+                                    ) : (
+                                        <DefaultProfileAvatar className="header-profile-icon" />
+                                    )}
                                 </button>
 
                                 {isProfileOpen && (
