@@ -132,6 +132,7 @@ const Header = ({
     const handleLoginClick = onLoginClick || (() => navigate('/login'));
     const handleSignupClick = onSignupClick || (() => navigate('/signup'));
     const handleLogoutClick = () => {
+        localStorage.removeItem('accessToken');
         if (onLogoutClick) {
             onLogoutClick();
         } else {
