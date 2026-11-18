@@ -1,140 +1,396 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 import Button from "../../../components/Button/Button";
 import Nav from "../../../components/Nav/Nav";
 import "./PersonalInfo.css";
 
-function DefaultProfileIcon() {
-  return (
-    <svg
-      viewBox="0 0 120 120"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ width: "100%", height: "100%", borderRadius: "50%", display: "block" }}
-      aria-hidden="true"
-    >
-      <circle cx="60" cy="60" r="60" fill="#DBDBDB" />
-      <circle cx="60" cy="43.5" r="19.5" fill="#FFFFFF" />
-      <path
-        d="M22.5 103.5C29.4 82.8 43.5 72 60 72C76.5 72 90.6 82.8 97.5 103.5C87.3 113.7 74.4 120 60 120C45.6 120 32.7 113.7 22.5 103.5Z"
-        fill="#FFFFFF"
-      />
-    </svg>
-  );
+// Leave the default API origin empty so local requests use Vite's /api proxy.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
+function getUserIdFromAccessToken(accessToken) {
+  let claims;
+
+  try {
+    claims = jwtDecode(accessToken);
+  } catch {
+    throw new Error("로그인 토큰을 읽을 수 없습니다. 다시 로그인해 주세요.");
+  }
+
+  const userId = claims.userId ?? claims.user_id ?? claims.uid ?? claims.id ?? claims.user?.id ?? claims.sub;
+  const userIdString = typeof userId === "number" ? String(userId) : userId;
+
+  if (typeof userIdString !== "string" || !/^\d+$/.test(userIdString)) {
+    throw new Error("accessToken에서 사용자 ID를 찾지 못했습니다. 토큰의 userId 또는 sub 값을 확인해 주세요.");
+  }
+
+  return userIdString;
+}
+
+async function apiRequest(path, { method = "GET", token, body, signal } = {}) {
+  const headers = new Headers();
+  let requestBody = body;
+
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (body !== undefined && !(body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+    requestBody = JSON.stringify(body);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers,
+    body: requestBody,
+    signal,
+  });
+  const responseText = await response.text();
+  let result = null;
+
+  if (responseText) {
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      result = { message: responseText };
+    }
+  }
+
+  if (!response.ok || result?.success === false) {
+    throw new Error(
+      result?.error?.message || result?.message || `요청에 실패했습니다. (${response.status})`,
+    );
+  }
+
+  return result && Object.hasOwn(result, "data") ? result.data : result;
+}
+
+function normalizeProfile(data, fallback = {}) {
+  return {
+    id: data?.id ?? fallback.id ?? null,
+    name: data?.name ?? fallback.name ?? "",
+    email: data?.emailId ?? data?.email_id ?? data?.email ?? fallback.email ?? "",
+    photo: data?.profileImageUrl ?? data?.profile_image_url ?? fallback.photo ?? "",
+  };
+}
+
+function getErrorMessage(error, fallback) {
+  return error instanceof Error && error.message ? error.message : fallback;
 }
 
 export default function PersonalInfo({ onNavigate }) {
   const [mode, setMode] = useState("view");
-  const [name, setName] = useState(() => localStorage.getItem("userName") || "학생1");
-  const [email, setEmail] = useState("student@email.com");
-  const [draftName, setDraftName] = useState(name);
-  const [draftEmail, setDraftEmail] = useState(email);
-  const [photo, setPhoto] = useState(() => localStorage.getItem("profileImage") || "");
-  const [deleteEmail, setDeleteEmail] = useState(email);
+  const [profile, setProfile] = useState({ id: null, name: "", email: "", photo: "" });
+  const [draftName, setDraftName] = useState("");
+  const [pendingPhoto, setPendingPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [message, setMessage] = useState("");
+  const [messageKind, setMessageKind] = useState("error");
+  const [profileError, setProfileError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isCodeSent, setIsCodeSent] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = useRef(null);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (!accessToken) {
+      setProfileError("로그인 후 내 정보를 확인할 수 있어요.");
+      setIsLoading(false);
+      return () => controller.abort();
+    }
+
+    let userId;
+    try {
+      userId = getUserIdFromAccessToken(accessToken);
+    } catch (error) {
+      setProfileError(getErrorMessage(error, "사용자 정보를 확인할 수 없습니다."));
+      setIsLoading(false);
+      return () => controller.abort();
+    }
+
+    apiRequest(`/api/users/${userId}`, { token: accessToken, signal: controller.signal })
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        const nextProfile = normalizeProfile(data, { id: userId });
+        setProfile(nextProfile);
+        setDraftName(nextProfile.name);
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) {
+          setProfileError(getErrorMessage(error, "내 정보를 불러오지 못했습니다."));
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false);
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => () => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+  }, [photoPreview]);
+
   const startEditing = () => {
-    setDraftName(name);
-    setDraftEmail(email);
+    setDraftName(profile.name);
+    setPendingPhoto(null);
+    setPhotoPreview("");
+    setMessage("");
     setMode("edit");
   };
 
-  const saveChanges = () => {
-    if (!draftName.trim() || !draftEmail.includes("@")) return;
-    const trimmedName = draftName.trim();
-    setName(trimmedName);
-    setEmail(draftEmail.trim());
-    localStorage.setItem("userName", trimmedName);
-    if (photo) {
-      localStorage.setItem("profileImage", photo);
-    } else {
-      localStorage.removeItem("profileImage");
-    }
-    window.dispatchEvent(new Event("profileUpdated"));
+  const cancelEditing = () => {
+    setPendingPhoto(null);
+    setPhotoPreview("");
+    setMessage("");
     setMode("view");
   };
 
-  const requestDeleteCode = () => {
-    if (!deleteEmail.includes("@")) {
-      setMessage("이메일 주소를 확인해 주세요.");
+  const saveChanges = async () => {
+    const nextName = draftName.trim();
+    if (!nextName || nextName.length > 50) {
+      setMessage("이름은 1자 이상 50자 이하로 입력해 주세요.");
+      setMessageKind("error");
       return;
     }
-    setMessage("인증코드를 보냈어요. 메일함을 확인해주세요.");
-  };
 
-  const deleteAccount = () => {
-    if (!verificationCode.trim() || confirmation !== "계정 삭제") {
-      setMessage("인증코드와 확인 문구를 입력해 주세요.");
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      setMessage("로그인 정보가 없습니다. 다시 로그인해 주세요.");
+      setMessageKind("error");
       return;
     }
-    onNavigate("login");
+
+    setIsSaving(true);
+    setMessage("");
+
+    try {
+      let nextProfile = profile;
+
+      if (nextName !== profile.name) {
+        const updatedProfile = await apiRequest("/api/setting/username", {
+          method: "PATCH",
+          token: accessToken,
+          body: { name: nextName },
+        });
+        nextProfile = normalizeProfile(updatedProfile, { ...profile, name: nextName });
+        setProfile(nextProfile);
+      }
+
+      if (pendingPhoto) {
+        const formData = new FormData();
+        formData.append("file", pendingPhoto);
+        const uploadedFile = await apiRequest("/api/files/images", {
+          method: "POST",
+          token: accessToken,
+          body: formData,
+        });
+        const profileImageId = Number(uploadedFile?.fileId);
+
+        if (!Number.isSafeInteger(profileImageId) || profileImageId <= 0) {
+          throw new Error("프로필 이미지 파일 ID를 받지 못했습니다.");
+        }
+
+        if (!uploadedFile?.imageUrl) {
+          throw new Error("프로필 사진 주소를 받지 못했습니다.");
+        }
+
+        try {
+          const updatedProfile = await apiRequest("/api/setting/profile-image", {
+            method: "PATCH",
+            token: accessToken,
+            body: { profileImageId },
+          });
+          nextProfile = normalizeProfile(updatedProfile, { ...nextProfile, photo: uploadedFile.imageUrl });
+          setProfile(nextProfile);
+        } catch (error) {
+          if (uploadedFile.fileId != null) {
+            try {
+              await apiRequest(`/api/files/${uploadedFile.fileId}`, { method: "DELETE", token: accessToken });
+            } catch {
+              // Keep the profile update error as the visible message.
+            }
+          }
+          throw error;
+        }
+      }
+
+      setDraftName(nextProfile.name);
+      setPendingPhoto(null);
+      setPhotoPreview("");
+      setMessage("내 정보가 저장되었습니다.");
+      setMessageKind("success");
+      setMode("view");
+    } catch (error) {
+      setMessage(getErrorMessage(error, "정보를 저장하지 못했습니다."));
+      setMessageKind("error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePhotoChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setMessage("이미지 파일을 선택해 주세요.");
+      setMessageKind("error");
+      event.target.value = "";
+      return;
+    }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setPhoto(reader.result);
+    setPendingPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    setMessage("");
+    event.target.value = "";
+  };
+
+  const requestDeleteCode = async () => {
+    if (!profile.email) {
+      setMessage("계정 이메일을 확인할 수 없습니다.");
+      setMessageKind("error");
+      return;
+    }
+
+    setIsSendingCode(true);
+    setMessage("");
+    try {
+      await apiRequest("/api/user/email/send-code", {
+        method: "POST",
+        body: { email_id: profile.email },
+      });
+      setIsCodeSent(true);
+      setMessage("인증코드를 보냈어요. 메일함을 확인해 주세요.");
+      setMessageKind("success");
+    } catch (error) {
+      setMessage(getErrorMessage(error, "인증코드를 보내지 못했습니다."));
+      setMessageKind("error");
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (!isCodeSent || !verificationCode.trim() || confirmation !== "계정 삭제") {
+      setMessage("인증코드를 받은 뒤 코드와 확인 문구를 입력해 주세요.");
+      setMessageKind("error");
+      return;
+    }
+    if (profile.id == null) {
+      setMessage("계정 ID를 확인할 수 없습니다. 다시 로그인해 주세요.");
+      setMessageKind("error");
+      return;
+    }
+
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      setMessage("로그인 정보가 없습니다. 다시 로그인해 주세요.");
+      setMessageKind("error");
+      return;
+    }
+
+    setIsDeleting(true);
+    setMessage("");
+    try {
+      const verification = await apiRequest("/api/user/email/verify-code", {
+        method: "POST",
+        body: {
+          email_id: profile.email,
+          verification_code: verificationCode.trim(),
+        },
+      });
+
+      if (!verification?.is_verification) {
+        throw new Error("인증코드가 올바르지 않습니다.");
       }
-    };
-    reader.readAsDataURL(file);
+
+      await apiRequest(`/api/users/${profile.id}`, { method: "DELETE", token: accessToken });
+      ["accessToken", "refreshToken", "token", "role", "userName"].forEach((key) => localStorage.removeItem(key));
+      onNavigate?.("login");
+    } catch (error) {
+      setMessage(getErrorMessage(error, "계정을 삭제하지 못했습니다."));
+      setMessageKind("error");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
-      <main className={`personal-info-page ${mode}`}>
-        <Nav
-          items={[
-            { text: "홈", link: "/" },
-            { text: "내 정보", link: mode === "view" ? undefined : "/personal-info" },
-            ...(mode === "edit" ? [{ text: "정보 수정" }] : []),
-            ...(mode === "delete" ? [{ text: "계정 삭제" }] : []),
-          ]}
-        />
+    <main className={`personal-info-page ${mode}`}>
+      <Nav
+        items={[
+          { text: "홈", link: "/" },
+          { text: "내 정보", link: mode === "view" ? undefined : "/personal-info" },
+          ...(mode === "edit" ? [{ text: "정보 수정" }] : []),
+          ...(mode === "delete" ? [{ text: "계정 삭제" }] : []),
+        ]}
+      />
 
-        <div className="global-page-heading">
-          <h1>{mode === "view" ? "내 정보" : mode === "edit" ? "정보 수정" : "계정 삭제"}</h1>
+      <div className="global-page-heading">
+        <h1>{mode === "view" ? "내 정보" : mode === "edit" ? "정보 수정" : "계정 삭제"}</h1>
+      </div>
+
+      {isLoading && <p className="personal-request-state" role="status">내 정보를 불러오는 중...</p>}
+
+      {!isLoading && profileError && (
+        <div className="personal-request-state" role="alert">
+          <p>{profileError}</p>
+          <Button text="로그인" width={120} onClick={() => onNavigate?.("login")} />
         </div>
+      )}
 
-      {mode === "view" && (
+      {!isLoading && !profileError && mode === "view" && (
         <section className="personal-view" aria-label="내 정보">
           <div className="personal-photo-column">
             <div className="personal-photo-circle">
-              {photo ? <img src={photo} alt="프로필 사진" /> : <DefaultProfileIcon />}
+              {profile.photo ? <img src={profile.photo} alt="프로필 사진" /> : <span>사진</span>}
             </div>
           </div>
           <div className="personal-values">
             <div className="personal-value-row">
               <span>이름</span>
-              <strong>{name}</strong>
+              <strong>{profile.name}</strong>
             </div>
             <div className="personal-value-row">
               <span>이메일</span>
-              <p>{email}</p>
+              <p>{profile.email}</p>
             </div>
             <div className="personal-button-wrap">
               <Button text="정보 수정" width={150} color="lightGray" onClick={startEditing} />
-              <Button text="계정 삭제" width={150} color="red" onClick={() => { setDeleteEmail(email); setMode("delete"); }}/>
+              <Button
+                text="계정 삭제"
+                width={150}
+                color="red"
+                onClick={() => {
+                  setMessage("");
+                  setVerificationCode("");
+                  setConfirmation("");
+                  setIsCodeSent(false);
+                  setMode("delete");
+                }}
+              />
             </div>
+            {message && <p className={`personal-form-message ${messageKind}`} role="status">{message}</p>}
           </div>
         </section>
       )}
 
-      {mode === "edit" && (
+      {!isLoading && !profileError && mode === "edit" && (
         <section className="personal-view personal-edit-view" aria-label="정보 수정">
           <div className="personal-photo-column">
             <button
               className="personal-photo-select"
               type="button"
-              aria-label="프로필 수정"
+              aria-label="프로필 사진 선택"
               onClick={() => fileInputRef.current?.click()}
             >
-              {photo ? <img src={photo} alt="선택한 프로필 사진" /> : <DefaultProfileIcon />}
-              <span className="personal-photo-edit-overlay">프로필 수정</span>
+              {photoPreview || profile.photo
+                ? <img src={photoPreview || profile.photo} alt="프로필 사진 미리보기" />
+                : <span>사진 선택</span>}
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} hidden />
           </div>
@@ -144,52 +400,72 @@ export default function PersonalInfo({ onNavigate }) {
               <input
                 className="personal-value-input"
                 value={draftName}
+                maxLength={50}
                 onChange={(event) => setDraftName(event.target.value)}
               />
             </label>
-            <label className="personal-value-row personal-edit-row">
+            <div className="personal-value-row">
               <span>이메일</span>
-              <input
-                className="personal-value-input"
-                type="email"
-                value={draftEmail}
-                onChange={(event) => setDraftEmail(event.target.value)}
-              />
-            </label>
-            <div className="personal-button-wrap">
-              <Button text="저장" width={150} onClick={saveChanges} />
-              <Button text="취소" width={150} color="lightGray" onClick={() => setMode("view")} />
+              <p>{profile.email}</p>
             </div>
+            <div className="personal-button-wrap">
+              <Button text={isSaving ? "저장 중..." : "저장"} width={150} onClick={saveChanges} disabled={isSaving} />
+              <Button text="취소" width={150} color="lightGray" onClick={cancelEditing} disabled={isSaving} />
+            </div>
+            {message && <p className={`personal-form-message ${messageKind}`} role="status">{message}</p>}
           </div>
         </section>
       )}
 
-        {mode === "delete" && (
+      {!isLoading && !profileError && mode === "delete" && (
         <section className="personal-delete-form" aria-labelledby="delete-heading">
           <h2 id="delete-heading">정말 계정을 삭제하시겠어요?</h2>
           <p className="delete-description">계정을 삭제하면 복구할 수 없습니다.</p>
           <label className="delete-email-field">
             이메일 입력
             <span>
-              <input type="email" placeholder="이메일 입력" value={deleteEmail} onChange={(event) => setDeleteEmail(event.target.value)} />
-              <Button text="인증코드 보내기" width={160} onClick={requestDeleteCode} />
+              <input type="email" value={profile.email} readOnly />
+              <Button
+                text={isSendingCode ? "전송 중..." : isCodeSent ? "인증코드 재전송" : "인증코드 보내기"}
+                width={160}
+                onClick={requestDeleteCode}
+                disabled={isSendingCode || isDeleting}
+              />
             </span>
           </label>
           <label>
             인증코드 입력
-            <input value={verificationCode} onChange={(event) => setVerificationCode(event.target.value)} placeholder="인증코드 입력" />
+            <input
+              value={verificationCode}
+              onChange={(event) => setVerificationCode(event.target.value)}
+              placeholder="인증코드 입력"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+            />
           </label>
           <label>
             확인을 위해 “계정 삭제”를 입력해주세요
             <input value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="계정 삭제" />
           </label>
-          {message && <p className="personal-form-message" role="status">{message}</p>}
+          {message && <p className={`personal-form-message ${messageKind}`} role="status">{message}</p>}
           <div className="personal-form-actions">
-            <Button text="정말 탈퇴하시겠어요?" width={170} color="red" onClick={deleteAccount} />
-            <Button text="취소" width={120} color="lightGray" onClick={() => { setMessage(""); setMode("view"); }} />
+            <Button
+              text={isDeleting ? "삭제 중..." : "정말 탈퇴하시겠어요?"}
+              width={170}
+              color="red"
+              onClick={deleteAccount}
+              disabled={isDeleting || isSendingCode}
+            />
+            <Button
+              text="취소"
+              width={120}
+              color="lightGray"
+              onClick={() => { setMessage(""); setMode("view"); }}
+              disabled={isDeleting}
+            />
           </div>
         </section>
-        )}
-      </main>
+      )}
+    </main>
   );
 }

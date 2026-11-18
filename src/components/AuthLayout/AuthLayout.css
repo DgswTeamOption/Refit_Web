@@ -42,6 +42,11 @@
   align-items: stretch;
   width: 100%;
   gap: 10px;
+  transform: translateY(-12px);
+}
+
+.signup-information > .signup-form-content {
+  transform: translateY(-12px);
 }
 
 .auth-logo {
@@ -62,6 +67,18 @@
 
 .auth-page .google-login-wrap {
   width: 100%;
+}
+
+.auth-page .google-login-widget {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.auth-page .google-login-widget > div,
+.auth-page .google-login-widget iframe {
+  max-width: 100%;
 }
 
 .auth-page .google-login-button {
@@ -317,6 +334,11 @@
   .auth-panel-content {
     width: calc(100% - 48px);
     padding: 32px 0 24px;
+  }
+
+  .login-form-content,
+  .signup-information > .signup-form-content {
+    transform: translateY(-8px);
   }
 
   .auth-panel-content > .global-navigation-links,

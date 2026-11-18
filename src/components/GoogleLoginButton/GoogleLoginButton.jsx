@@ -1,60 +1,82 @@
-import { useState } from 'react';
-import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import { useEffect, useRef, useState } from "react";
 
-const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() || "";
 
-function GoogleLoginButtonContent() {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(localStorage.getItem("token")));
-  const startGoogleLogin = useGoogleLogin({
-    onSuccess: ({ access_token: token }) => {
-      localStorage.setItem("token", token);
-      setIsLoggedIn(true);
-    },
-    onError: () => console.error("구글 로그인에 실패했습니다."),
-  });
+function GoogleLoginButtonContent({ onIdToken, onError }) {
+  const containerRef = useRef(null);
+  const [buttonWidth, setButtonWidth] = useState(400);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-  };
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+
+    const resizeButton = () => {
+      const availableWidth = Math.floor(container.getBoundingClientRect().width);
+      if (availableWidth > 0) setButtonWidth(Math.min(400, availableWidth));
+    };
+
+    resizeButton();
+    const observer = new ResizeObserver(resizeButton);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div className="google-login-wrap">
-      {!isLoggedIn ? (
-        <button type="button" className="google-login-button" onClick={() => startGoogleLogin()}>
-          <svg className="google-login-icon" viewBox="0 0 48 48" aria-hidden="true">
-            <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11c-.5 2.5-2 4.6-4.3 6l6.8 5.3c4-3.7 6.1-9 6.1-15z" />
-            <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.8-5.3c-1.9 1.3-4.1 2-6.7 2-5.1 0-9.4-3.4-10.9-8H6.1v5.5C9.5 39.7 16.2 44 24 44z" />
-            <path fill="#FBBC05" d="M13.1 27.8a12 12 0 0 1 0-7.6v-5.5H6.1a20 20 0 0 0 0 18.6l7-5.5z" />
-            <path fill="#EA4335" d="M24 12.2c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 6.1 29.5 4 24 4 16.2 4 9.5 8.3 6.1 14.7l7 5.5c1.5-4.6 5.8-8 10.9-8z" />
-          </svg>
-          <span>Google로 계속하기</span>
-        </button>
-      ) : (
-        <button type="button" className="google-login-button" onClick={handleLogout}>
-          로그아웃
-        </button>
-      )}
+    <div ref={containerRef} className="google-login-wrap google-login-widget">
+      <GoogleLogin
+        onSuccess={(credentialResponse) => {
+          if (!credentialResponse.credential) {
+            onError?.(new Error("Google에서 ID 토큰을 받지 못했습니다."));
+            return;
+          }
+
+          try {
+            const claims = jwtDecode(credentialResponse.credential);
+            const audiences = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
+            if (!audiences.includes(clientId)) {
+              onError?.(new Error("Google 인증 Client ID가 일치하지 않습니다."));
+              return;
+            }
+            if (!claims.exp || claims.exp * 1000 <= Date.now()) {
+              onError?.(new Error("Google 인증이 만료됐습니다. 다시 시도해 주세요."));
+              return;
+            }
+            if (!["accounts.google.com", "https://accounts.google.com"].includes(claims.iss)) {
+              onError?.(new Error("유효하지 않은 Google 인증 정보입니다."));
+              return;
+            }
+          } catch {
+            onError?.(new Error("Google ID 토큰을 확인할 수 없습니다. 다시 시도해 주세요."));
+            return;
+          }
+
+          onIdToken?.(credentialResponse.credential);
+        }}
+        onError={() => onError?.(new Error("Google 인증에 실패했습니다. 다시 시도해 주세요."))}
+        theme="outline"
+        size="large"
+        shape="rectangular"
+        text="continue_with"
+        logo_alignment="left"
+        locale="ko"
+        width={String(buttonWidth)}
+      />
     </div>
   );
 }
 
-function GoogleLoginButton() {
+export default function GoogleLoginButton({ onIdToken, onError }) {
   if (!clientId) {
     return (
       <div className="google-login-wrap">
         <button
           type="button"
           className="google-login-button"
-          onClick={() => console.warn("구글 클라이언트 ID(VITE_GOOGLE_CLIENT_ID) 설정이 필요합니다.")}
+          onClick={() => onError?.(new Error("VITE_GOOGLE_CLIENT_ID 설정이 필요합니다."))}
         >
-          <svg className="google-login-icon" viewBox="0 0 48 48" aria-hidden="true">
-            <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11c-.5 2.5-2 4.6-4.3 6l6.8 5.3c4-3.7 6.1-9 6.1-15z" />
-            <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.8-5.3c-1.9 1.3-4.1 2-6.7 2-5.1 0-9.4-3.4-10.9-8H6.1v5.5C9.5 39.7 16.2 44 24 44z" />
-            <path fill="#FBBC05" d="M13.1 27.8a12 12 0 0 1 0-7.6v-5.5H6.1a20 20 0 0 0 0 18.6l7-5.5z" />
-            <path fill="#EA4335" d="M24 12.2c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 6.1 29.5 4 24 4 16.2 4 9.5 8.3 6.1 14.7l7 5.5c1.5-4.6 5.8-8 10.9-8z" />
-          </svg>
-          <span>Google로 계속하기</span>
+          Google로 계속하기
         </button>
       </div>
     );
@@ -62,9 +84,7 @@ function GoogleLoginButton() {
 
   return (
     <GoogleOAuthProvider clientId={clientId}>
-      <GoogleLoginButtonContent />
+      <GoogleLoginButtonContent onIdToken={onIdToken} onError={onError} />
     </GoogleOAuthProvider>
   );
 }
-
-export default GoogleLoginButton;

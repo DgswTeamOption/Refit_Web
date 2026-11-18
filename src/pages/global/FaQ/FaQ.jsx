@@ -59,9 +59,11 @@ export default function FaQ() {
               <details className="faq-question-row" key={question}>
                 <summary>
                   <span>{question}</span>
-                  <span className="faq-question-chevron" aria-hidden="true">⌄</span>
+                  <span className="faq-question-chevron" aria-hidden="true" />
                 </summary>
-                <p className="faq-answer">{answer}</p>
+                <div className="faq-answer-clip">
+                  <p className="faq-answer">{answer}</p>
+                </div>
               </details>
             ))}
             {visibleQuestions.length === 0 && <p className="faq-no-results">검색 결과가 없습니다.</p>}

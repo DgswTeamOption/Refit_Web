@@ -1,18 +1,33 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://refit.team').replace(/\/+$/, '');
+// 기본 API 주소는 .env의 VITE_API_BASE_URL을 사용하며, 미설정 시 Vite 프록시(/api)를 사용합니다.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+
+let tokenProvider = () => (
+    typeof window !== 'undefined' ? window.localStorage.getItem('accessToken') : null
+);
+
+export function setTokenProvider(provider) {
+    if (typeof provider === 'function') {
+        tokenProvider = provider;
+    }
+}
 
 function buildUrl(path, params) {
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-    const url = new URL(`${API_BASE_URL}${normalizedPath}`);
+    const base = `${API_BASE_URL}${normalizedPath}`;
 
-    if (params && typeof params === 'object') {
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-                url.searchParams.append(key, String(value));
-            }
-        });
+    if (!params || typeof params !== 'object') {
+        return base;
     }
 
-    return url.toString();
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+            searchParams.append(key, String(value));
+        }
+    });
+
+    const query = searchParams.toString();
+    return query ? `${base}?${query}` : base;
 }
 
 export class ApiError extends Error {
@@ -30,28 +45,25 @@ export async function apiRequest(path, options = {}) {
         params,
         body,
         headers: customHeaders = {},
+        token: customToken,
         signal,
     } = options;
 
-    const token = typeof window !== 'undefined'
-        ? (localStorage.getItem('accessToken') || localStorage.getItem('token'))
-        : null;
-
-    const headers = {
-        ...customHeaders,
-    };
+    const accessToken = customToken ?? tokenProvider();
+    const headers = { ...customHeaders };
 
     if (body !== undefined && !(body instanceof FormData)) {
         headers['Content-Type'] = 'application/json';
     }
 
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
+    if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
     }
 
     const response = await fetch(buildUrl(path, params), {
         method,
         headers,
+        credentials: 'include',
         body: body === undefined
             ? undefined
             : (body instanceof FormData ? body : JSON.stringify(body)),

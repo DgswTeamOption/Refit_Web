@@ -2,9 +2,11 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Footer from '../Footer/Footer.jsx';
 import GlobalNavigation from '../GlobalNavigation/GlobalNavigation.jsx';
 import Header from '../Header/Header.jsx';
+import { normalizeRole } from '../../utils/auth.js';
 import '../../styles/global-pages.css';
 
 const PAGE_PATHS = {
+    introduce: '/introduce',
     faq: '/faq',
     terms: '/terms',
     privacy: '/privacy',
@@ -15,12 +17,20 @@ export default function MainLayout() {
     const navigate = useNavigate();
     const isTeacherPage = pathname.startsWith('/teacher');
     const isStudentPage = pathname === '/student' || pathname.startsWith('/class/');
-    const homePath = isTeacherPage ? '/teacher' : isStudentPage ? '/student' : '/login';
+    const savedRole = typeof window !== 'undefined'
+        ? normalizeRole(localStorage.getItem('role'))
+        : '';
+    const activeRole = savedRole || (isTeacherPage ? 'teacher' : isStudentPage ? 'student' : '');
+    const homePath = activeRole === 'teacher'
+        ? '/teacher'
+        : activeRole === 'student'
+            ? '/student'
+            : '/login';
     const showFooter = pathname !== '/personal-info';
 
     return (
         <div className="global-site">
-            <Header onLogoClick={() => navigate(homePath)} />
+            <Header showServiceMenu onLogoClick={() => navigate(homePath)} />
             <Outlet />
             {showFooter && (
                 <GlobalNavigation
