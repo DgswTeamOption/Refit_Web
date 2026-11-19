@@ -3,20 +3,46 @@ import { Link } from 'react-router-dom';
 import Calendar from '../../../components/Calendar/Calendar.jsx';
 import Button from '../../../components/Button/Button.jsx';
 import ClassBlock from '../../../components/ClassBlock/ClassBlock.jsx';
-import { INITIAL_TEACHER_CLASSES, readTeacherClasses, saveTeacherClasses } from '../classData.js';
+import { INITIAL_TEACHER_CLASSES } from '../classData.js';
+import {
+    getTeacherClasses,
+    createTeacherClass,
+    deleteTeacherClass,
+} from '../../../api/overviewApi.js';
 import './Overview.css';
 
 const MAX_VISIBLE_CLASSES = 4;
 const CLASS_COLORS = [...new Set(INITIAL_TEACHER_CLASSES.map(({ color }) => color))];
 
+function formatClassList(list = []) {
+    return list.map((item, index) => ({
+        ...item,
+        title: item.name,
+        color: CLASS_COLORS[index % CLASS_COLORS.length],
+    }));
+}
+
 export default function Overview({ hidden }) {
-    const [classes, setClasses] = useState(readTeacherClasses);
+    const [classes, setClasses] = useState([]);
     const [modal, setModal] = useState(null);
     const [title, setTitle] = useState('');
     const [titleError, setTitleError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const dialogRef = useRef(null);
     const titleInputRef = useRef(null);
+
+    useEffect(() => {
+        async function fetchClasses() {
+            try {
+                const data = await getTeacherClasses();
+                setClasses(formatClassList(data));
+            } catch (error) {
+                console.error('수업 목록 조회 실패:', error);
+            }
+        }
+        fetchClasses();
+    }, []);
 
     useEffect(() => {
         if (!modal) return;
@@ -38,6 +64,7 @@ export default function Overview({ hidden }) {
     }, [modal]);
 
     function closeModal() {
+        if (isSubmitting) return;
         setModal(null);
     }
 
@@ -47,8 +74,9 @@ export default function Overview({ hidden }) {
         setModal({ type: 'create' });
     }
 
-    function handleCreateSubmit(event) {
+    async function handleCreateSubmit(event) {
         event.preventDefault();
+        if (isSubmitting) return;
 
         const classTitle = title.trim();
 
@@ -58,51 +86,50 @@ export default function Overview({ hidden }) {
             return;
         }
 
-        const randomColor = CLASS_COLORS[Math.floor(Math.random() * CLASS_COLORS.length)];
+        try {
+            setIsSubmitting(true);
+            const created = await createTeacherClass({ name: classTitle });
 
-        const newClass = {
-            id: crypto.randomUUID(),
-            title: classTitle,
-            color: randomColor,
-        };
-
-        // 입력한 제목과 랜덤 색상으로 수업 카드 추가
-        setClasses((previous) => {
-            const nextClasses = [newClass, ...previous];
-            saveTeacherClasses(nextClasses);
-            return nextClasses;
-        });
-
-        setTitle('');
-        setTitleError('');
-        closeModal();
+            setClasses((previous) => formatClassList([created, ...previous]));
+            setTitle('');
+            setTitleError('');
+            setModal(null);
+        } catch (error) {
+            setTitleError(error.message || '수업 생성에 실패했습니다.');
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
-    function handleDeleteClass() {
-        if (modal?.type !== 'delete') return;
+    async function handleDeleteClass() {
+        if (modal?.type !== 'delete' || isSubmitting) return;
 
         const targetId = modal.item.id;
 
-        setClasses((previous) => {
-            // 현재 화면에 보이는 수업에서 선택한 수업 삭제
-            const visible = previous
-                .slice(0, MAX_VISIBLE_CLASSES)
-                .filter((item) => item.id !== targetId);
+        try {
+            setIsSubmitting(true);
+            await deleteTeacherClass(targetId);
 
-            // 화면에 나오지 않는 수업들
-            const hidden = previous.slice(MAX_VISIBLE_CLASSES);
+            setClasses((previous) => {
+                const visible = previous
+                    .slice(0, MAX_VISIBLE_CLASSES)
+                    .filter((item) => item.id !== targetId);
 
-            // 숨겨진 수업 중 가장 최근에 만든 수업을 가져오기
-            if (visible.length < MAX_VISIBLE_CLASSES && hidden.length > 0) {
-                visible.push(hidden.pop());
-            }
+                const hiddenList = previous.slice(MAX_VISIBLE_CLASSES);
 
-            const nextClasses = [...visible, ...hidden];
-            saveTeacherClasses(nextClasses);
-            return nextClasses;
-        });
+                if (visible.length < MAX_VISIBLE_CLASSES && hiddenList.length > 0) {
+                    visible.push(hiddenList.shift());
+                }
 
-        closeModal();
+                return [...visible, ...hiddenList];
+            });
+
+            setModal(null);
+        } catch (error) {
+            alert(error.message || '수업 삭제에 실패했습니다.');
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
