@@ -90,13 +90,15 @@ export default function Signup({ onNavigate }) {
         setGoogleSignupProfile(registeredProfile);
       }
 
-      // Google registration returns the account profile; login returns the
-      // access and refresh tokens used by the rest of the app.
-      const tokens = await authApiRequest("/api/auth/google/login", {
+      await authApiRequest("/api/auth/google/login", {
         body: { idToken: googleIdToken },
       });
       const registeredRole = normalizeRole(registeredProfile?.role) || role;
-      saveAuthSession(tokens, { role: registeredRole, name: registeredProfile?.name || name });
+      saveAuthSession({
+        role: registeredRole,
+        name: registeredProfile?.name || name,
+        userId: registeredProfile?.id,
+      });
       onNavigate("login");
     } catch (error) {
       setMessage(error.message || "Google 회원가입에 실패했습니다.");

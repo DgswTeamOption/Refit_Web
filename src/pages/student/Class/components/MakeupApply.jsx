@@ -7,10 +7,20 @@ import { formatToKoreanDate, formatToTime } from '../constants';
 /**
  * 보강 신청 폼 및 신청 내역 화면 (view13)
  * - 서버 연동 시 실제 신청 가능 슬롯(availableSlots)의 schedule_id와 makeup_time 사용
- * - 달력 선택 시 현재 보고 있는 연·월 반영
+ * - 달력 선택 시 현재 보고 있는 연·월 및 실제 출결 일정 반영
  * - 실패 시 상태 변경 없이 오류 메시지 표시
  */
-function MakeupApply({ items = [], availableSlots = [], isServerMode = false, onSubmit, onCancel }) {
+function MakeupApply({
+    items = [],
+    availableSlots = [],
+    isServerMode = false,
+    calendarEvents = {},
+    calendarYear,
+    calendarMonth,
+    onMonthChange,
+    onSubmit,
+    onCancel,
+}) {
     const [selectedSlotId, setSelectedSlotId] = useState(null);
     const [makeupDate, setMakeupDate] = useState('');
     const [makeupStartTime, setMakeupStartTime] = useState('');
@@ -112,10 +122,14 @@ function MakeupApply({ items = [], availableSlots = [], isServerMode = false, on
         <div className="apply-view-wrapper">
             <h2 className="apply-section-guide-title">신청할 날짜를 선택해주세요</h2>
             <div className="apply-two-columns">
-                {/* 좌측 캘린더 (현재 보고 있는 연·월 연동) */}
+                {/* 좌측 캘린더 (실제 출결 일정 및 연·월 연동) */}
                 <div className="apply-calendar-column">
                     <Calendar
                         mode="attendance"
+                        events={calendarEvents}
+                        year={calendarYear}
+                        month={calendarMonth}
+                        onMonthChange={onMonthChange}
                         onSelectDate={handleSelectDateFromCalendar}
                         selectedDate={makeupDate}
                     />

@@ -7,6 +7,7 @@ import Button from '../../../components/Button/Button';
 import JoinClassModal from './components/JoinClassModal';
 import LeaveClassModal from './components/LeaveClassModal';
 import studentApi from '../../../api/studentApi';
+import { extractIsoDate } from '../Class/constants';
 
 const CLASS_COLORS = ['peach', 'lavender', 'yellow', 'mint'];
 
@@ -22,11 +23,46 @@ function formatClassItem(item, index = 0) {
     };
 }
 
+// 수업 캘린더 응답에서 해당 연·월의 일자(day) 목록 추출
+function extractCalendarDays(calendarResponse, targetYear, targetMonth) {
+    const items = Array.isArray(calendarResponse)
+        ? calendarResponse
+        : Array.isArray(calendarResponse?.events)
+            ? calendarResponse.events
+            : Array.isArray(calendarResponse?.dates)
+                ? calendarResponse.dates
+                : Array.isArray(calendarResponse?.schedules)
+                    ? calendarResponse.schedules
+                    : [];
+
+    const days = [];
+    items.forEach((entry) => {
+        const raw = typeof entry === 'string'
+            ? entry
+            : entry?.date || entry?.class_date || entry?.schedule_date || entry?.start_time;
+        const iso = extractIsoDate(raw);
+        if (!iso) return;
+
+        const [y, m, d] = iso.split('-').map(Number);
+        if (y === targetYear && m === targetMonth && d) {
+            days.push(d);
+        }
+    });
+    return days;
+}
+
 function Overview({ onSelectClass }) {
     const navigate = useNavigate();
 
     const [classes, setClasses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    // 달력 연·월 및 실제 수업 일정 맵 ({ [day]: ['peach', 'lavender', ...] })
+    const [calendarDate, setCalendarDate] = useState(() => {
+        const now = new Date();
+        return { year: now.getFullYear(), month: now.getMonth() + 1 };
+    });
+    const [calendarEvents, setCalendarEvents] = useState({});
 
     // 모달 및 입력 상태
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
@@ -61,6 +97,52 @@ function Overview({ onSelectClass }) {
             isMounted = false;
         };
     }, []);
+
+    // 참여 중인 수업의 월별 캘린더 일정 불러오기
+    useEffect(() => {
+        if (classes.length === 0) return;
+
+        let isMounted = true;
+        const { year, month } = calendarDate;
+
+        async function fetchAllClassCalendars() {
+            const results = await Promise.all(
+                classes.map((cls) =>
+                    studentApi
+                        .getClassCalendar(cls.id, { year, month })
+                        .then((data) => ({ color: cls.color, data }))
+                        .catch(() => ({ color: cls.color, data: null }))
+                )
+            );
+
+            if (!isMounted) return;
+
+            const eventsMap = {};
+            results.forEach(({ color, data }) => {
+                if (!data) return;
+                const days = extractCalendarDays(data, year, month);
+                days.forEach((day) => {
+                    if (!eventsMap[day]) {
+                        eventsMap[day] = [];
+                    }
+                    if (!eventsMap[day].includes(color)) {
+                        eventsMap[day].push(color);
+                    }
+                });
+            });
+
+            setCalendarEvents(eventsMap);
+        }
+
+        fetchAllClassCalendars();
+        return () => {
+            isMounted = false;
+        };
+    }, [classes, calendarDate]);
+
+    const handleMonthChange = (nextYear, nextMonth) => {
+        setCalendarDate({ year: nextYear, month: nextMonth });
+    };
 
     // 수업 참여 모달 열기
     const handleOpenJoinModal = () => {
@@ -132,7 +214,14 @@ function Overview({ onSelectClass }) {
             <div className="overview-container">
                 {/* 좌측 캘린더 영역 */}
                 <aside className="overview-calendar-aside">
-                    <Calendar mode="class" classes={classes} />
+                    <Calendar
+                        mode="class"
+                        classes={classes}
+                        events={classes.length === 0 ? {} : calendarEvents}
+                        year={calendarDate.year}
+                        month={calendarDate.month}
+                        onMonthChange={handleMonthChange}
+                    />
                 </aside>
 
                 {/* 우측 내 수업 영역 */}

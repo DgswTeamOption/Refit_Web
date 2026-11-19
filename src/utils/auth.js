@@ -1,22 +1,42 @@
-import { jwtDecode } from "jwt-decode";
+import { logoutAuthApi, refreshAuthToken } from "../api/apiClient";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
 
-export async function authApiRequest(path, { method = "POST", body, token } = {}) {
+export async function authApiRequest(path, { method = "POST", body, signal, skipAuthRefresh = false } = {}) {
   const headers = new Headers();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+  headers.set("X-Client", "web");
 
-  let requestBody;
-  if (body !== undefined) {
+  let requestBody = body;
+  if (body !== undefined && !(body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
     requestBody = JSON.stringify(body);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const fetchOptions = {
     method,
     headers,
+    credentials: "include",
     body: requestBody,
-  });
+    signal,
+  };
+
+  let response = await fetch(`${API_BASE_URL}${path}`, fetchOptions);
+
+  const isAuthEndpoint =
+    path.startsWith("/api/auth/login") ||
+    path.startsWith("/api/auth/google/login") ||
+    path.startsWith("/api/auth/refresh") ||
+    path.startsWith("/api/auth/logout");
+
+  if (response.status === 401 && !skipAuthRefresh && !isAuthEndpoint) {
+    try {
+      await refreshAuthToken();
+      response = await fetch(`${API_BASE_URL}${path}`, fetchOptions);
+    } catch {
+      // refresh 실패 시 원래 401 응답으로 에러 처리
+    }
+  }
+
   const responseText = await response.text();
   let result = null;
 
@@ -57,62 +77,95 @@ export function normalizeRole(value) {
   return "";
 }
 
-function readUserId(claims) {
-  const value = claims.userId ?? claims.user_id ?? claims.uid ?? claims.id ?? claims.user?.id ?? claims.sub;
+function readUserId(data) {
+  if (!data || typeof data !== "object") return "";
+  const value = data.userId ?? data.user_id ?? data.uid ?? data.id ?? data.user?.id;
   const userId = typeof value === "number" ? String(value) : value;
   return typeof userId === "string" && /^\d+$/.test(userId) ? userId : "";
 }
 
-export async function resolveAuthenticatedUser(accessToken) {
-  let claims;
-  try {
-    claims = jwtDecode(accessToken);
-  } catch {
-    throw new Error("로그인 토큰을 읽을 수 없습니다.");
-  }
-
-  let role = normalizeRole(
-    claims.role ?? claims.userRole ?? claims.user_role ?? claims.roles ?? claims.authorities ?? claims.authority ?? claims.user?.role ?? claims.realm_access?.roles,
-  );
-  let name = claims.name ?? claims.userName ?? claims.username ?? claims.preferred_username ?? claims.user?.name ?? "";
-  const userId = readUserId(claims);
-
-  if (userId && (!role || !name)) {
+export async function fetchCurrentUserProfile({ signal } = {}) {
+  const endpoints = ["/api/users/me", "/api/auth/me"];
+  for (const endpoint of endpoints) {
     try {
-      const profile = await authApiRequest(`/api/users/${userId}`, { method: "GET", token: accessToken });
-      role ||= normalizeRole(profile?.role);
-      name ||= profile?.name || "";
+      const profile = await authApiRequest(endpoint, { method: "GET", signal });
+      if (profile && typeof profile === "object") {
+        return profile;
+      }
     } catch (error) {
-      if (!role) throw error;
+      if (error?.name === "AbortError") throw error;
     }
   }
 
-  if (!role) {
-    throw new Error("로그인은 완료됐지만 계정 역할을 확인할 수 없습니다.");
+  const storedUserId = typeof window !== "undefined" ? localStorage.getItem("userId") : "";
+  if (storedUserId && /^\d+$/.test(storedUserId)) {
+    return authApiRequest(`/api/users/${storedUserId}`, { method: "GET", signal });
   }
 
-  return { role, name };
+  return null;
 }
 
-export function saveAuthSession(tokens, { role, name } = {}) {
-  if (!tokens?.accessToken) {
-    throw new Error("로그인 응답에 accessToken이 없습니다.");
+export async function resolveAuthenticatedUser(loginResponse = null) {
+  const source = loginResponse && typeof loginResponse === "object" ? loginResponse : {};
+  let role = normalizeRole(
+    source.role ?? source.userRole ?? source.user_role ?? source.roles ?? source.user?.role,
+  );
+  let name = source.name ?? source.userName ?? source.username ?? source.user?.name ?? "";
+  let userId = readUserId(source);
+
+  if (!role || !name || !userId) {
+    const profile = await fetchCurrentUserProfile();
+    if (profile) {
+      role ||= normalizeRole(profile.role ?? profile.userRole ?? profile.roles);
+      name ||= profile.name ?? profile.userName ?? profile.username ?? "";
+      userId ||= readUserId(profile);
+    }
   }
 
-  localStorage.setItem("accessToken", tokens.accessToken);
-  localStorage.removeItem("refreshToken");
-  if (tokens.refreshToken) localStorage.setItem("refreshToken", tokens.refreshToken);
-  localStorage.removeItem("token");
+  // 로그인 응답 body가 {}이고 별도 내 정보 조회 API가 아직 없을 때 기본값 fallback
+  if (!role) {
+    role = normalizeRole(typeof window !== "undefined" ? localStorage.getItem("role") : "") || "student";
+  }
+
+  return { role, name, userId };
+}
+
+export function saveAuthSession({ role, name, userId } = {}) {
+  if (typeof window === "undefined") return;
+
+  // HttpOnly 쿠키 인증 방식이므로 브라우저 저장소에는 토큰을 저장하지 않음
+  ["accessToken", "refreshToken", "token"].forEach((key) => localStorage.removeItem(key));
+  localStorage.setItem("isLoggedIn", "true");
 
   const normalizedRole = normalizeRole(role);
   if (normalizedRole) localStorage.setItem("role", normalizedRole);
   else localStorage.removeItem("role");
+
   if (name) localStorage.setItem("userName", name);
   else localStorage.removeItem("userName");
+
+  if (userId) localStorage.setItem("userId", String(userId));
+  else localStorage.removeItem("userId");
+}
+
+export function isAuthenticatedSession() {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("isLoggedIn") === "true";
 }
 
 export function clearAuthSession() {
-  ["accessToken", "refreshToken", "token", "role", "userName"].forEach((key) => {
+  if (typeof window === "undefined") return;
+  ["isLoggedIn", "accessToken", "refreshToken", "token", "role", "userName", "userId"].forEach((key) => {
     localStorage.removeItem(key);
   });
+}
+
+export async function logoutAuthSession() {
+  try {
+    await logoutAuthApi();
+  } catch {
+    // 서버 로그아웃 실패 시에도 클라이언트 세션 상태는 초기화
+  } finally {
+    clearAuthSession();
+  }
 }

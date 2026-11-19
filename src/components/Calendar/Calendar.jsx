@@ -5,57 +5,84 @@ import { CalendarContainer } from './Calendar.styles';
 import CalendarBlock from './CalendarBlock';
 import './Calendar.css';
 
-function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate }) {
-    const [year, setYear] = useState(() => new Date().getFullYear());
-    const [month, setMonth] = useState(() => new Date().getMonth()); // 0-indexed
+const DEFAULT_CLASS_EVENTS = {
+    4: ['lavender', 'mint'],
+    6: ['lavender', 'mint'],
+    11: ['peach', 'lavender', 'yellow'],
+    13: ['lavender', 'mint', 'yellow'],
+    18: ['lavender', 'mint'],
+    20: ['lavender', 'mint'],
+    25: ['peach', 'lavender', 'yellow'],
+    27: ['peach', 'lavender', 'yellow'],
+};
+
+const DEFAULT_ATTENDANCE_EVENTS = {
+    4: ['darkGray', 'blue'],
+    6: ['darkGray', 'blue'],
+    11: ['red', 'blue', 'yellow'],
+    13: ['red', 'blue', 'yellow'],
+    18: ['darkGray', 'blue'],
+    20: ['darkGray', 'blue'],
+    25: ['red', 'blue', 'yellow'],
+    27: ['red', 'blue', 'yellow'],
+};
+
+function Calendar({
+    mode = 'class',
+    classes = null,
+    events = null,
+    year: controlledYear,
+    month: controlledMonth, // 1-indexed (1 ~ 12)
+    onMonthChange,
+    onSelectDate,
+    selectedDate,
+}) {
+    const [internalYear, setInternalYear] = useState(() => new Date().getFullYear());
+    const [internalMonth, setInternalMonth] = useState(() => new Date().getMonth()); // 0-indexed
+
+    const isControlledDate =
+        typeof controlledYear === 'number' && typeof controlledMonth === 'number';
+    const year = isControlledDate ? controlledYear : internalYear;
+    const month = isControlledDate ? controlledMonth - 1 : internalMonth; // 0-indexed
 
     const firstDayIndex = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
 
+    const updateMonth = (nextYear, nextMonthZeroBased) => {
+        if (!isControlledDate) {
+            setInternalYear(nextYear);
+            setInternalMonth(nextMonthZeroBased);
+        }
+        if (onMonthChange) {
+            onMonthChange(nextYear, nextMonthZeroBased + 1);
+        }
+    };
+
     const handlePrevMonth = () => {
         if (month === 0) {
-            setYear((prev) => prev - 1);
-            setMonth(11);
+            updateMonth(year - 1, 11);
         } else {
-            setMonth((prev) => prev - 1);
+            updateMonth(year, month - 1);
         }
     };
 
     const handleNextMonth = () => {
         if (month === 11) {
-            setYear((prev) => prev + 1);
-            setMonth(0);
+            updateMonth(year + 1, 0);
         } else {
-            setMonth((prev) => prev + 1);
+            updateMonth(year, month + 1);
         }
     };
 
     const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
     const isClassEmpty = Array.isArray(classes) && classes.length === 0;
 
-    const classEvents = isClassEmpty ? {} : {
-        4: ['lavender', 'mint'],
-        6: ['lavender', 'mint'],
-        11: ['peach', 'lavender', 'yellow'],
-        13: ['lavender', 'mint', 'yellow'],
-        18: ['lavender', 'mint'],
-        20: ['lavender', 'mint'],
-        25: ['peach', 'lavender', 'yellow'],
-        27: ['peach', 'lavender', 'yellow'],
-    };
-
-    const attendanceEvents = {
-        4: ['darkGray', 'blue'],
-        6: ['darkGray', 'blue'],
-        11: ['red', 'blue', 'yellow'],
-        13: ['red', 'blue', 'yellow'],
-        18: ['darkGray', 'blue'],
-        20: ['darkGray', 'blue'],
-        25: ['red', 'blue', 'yellow'],
-        27: ['red', 'blue', 'yellow'],
-    };
-
-    const activeEvents = mode === 'attendance' ? attendanceEvents : classEvents;
+    // events prop이 전달되면 실제 데이터만 사용 (미전달 시 기존 공용 호환 유지)
+    const activeEvents = events !== null
+        ? events
+        : mode === 'attendance'
+            ? DEFAULT_ATTENDANCE_EVENTS
+            : (isClassEmpty ? {} : DEFAULT_CLASS_EVENTS);
 
     const checkSelected = (date) => {
         if (typeof selectedDate === 'string' && selectedDate.includes('-')) {
@@ -113,7 +140,8 @@ function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate }
                             { id: 'math1', title: '수학1', color: 'yellow' },
                             { id: 'math2', title: '수학2', color: 'mint' },
                         ]).map((cls) => {
-                            const formattedColor = cls.color[0].toUpperCase() + cls.color.slice(1);
+                            const color = cls.color || 'blue';
+                            const formattedColor = color[0].toUpperCase() + color.slice(1);
                             return (
                                 <div key={cls.id} className="CalendarFootTag">
                                     <div className={`CalendarCircle CalendarCircle${formattedColor}`} />

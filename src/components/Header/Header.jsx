@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
 import './Header.css';
 import bellIcon from '../../assets/bell.svg';
-import { clearAuthSession } from '../../utils/auth';
+import { fetchCurrentUserProfile, isAuthenticatedSession, logoutAuthSession } from '../../utils/auth';
 
 function DefaultProfileAvatar({ className = 'header-profile-icon' }) {
     return (
@@ -24,8 +23,6 @@ function DefaultProfileAvatar({ className = 'header-profile-icon' }) {
     );
 }
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
-
 const Header = ({
     isLoggedIn: isLoggedInProp,
     userName = '학생1',
@@ -39,14 +36,11 @@ const Header = ({
     const navigate = useNavigate();
     const isLoggedIn = isLoggedInProp !== undefined
         ? isLoggedInProp
-        : Boolean(typeof window !== 'undefined' && (localStorage.getItem('accessToken') || localStorage.getItem('token')));
+        : isAuthenticatedSession();
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [profileName, setProfileName] = useState(userName);
     const [profileImageUrl, setProfileImageUrl] = useState('');
-    const accessToken = typeof window !== 'undefined'
-        ? localStorage.getItem('accessToken') || localStorage.getItem('token')
-        : null;
 
     // 초기 로그인 시에는 알림이 없도록 빈 배열 기본값 적용
     const [notifications, setNotifications] = useState(initialNotifications);
@@ -55,27 +49,15 @@ const Header = ({
     const profileRef = useRef(null);
 
     useEffect(() => {
-        setProfileName(userName || '학생1');
-        setProfileImageUrl('');
-        if (!isLoggedIn || !accessToken) return undefined;
+        if (!isLoggedIn) return undefined;
 
         const controller = new AbortController();
 
         const loadProfile = async () => {
             try {
-                const claims = jwtDecode(accessToken);
-                const rawUserId = claims.userId ?? claims.user_id ?? claims.uid ?? claims.id ?? claims.user?.id ?? claims.sub;
-                const userId = typeof rawUserId === 'number' ? String(rawUserId) : rawUserId;
-                if (typeof userId !== 'string' || !/^\d+$/.test(userId)) return;
+                const profile = await fetchCurrentUserProfile({ signal: controller.signal });
+                if (!profile) return;
 
-                const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
-                    headers: { Authorization: `Bearer ${accessToken}` },
-                    signal: controller.signal,
-                });
-                if (!response.ok) return;
-
-                const result = await response.json();
-                const profile = result?.data ?? result;
                 const name = profile?.name ?? profile?.userName ?? profile?.username ?? '';
                 const imageUrl = profile?.profileImageUrl
                     ?? profile?.profile_image_url
@@ -95,7 +77,7 @@ const Header = ({
 
         loadProfile();
         return () => controller.abort();
-    }, [accessToken, isLoggedIn, userName]);
+    }, [isLoggedIn, userName]);
 
     const unreadCount = notifications.filter((item) => item.isUnread).length;
 
@@ -149,11 +131,11 @@ const Header = ({
     const handleLogoClick = onLogoClick || (() => navigate(isLoggedIn ? '/student' : '/login'));
     const handleLoginClick = onLoginClick || (() => navigate('/login'));
     const handleSignupClick = onSignupClick || (() => navigate('/signup'));
-    const handleLogoutClick = () => {
+    const handleLogoutClick = async () => {
         if (onLogoutClick) {
-            onLogoutClick();
+            await onLogoutClick();
         } else {
-            clearAuthSession();
+            await logoutAuthSession();
             navigate('/login');
         }
     };

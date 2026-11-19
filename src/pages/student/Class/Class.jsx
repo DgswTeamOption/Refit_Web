@@ -7,14 +7,11 @@ import Nav from '../../../components/Nav/Nav';
 import studentApi from '../../../api/studentApi';
 import {
     CLASS_TABS,
-    CLASS_TITLES,
-    NOTICES_DATA,
-    INITIAL_ABSENCE_LIST,
-    INITIAL_MAKEUP_LIST,
     mapNoticeFromApi,
     mapAttendanceFromApi,
     mapAbsenceFromApi,
     mapMakeupFromApi,
+    buildAttendanceCalendarEvents,
 } from './constants';
 import ClassMain from './components/ClassMain';
 import NoticeList from './components/NoticeList';
@@ -31,52 +28,88 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
 
     // 이전 화면에서 넘겨준 수업 정보가 있으면 바로 사용
     const initialClassInfo = propClassInfo || location.state?.classInfo;
-    const fallbackTitle = initialClassInfo?.title || CLASS_TITLES[classId] || '영어1';
+    const fallbackTitle = initialClassInfo?.title || '수업';
     const [classTitle, setClassTitle] = useState(fallbackTitle);
 
     // 현재 선택된 탭 ('main' | 'absence' | 'makeup') 및 서브 화면
     const [activeTab, setActiveTab] = useState('main');
     const [subView, setSubView] = useState('tab');
 
-    // 공지, 출석, 결석, 보강 데이터 상태
-    const [notices, setNotices] = useState(NOTICES_DATA);
-    const [selectedNotice, setSelectedNotice] = useState(NOTICES_DATA[0]);
+    // 달력에 표시 중인 연·월 (1-indexed month)
+    const [calendarDate, setCalendarDate] = useState(() => {
+        const now = new Date();
+        return { year: now.getFullYear(), month: now.getMonth() + 1 };
+    });
+
+    // 공지, 출석, 캘린더, 결석, 보강 데이터 상태 (목업 없이 빈 상태로 초기화)
+    const [notices, setNotices] = useState([]);
+    const [selectedNotice, setSelectedNotice] = useState(null);
+    const [calendarData, setCalendarData] = useState([]);
     const [attendanceList, setAttendanceList] = useState([]);
     const [attendanceStats, setAttendanceStats] = useState(null);
-    const [absenceList, setAbsenceList] = useState(INITIAL_ABSENCE_LIST);
-    const [makeupList, setMakeupList] = useState(INITIAL_MAKEUP_LIST);
+    const [absenceList, setAbsenceList] = useState([]);
+    const [makeupList, setMakeupList] = useState([]);
     const [availableMakeupSlots, setAvailableMakeupSlots] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     const numericClassId = Number(classId);
     const isValidClassId = Number.isInteger(numericClassId) && numericClassId > 0;
 
-    // 수업 상세 정보 및 목록 데이터 불러오기
+    // 1. 수업 기본 목록 데이터 불러오기 (공지, 결석, 보강, 보강 가능 시간)
     useEffect(() => {
         if (!isValidClassId) return;
 
         let isMounted = true;
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1;
 
-        async function fetchClassData() {
-            // 실패한 요청만 null로 처리해 나머지 데이터가 정상 표시되도록 함
-            const [
-                detail,
-                noticesData,
-                attendanceData,
-                statsData,
-                absencesData,
-                makeupsData,
-                availabilityData,
-            ] = await Promise.all([
-                studentApi.getClassDetail(numericClassId, { year, month }).catch(() => null),
+        async function fetchStaticClassData() {
+            const [noticesData, absencesData, makeupsData, availabilityData] = await Promise.all([
                 studentApi.getNotices(numericClassId).catch(() => null),
-                studentApi.getMyAttendance(numericClassId, { year, month }).catch(() => null),
-                studentApi.getAttendanceStats(numericClassId, { year, month }).catch(() => null),
                 studentApi.getMyAbsences(numericClassId).catch(() => null),
                 studentApi.getMakeups(numericClassId).catch(() => null),
                 studentApi.getMakeupAvailability({ class_id: numericClassId }).catch(() => null),
+            ]);
+
+            if (!isMounted) return;
+
+            if (Array.isArray(noticesData)) {
+                const mapped = noticesData.map(mapNoticeFromApi);
+                setNotices(mapped);
+                setSelectedNotice(mapped[0] || null);
+            }
+
+            if (Array.isArray(absencesData)) {
+                setAbsenceList(absencesData.map((item) => mapAbsenceFromApi(item)));
+            }
+
+            if (Array.isArray(makeupsData)) {
+                setMakeupList(makeupsData.map((item) => mapMakeupFromApi(item)));
+            }
+
+            if (Array.isArray(availabilityData)) {
+                setAvailableMakeupSlots(availabilityData);
+            }
+        }
+
+        fetchStaticClassData();
+        return () => {
+            isMounted = false;
+        };
+    }, [isValidClassId, numericClassId]);
+
+    // 2. 월별 데이터 불러오기 (수업 상세, 캘린더, 해당 월 출석 및 통계)
+    useEffect(() => {
+        if (!isValidClassId) return;
+
+        let isMounted = true;
+        const { year, month } = calendarDate;
+
+        async function fetchMonthlyData() {
+            setIsLoading(true);
+            const [detail, monthlyCalendar, attendanceData, statsData] = await Promise.all([
+                studentApi.getClassDetail(numericClassId, { year, month }).catch(() => null),
+                studentApi.getClassCalendar(numericClassId, { year, month }).catch(() => null),
+                studentApi.getMyAttendance(numericClassId, { year, month }).catch(() => null),
+                studentApi.getAttendanceStats(numericClassId, { year, month }).catch(() => null),
             ]);
 
             if (!isMounted) return;
@@ -86,54 +119,46 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                 setClassTitle(detail.name);
             }
 
-            if (Array.isArray(noticesData)) {
-                const mapped = noticesData.map(mapNoticeFromApi);
-                if (mapped.length > 0) {
-                    setNotices(mapped);
-                    setSelectedNotice(mapped[0]);
-                }
-            }
+            setCalendarData(monthlyCalendar || []);
 
             if (Array.isArray(attendanceData)) {
                 setAttendanceList(
                     attendanceData.map((item) => mapAttendanceFromApi(item, currentTitle))
                 );
+            } else {
+                setAttendanceList([]);
             }
 
-            if (Array.isArray(statsData) && statsData[0]) {
-                const stat = statsData[0];
+            const stat = Array.isArray(statsData) ? statsData[0] : statsData;
+            if (stat && typeof stat === 'object') {
                 const presentCount = (stat.present_count ?? 0) + (stat.late_count ?? 0);
                 const absentCount = stat.absent_count ?? 0;
                 setAttendanceStats({
                     presentCount,
                     absentCount,
-                    totalCount: presentCount + absentCount,
+                    totalCount: stat.total_count ?? (presentCount + absentCount),
                 });
+            } else {
+                setAttendanceStats(null);
             }
 
-            if (Array.isArray(absencesData)) {
-                setAbsenceList(absencesData.map(mapAbsenceFromApi));
-            }
-
-            if (Array.isArray(makeupsData)) {
-                setMakeupList(makeupsData.map(mapMakeupFromApi));
-            }
-
-            if (Array.isArray(availabilityData)) {
-                setAvailableMakeupSlots(availabilityData);
-            }
+            setIsLoading(false);
         }
 
-        fetchClassData();
+        fetchMonthlyData();
         return () => {
             isMounted = false;
         };
-    }, [isValidClassId, numericClassId, fallbackTitle]);
+    }, [isValidClassId, numericClassId, calendarDate, fallbackTitle]);
 
     // 화면 전환 시 항상 최상단으로 스크롤 이동
     useEffect(() => {
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }, [subView, activeTab]);
+
+    const handleMonthChange = (nextYear, nextMonth) => {
+        setCalendarDate({ year: nextYear, month: nextMonth });
+    };
 
     const handleGoHome = () => {
         if (onGoHome) {
@@ -177,7 +202,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                 reason: newAbsence.reason,
                 absence_date: newAbsence.rawDate,
             });
-            setAbsenceList((prev) => [mapAbsenceFromApi(created), ...prev]);
+            setAbsenceList((prev) => [mapAbsenceFromApi(created, newAbsence), ...prev]);
             setSubView('tab');
             return;
         }
@@ -193,11 +218,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                 schedule_id: newMakeup.scheduleId,
                 makeup_time: newMakeup.isoMakeupTime,
             });
-            const mapped = mapMakeupFromApi(created);
-            setMakeupList((prev) => [
-                { ...mapped, time: newMakeup.time, reason: newMakeup.reason },
-                ...prev,
-            ]);
+            setMakeupList((prev) => [mapMakeupFromApi(created, newMakeup), ...prev]);
             setSubView('tab');
             return;
         }
@@ -230,6 +251,16 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
         }
         setMakeupList((prev) => prev.filter((item) => item.id !== id));
     };
+
+    // 현재 보고 있는 월의 실제 달력 이벤트 계산
+    const calendarEvents = buildAttendanceCalendarEvents({
+        year: calendarDate.year,
+        month: calendarDate.month,
+        calendarData,
+        attendanceList,
+        absenceList,
+        makeupList,
+    });
 
     // 현재 위치(Breadcrumb) 마지막 글자 결정
     const getBreadcrumbLastText = () => {
@@ -286,6 +317,10 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                 {subView === 'absence-apply' && (
                     <AbsenceApply
                         items={absenceList}
+                        calendarEvents={calendarEvents}
+                        calendarYear={calendarDate.year}
+                        calendarMonth={calendarDate.month}
+                        onMonthChange={handleMonthChange}
                         onSubmit={handleSubmitAbsence}
                         onCancel={handleCancelAbsence}
                     />
@@ -296,6 +331,10 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                         items={makeupList}
                         availableSlots={availableMakeupSlots}
                         isServerMode={isValidClassId}
+                        calendarEvents={calendarEvents}
+                        calendarYear={calendarDate.year}
+                        calendarMonth={calendarDate.month}
+                        onMonthChange={handleMonthChange}
                         onSubmit={handleSubmitMakeup}
                         onCancel={handleCancelMakeup}
                     />
@@ -305,7 +344,13 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                 {subView === 'tab' && (
                     <div className="class-two-columns">
                         <aside className="class-calendar-aside">
-                            <Calendar mode="attendance" />
+                            <Calendar
+                                mode="attendance"
+                                events={calendarEvents}
+                                year={calendarDate.year}
+                                month={calendarDate.month}
+                                onMonthChange={handleMonthChange}
+                            />
                         </aside>
 
                         <section className="class-content-area">
@@ -315,6 +360,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                                     attendanceList={attendanceList}
                                     attendanceStats={attendanceStats}
                                     notices={notices}
+                                    isLoading={isLoading}
                                     onViewMoreNotices={() => setSubView('notice-list')}
                                     onSelectNotice={handleOpenNoticeDetail}
                                 />

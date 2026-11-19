@@ -7,7 +7,15 @@ import { formatToKoreanDate } from '../constants';
 /**
  * 결석 신청 폼 및 신청 내역 화면 (view12)
  */
-function AbsenceApply({ items = [], onSubmit, onCancel }) {
+function AbsenceApply({
+    items = [],
+    calendarEvents = {},
+    calendarYear,
+    calendarMonth,
+    onMonthChange,
+    onSubmit,
+    onCancel,
+}) {
     const [absenceDate, setAbsenceDate] = useState('');
     const [absenceReason, setAbsenceReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,10 +57,14 @@ function AbsenceApply({ items = [], onSubmit, onCancel }) {
         <div className="apply-view-wrapper">
             <h2 className="apply-section-guide-title">신청할 날짜를 선택해주세요</h2>
             <div className="apply-two-columns">
-                {/* 좌측 캘린더 (현재 보고 있는 연·월 연동) */}
+                {/* 좌측 캘린더 (실제 출결 일정 및 연·월 연동) */}
                 <div className="apply-calendar-column">
                     <Calendar
                         mode="attendance"
+                        events={calendarEvents}
+                        year={calendarYear}
+                        month={calendarMonth}
+                        onMonthChange={onMonthChange}
                         onSelectDate={handleSelectDateFromCalendar}
                         selectedDate={absenceDate}
                     />

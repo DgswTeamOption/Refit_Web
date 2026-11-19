@@ -34,9 +34,9 @@ export default function Login({ onNavigate }) {
     }
   }
 
-  async function signInWithTokens(tokens) {
-    const user = await resolveAuthenticatedUser(tokens.accessToken);
-    saveAuthSession(tokens, user);
+  async function signInWithSession(loginResponse) {
+    const user = await resolveAuthenticatedUser(loginResponse);
+    saveAuthSession(user);
     onNavigate(user.role);
   }
 
@@ -45,10 +45,10 @@ export default function Login({ onNavigate }) {
     setIsSubmitting(true);
     setMessage("");
     try {
-      const tokens = await authApiRequest("/api/auth/google/login", {
+      const loginResponse = await authApiRequest("/api/auth/google/login", {
         body: { idToken },
       });
-      await signInWithTokens(tokens);
+      await signInWithSession(loginResponse);
     } catch (error) {
       setMessage(error.status === 401
         ? "Google 인증 토큰을 서버가 거부했습니다. 서버가 허용하는 Google Client ID 목록을 확인해 주세요."
@@ -69,13 +69,13 @@ export default function Login({ onNavigate }) {
     setIsSubmitting(true);
     setMessage("");
     try {
-      const tokens = await authApiRequest("/api/auth/login", {
+      const loginResponse = await authApiRequest("/api/auth/login", {
         body: {
           email_id: normalizedEmail,
           verificationToken: normalizedCode,
         },
       });
-      await signInWithTokens(tokens);
+      await signInWithSession(loginResponse);
     } catch (error) {
       setMessage(error.message || "로그인에 실패했습니다.");
     } finally {
