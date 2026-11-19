@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import Button from '../../../../components/Button/Button.jsx';
 
-function DeleteNoticeDialog({ title, onCancel, onConfirm }) {
+function DeleteNoticeDialog({ title, onCancel, onConfirm, saving, error }) {
     const dialogRef = useRef(null);
 
     useEffect(() => {
@@ -18,15 +18,16 @@ function DeleteNoticeDialog({ title, onCancel, onConfirm }) {
             aria-describedby="notice-delete-description notice-delete-target"
             onCancel={(event) => {
                 event.preventDefault();
-                onCancel();
+                if (!saving) onCancel();
             }}
         >
             <h2 id="notice-delete-title">공지를 삭제할까요?</h2>
             <p id="notice-delete-description">삭제한 공지는 학생에게 더 이상 보이지 않습니다.</p>
             <p id="notice-delete-target" className="notice-delete-dialog__target">{title}</p>
+            {error && <p className="notices-editor__error" role="alert">{error}</p>}
             <div className="notices-actions notice-delete-dialog__actions">
-                <Button text="취소" color="lightGray" width={154} onClick={onCancel} />
-                <Button text="공지 삭제" color="red" width={154} onClick={onConfirm} />
+                <Button text="취소" color="lightGray" width={154} onClick={onCancel} disabled={saving} />
+                <Button text={saving ? '삭제 중…' : '공지 삭제'} color="red" width={154} onClick={onConfirm} disabled={saving} />
             </div>
         </dialog>
     );
@@ -39,6 +40,8 @@ export default function Notices({
     onRequestDelete,
     onCancelDelete,
     onConfirmDelete,
+    saving = false,
+    error = '',
 }) {
     return (
         <div className="notices-page">
@@ -58,6 +61,8 @@ export default function Notices({
                     title={notice.title}
                     onCancel={onCancelDelete}
                     onConfirm={onConfirmDelete}
+                    saving={saving}
+                    error={error}
                 />
             )}
         </div>

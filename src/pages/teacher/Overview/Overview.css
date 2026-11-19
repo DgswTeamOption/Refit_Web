@@ -128,6 +128,17 @@
     width: 100%;
 }
 
+.teacher-overview__grid .class-block__banner {
+    overflow: hidden;
+}
+
+.teacher-overview__grid .class-block__banner > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .teacher-overview__empty {
     display: flex;
     align-items: center;
@@ -218,6 +229,7 @@
 
 .overview-modal__input {
     display: block;
+    box-sizing: border-box;
 
     width: 100%;
     max-width: 100%;

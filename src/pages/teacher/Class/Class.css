@@ -37,11 +37,13 @@
     margin-top: 24px;
 }
 
-.teacher-class__content {
+.teacher-class__content,
+.teacher-class__sidebar {
     min-width: 0;
 }
 
 .teacher-class__calendar > div {
+    width: 100%;
     min-height: 388px;
     border: 1px solid #e8e8e8;
     border-radius: 15px;
@@ -69,6 +71,10 @@
     padding: 8px 4px 5px;
 }
 
+.teacher-class__calendar .CalendarBlock.is-selected:not([aria-current="date"]) .CalendarDate {
+    font-weight: 500;
+}
+
 .teacher-class__calendar .CalendarFoot {
     margin-top: auto;
     padding: 20px 20px 13px;
@@ -77,6 +83,103 @@
 
 .teacher-class__calendar .CalendarFootTag {
     gap: 7px;
+}
+
+.teacher-class__code-card {
+    margin-top: 24px;
+    padding: 20px 24px;
+    border: 1px solid #e8e8e8;
+    border-radius: 15px;
+}
+
+.teacher-class__code-card h2 {
+    margin: 0 0 4px;
+    font-size: 17px;
+    line-height: 24px;
+}
+
+.teacher-class__code-card p {
+    margin: 0;
+    color: #666;
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.teacher-class__code-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.teacher-class__code-value,
+.teacher-class__copy-code {
+    min-height: 48px;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.teacher-class__code-value {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    padding: 0 14px;
+    border: 1px solid #e8e8e8;
+    color: #151515;
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    overflow-wrap: anywhere;
+    user-select: all;
+}
+
+.teacher-class__copy-code {
+    box-sizing: border-box;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 88px;
+    border: 1px solid #cfe6f7;
+    color: #1677b7;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.teacher-class__copy-code:hover {
+    background: #f0f8ff;
+}
+
+.teacher-class__copy-icon {
+    position: relative;
+    width: 12px;
+    height: 12px;
+}
+
+.teacher-class__copy-icon::before,
+.teacher-class__copy-icon::after {
+    position: absolute;
+    width: 6px;
+    height: 7px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    content: '';
+}
+
+.teacher-class__copy-icon::before {
+    top: 0;
+    left: 0;
+}
+
+.teacher-class__copy-icon::after {
+    right: 0;
+    bottom: 0;
+    background: #fff;
+}
+
+.teacher-class__copy-feedback:not(:empty) {
+    margin-top: 8px;
 }
 
 .teacher-class__content h2 {

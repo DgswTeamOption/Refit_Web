@@ -5,15 +5,26 @@ import { CalendarContainer } from './Calendar.styles';
 import CalendarBlock from './CalendarBlock';
 import './Calendar.css';
 
-function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate }) {
+function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate, period, onPeriodChange, events, highlightToday = false }) {
     // 2026년 8월 기준 (Figma 시안 기준)
-    const [year, setYear] = useState(2026);
-    const [month, setMonth] = useState(7); // 0-indexed (7 = 8월)
+    const [internalYear, setYear] = useState(2026);
+    const [internalMonth, setMonth] = useState(7); // 0-indexed (7 = 8월)
+    const [today] = useState(() => new Date());
+    const year = period?.year ?? internalYear;
+    const month = period ? period.month - 1 : internalMonth;
+    const todayDate = highlightToday && year === today.getFullYear() && month === today.getMonth()
+        ? today.getDate()
+        : null;
 
     const firstDayIndex = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
 
     const handlePrevMonth = () => {
+        if (onPeriodChange) {
+            const previous = new Date(year, month - 1, 1);
+            onPeriodChange({ year: previous.getFullYear(), month: previous.getMonth() + 1 });
+            return;
+        }
         if (month === 0) {
             setYear((prev) => prev - 1);
             setMonth(11);
@@ -23,6 +34,11 @@ function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate }
     };
 
     const handleNextMonth = () => {
+        if (onPeriodChange) {
+            const next = new Date(year, month + 1, 1);
+            onPeriodChange({ year: next.getFullYear(), month: next.getMonth() + 1 });
+            return;
+        }
         if (month === 11) {
             setYear((prev) => prev + 1);
             setMonth(0);
@@ -58,7 +74,7 @@ function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate }
         27: ['red', 'blue', 'yellow'],
     };
 
-    const activeEvents = mode === 'attendance' ? attendanceEvents : classEvents;
+    const activeEvents = events ?? (mode === 'attendance' ? attendanceEvents : classEvents);
 
     return (
         <CalendarContainer>
@@ -93,6 +109,7 @@ function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate }
                         colors={activeEvents[date] || []}
                         onClick={onSelectDate}
                         isSelected={selectedDate === date}
+                        isToday={todayDate === date}
                     />
                 ))}
             </div>
