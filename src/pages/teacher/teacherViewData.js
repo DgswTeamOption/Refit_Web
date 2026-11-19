@@ -1,4 +1,5 @@
 export const CLASS_COLORS = ['peach', 'lavender', 'yellow', 'mint'];
+const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
 export function classColor(id) {
     return CLASS_COLORS[Number(id) % CLASS_COLORS.length];
@@ -18,17 +19,41 @@ export function shiftPeriod({ year, month }, offset) {
     return { year: date.getFullYear(), month: date.getMonth() + 1 };
 }
 
-export function calendarEvents(schedules, classes, { year, month }) {
+// Weekly rows are keyed by class ID, for example { 4: [{ mon: '16:00' }] }.
+export function calendarEvents(schedules, classes, { year, month }, weeklySchedules = {}) {
     const prefix = `${year}-${String(month).padStart(2, '0')}-`;
     const colors = new Map(classes.map((item) => [String(item.id), classColor(item.id)]));
-    return schedules.reduce((events, schedule) => {
+    const events = {};
+    const mark = (day, color) => {
+        const marks = events[day] ??= [];
+        if (!marks.includes(color)) marks.push(color);
+    };
+
+    for (const schedule of schedules) {
         const start = schedule.startTime;
-        if (typeof start !== 'string' || !start.startsWith(prefix)) return events;
+        if (typeof start !== 'string' || !start.startsWith(prefix)) continue;
         const day = Number(start.slice(8, 10));
         const color = colors.get(String(schedule.classId));
-        if (color) events[day] = [...new Set([...(events[day] || []), color])];
-        return events;
-    }, {});
+        if (color) mark(day, color);
+    }
+
+    const lastDay = new Date(year, month, 0).getDate();
+    for (const [classId, rows] of Object.entries(weeklySchedules)) {
+        const color = colors.get(classId);
+        if (!color) continue;
+
+        const weekdays = new Set(WEEKDAY_KEYS.filter((key) =>
+            rows.some((row) => /^\d{2}:\d{2}$/.test(row[key]))
+        ));
+        if (!weekdays.size) continue;
+
+        for (let day = 1; day <= lastDay; day++) {
+            const weekday = WEEKDAY_KEYS[new Date(year, month - 1, day).getDay()];
+            if (weekdays.has(weekday)) mark(day, color);
+        }
+    }
+
+    return events;
 }
 
 export function attendanceTotals(rows) {

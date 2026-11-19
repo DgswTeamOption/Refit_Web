@@ -2,6 +2,7 @@ import Button from '../../../../components/Button/Button.jsx';
 import Condition from '../../../../components/Condition/Condition.jsx';
 import { attendanceLabel, attendanceTotals, noticeForView } from '../../teacherViewData.js';
 import ClassCalendar from './ClassCalendar.jsx';
+import ClassCodeCard from './ClassCodeCard.jsx';
 
 function RequestState({ resource, onRetry }) {
     if (resource.loading) return <p role="status">불러오는 중입니다.</p>;
@@ -21,9 +22,12 @@ export default function ClassHome({ classroom, period, onPeriodChange, summary, 
     const displayDate = Number(month) + '월 ' + Number(day) + '일';
     return (
         <div className="teacher-class__layout">
-            <aside className="teacher-class__calendar" aria-label="수업 달력">
-                <ClassCalendar period={period} onPeriodChange={onPeriodChange} classroom={classroom} selectedDate={selectedDate} onSelectDate={onSelectDate} />
-            </aside>
+            <div className="teacher-class__sidebar">
+                <aside className="teacher-class__calendar" aria-label="수업 달력">
+                    <ClassCalendar period={period} onPeriodChange={onPeriodChange} classroom={classroom} selectedDate={selectedDate} onSelectDate={onSelectDate} />
+                </aside>
+                {classroom.classCode && <ClassCodeCard classCode={classroom.classCode} />}
+            </div>
             <div className="teacher-class__content">
                 <section className="teacher-class__summary" aria-labelledby="class-attendance-title">
                     <h2 id="class-attendance-title">이번달 출석 현황</h2>
