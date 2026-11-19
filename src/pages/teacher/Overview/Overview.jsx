@@ -177,7 +177,7 @@ export default function Overview({ hidden }) {
                                         </div>
                                         <div className="class-block__body">
                                             <h3 className="class-block__title">{item.name}</h3>
-                                            <button type="button" className="class-block__leave" aria-label={item.name + ' 수업 나가기'} onClick={() => { setModalError(''); setModal({ type: 'delete', item }); }}>수업 나가기</button>
+                                            <button type="button" className="class-block__leave" aria-label={item.name + ' 수업 삭제'} onClick={() => { setModalError(''); setModal({ type: 'delete', item }); }}>수업 삭제</button>
                                         </div>
                                     </article>
                                     <Link className="teacher-overview__class-link" to={'/teacher/class/' + item.id} state={{ classTitle: item.name }} aria-label={item.name + ' 수업 열기'} />

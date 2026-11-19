@@ -49,11 +49,11 @@
 .CalendarBlock.is-clickable {
     cursor: pointer;
 }
-.CalendarBlock.is-selected {
+.CalendarBlock:is(.is-selected, [aria-current="date"]) {
     background-color: #EBF5FF;
     border-radius: 8px;
 }
-.CalendarBlock.is-selected .CalendarDate {
+.CalendarBlock:is(.is-selected, [aria-current="date"]) .CalendarDate {
     color: #0099FF;
     font-weight: 700;
 }

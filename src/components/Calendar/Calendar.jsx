@@ -5,12 +5,16 @@ import { CalendarContainer } from './Calendar.styles';
 import CalendarBlock from './CalendarBlock';
 import './Calendar.css';
 
-function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate, period, onPeriodChange, events }) {
+function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate, period, onPeriodChange, events, highlightToday = false }) {
     // 2026년 8월 기준 (Figma 시안 기준)
     const [internalYear, setYear] = useState(2026);
     const [internalMonth, setMonth] = useState(7); // 0-indexed (7 = 8월)
+    const [today] = useState(() => new Date());
     const year = period?.year ?? internalYear;
     const month = period ? period.month - 1 : internalMonth;
+    const todayDate = highlightToday && year === today.getFullYear() && month === today.getMonth()
+        ? today.getDate()
+        : null;
 
     const firstDayIndex = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
@@ -105,6 +109,7 @@ function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate, 
                         colors={activeEvents[date] || []}
                         onClick={onSelectDate}
                         isSelected={selectedDate === date}
+                        isToday={todayDate === date}
                     />
                 ))}
             </div>

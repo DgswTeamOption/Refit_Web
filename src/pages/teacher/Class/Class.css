@@ -104,34 +104,39 @@
 .teacher-class__code-controls {
     display: flex;
     gap: 8px;
-    margin-top: 14px;
+    margin-top: 16px;
 }
 
 .teacher-class__code-value,
 .teacher-class__copy-code {
-    box-sizing: border-box;
-    min-height: 46px;
+    min-height: 48px;
     border-radius: 8px;
     background: #fff;
 }
 
 .teacher-class__code-value {
+    display: flex;
     flex: 1;
+    align-items: center;
     min-width: 0;
-    padding: 0 12px;
+    padding: 0 14px;
     border: 1px solid #e8e8e8;
     color: #151515;
-    font-size: 21px;
+    font-size: 23px;
     font-weight: 700;
     letter-spacing: 0.12em;
+    overflow-wrap: anywhere;
+    user-select: all;
 }
 
 .teacher-class__copy-code {
+    box-sizing: border-box;
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 0 14px;
+    width: 88px;
     border: 1px solid #cfe6f7;
     color: #1677b7;
     font-size: 13px;
