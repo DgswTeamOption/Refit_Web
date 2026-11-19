@@ -6,19 +6,20 @@ import {
   getClassMakeups,
   getClassStudents,
   approveMakeup,
-  cancelMakeup,
+  rejectMakeup,
 } from "../../../../api/overviewApi.js";
 
 const MAKEUP_STATUS_MAP = {
   0: "대기중",
   1: "수락됨",
   2: "거절됨",
+  3: "취소됨",
   [-1]: "거절됨",
 };
 
 function formatMakeupDateTime(isoString) {
   if (!isoString) return { date: "", time: "" };
-  const dateObj = new Date(isoString);
+  const dateObj = new Date(String(isoString).replace(" ", "T"));
   if (Number.isNaN(dateObj.getTime())) return { date: isoString, time: "" };
 
   const month = dateObj.getMonth() + 1;
@@ -67,7 +68,7 @@ export default function MakeupTab({ classId, classroomId }) {
                 `학생 ${item.student_id}`,
               date,
               time,
-              status: MAKEUP_STATUS_MAP[item.approval_status] || "대기중",
+              status: MAKEUP_STATUS_MAP[item.approval_status] ?? "대기중",
             };
           })
         );
@@ -98,7 +99,7 @@ export default function MakeupTab({ classId, classroomId }) {
     if (submittingId === id) return;
     try {
       setSubmittingId(id);
-      await cancelMakeup(id);
+      await rejectMakeup(id);
       setMakeupList((prev) =>
         prev.map((item) => (item.id === id ? { ...item, status: "거절됨" } : item))
       );
@@ -153,6 +154,8 @@ export default function MakeupTab({ classId, classroomId }) {
                         onClick={() => handleReject(item.id)}
                       />
                     </>
+                  ) : item.status === "취소됨" ? (
+                    <span>—</span>
                   ) : (
                     <Button
                       text="수정"

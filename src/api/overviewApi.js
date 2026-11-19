@@ -57,6 +57,8 @@ export const approveMakeup = (makeupId, approvalStatus = 1) =>
     method: 'PATCH',
     body: JSON.stringify({ approval_status: approvalStatus }),
   });
+export const rejectMakeup = (makeupId) =>
+  approveMakeup(makeupId, 2);
 export const cancelMakeup = (makeupId) =>
   request(`/api/makeups/cancel/${makeupId}`, { method: 'PATCH' });
 

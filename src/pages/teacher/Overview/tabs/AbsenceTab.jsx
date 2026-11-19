@@ -43,7 +43,7 @@ export default function AbsenceTab({ classId, classroomId }) {
             studentName: item.student_name,
             date: formatAbsenceDate(item.absence_date),
             reason: item.reason,
-            status: STATUS_MAP[item.status] || "대기중",
+            status: STATUS_MAP[item.status] ?? "대기중",
           }))
         );
       } catch (error) {
@@ -82,12 +82,6 @@ export default function AbsenceTab({ classId, classroomId }) {
     } finally {
       setSubmittingId(null);
     }
-  };
-
-  const handleStartEdit = (id) => {
-    setAbsenceList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status: "대기중" } : item))
-    );
   };
 
   return (
@@ -129,12 +123,7 @@ export default function AbsenceTab({ classId, classroomId }) {
                       />
                     </>
                   ) : (
-                    <Button
-                      text="수정"
-                      color="lightGray"
-                      width={60}
-                      onClick={() => handleStartEdit(item.id)}
-                    />
+                    <span>—</span>
                   )}
                 </div>
               </td>
