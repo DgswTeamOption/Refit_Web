@@ -173,7 +173,7 @@ export default function Overview({ hidden }) {
                                             yellow: 'linear-gradient(to bottom right, #FFC45B, #FFE9A2)',
                                             mint: 'linear-gradient(to bottom right, #82D2BC, #C8EFE2)',
                                         }[classColor(item.id)] }} aria-hidden="true">
-                                            {item.bannerImageUrl && <img src={item.bannerImageUrl} alt="" style={{ width: '100%', height: '94px', objectFit: 'cover' }} />}
+                                            {item.bannerImageUrl && <img src={item.bannerImageUrl} alt="" />}
                                         </div>
                                         <div className="class-block__body">
                                             <h3 className="class-block__title">{item.name}</h3>
