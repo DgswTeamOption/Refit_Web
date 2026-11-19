@@ -1,13 +1,53 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import Condition from "../../../../components/Condition/Condition";
+import { getClassStudents } from "../../../../api/overviewApi.js";
 
-export default function StudentTab() {
+function formatAbsenceDate(dateString) {
+  if (!dateString) return "—";
+  const parts = dateString.split("-");
+  if (parts.length < 3) return dateString;
+  return `${Number(parts[1])}월 ${Number(parts[2])}일`;
+}
+
+export default function StudentTab({ classId, classroomId }) {
+  const params = useParams();
+  const activeClassId =
+    classId ?? classroomId ?? params.classroomId ?? params.classId ?? params.id;
+
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [studentList] = useState([
-    { id: 1, studentName: "김민지", makeupCount: "1 / 2", recentAbsence: "8월 27일", makeupStatus: "필요", makeupDaysNeeded: "1일" },
-    { id: 2, studentName: "박서준", makeupCount: "0 / 1", recentAbsence: "8월 25일", makeupStatus: "불필요", makeupDaysNeeded: "0일" },
-    { id: 3, studentName: "이서연", makeupCount: "2 / 3", recentAbsence: "8월 20일", makeupStatus: "필요", makeupDaysNeeded: "1일" },
-  ]);
+  const [studentList, setStudentList] = useState([]);
+
+  useEffect(() => {
+    if (!activeClassId) return;
+
+    async function fetchStudents() {
+      try {
+        const data = await getClassStudents(activeClassId);
+        const list = Array.isArray(data) ? data : [];
+        setStudentList(
+          list.map((item) => {
+            const makeup = item.makeupCount ?? 0;
+            const absence = item.absenceCount ?? 0;
+            const needed = Math.max(0, absence - makeup);
+
+            return {
+              id: item.studentId,
+              studentName: item.name,
+              makeupCount: `${makeup} / ${absence}`,
+              recentAbsence: formatAbsenceDate(item.lastAbsenceDate),
+              makeupStatus: needed > 0 ? "필요" : "불필요",
+              makeupDaysNeeded: `${needed}일`,
+            };
+          })
+        );
+      } catch (error) {
+        console.error("학생 목록 조회 실패:", error);
+      }
+    }
+
+    fetchStudents();
+  }, [activeClassId]);
 
   const filteredStudentList = useMemo(() => {
     if (!searchKeyword.trim()) return studentList;

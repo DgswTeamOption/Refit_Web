@@ -1,15 +1,25 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import Button from "../../../../components/Button/Button";
+import {
+  getClassSchedules,
+  getClassStudents,
+  createClassSchedule,
+  updateClassSchedule,
+  deleteClassSchedule,
+} from "../../../../api/overviewApi.js";
 
 const DAYS_OPTIONS = [
-  { label: "월", fullLabel: "월요일", key: "mon" },
-  { label: "화", fullLabel: "화요일", key: "tue" },
-  { label: "수", fullLabel: "수요일", key: "wed" },
-  { label: "목", fullLabel: "목요일", key: "thu" },
-  { label: "금", fullLabel: "금요일", key: "fri" },
-  { label: "토", fullLabel: "토요일", key: "sat" },
-  { label: "일", fullLabel: "일요일", key: "sun" },
+  { label: "월", fullLabel: "월요일", key: "mon", offset: 0 },
+  { label: "화", fullLabel: "화요일", key: "tue", offset: 1 },
+  { label: "수", fullLabel: "수요일", key: "wed", offset: 2 },
+  { label: "목", fullLabel: "목요일", key: "thu", offset: 3 },
+  { label: "금", fullLabel: "금요일", key: "fri", offset: 4 },
+  { label: "토", fullLabel: "토요일", key: "sat", offset: 5 },
+  { label: "일", fullLabel: "일요일", key: "sun", offset: 6 },
 ];
+
+const JS_DAY_TO_KEY = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
 const SCHEDULE_STYLES = `
   .form-section .schedule-top-row {
@@ -97,6 +107,74 @@ const SCHEDULE_STYLES = `
   }
 `;
 
+function buildIsoRangeForDay(dayKey, timeString) {
+  const dayOption = DAYS_OPTIONS.find((d) => d.key === dayKey);
+  const offset = dayOption ? dayOption.offset : 0;
+  const [hours, minutes] = timeString.split(":").map(Number);
+
+  const now = new Date();
+  const currentJsDay = now.getDay();
+  const diffToMonday = currentJsDay === 0 ? -6 : 1 - currentJsDay;
+
+  const startDate = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + diffToMonday + offset,
+    hours,
+    minutes,
+    0,
+    0
+  );
+  const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+
+  return {
+    start_time: startDate.toISOString(),
+    end_time: endDate.toISOString(),
+  };
+}
+
+function groupSchedulesByStudent(schedules, students) {
+  const studentNameMap = new Map();
+  students.forEach((s) => {
+    studentNameMap.set(s.studentId, s.name);
+  });
+
+  const groupedMap = new Map();
+
+  schedules.forEach((item) => {
+    const startObj = new Date(item.startTime);
+    if (Number.isNaN(startObj.getTime())) return;
+
+    const dayKey = JS_DAY_TO_KEY[startObj.getDay()];
+    const formattedTime = `${String(startObj.getHours()).padStart(2, "0")}:${String(
+      startObj.getMinutes()
+    ).padStart(2, "0")}`;
+
+    if (!groupedMap.has(item.studentId)) {
+      groupedMap.set(item.studentId, {
+        id: item.studentId,
+        studentId: item.studentId,
+        studentName:
+          studentNameMap.get(item.studentId) || `학생 ${item.studentId}`,
+        mon: "—",
+        tue: "—",
+        wed: "—",
+        thu: "—",
+        fri: "—",
+        sat: "—",
+        sun: "—",
+        scheduleIdsByDay: {},
+      });
+    }
+
+    const row = groupedMap.get(item.studentId);
+    row[dayKey] = formattedTime;
+    row.scheduleIdsByDay[dayKey] = item.scheduleId;
+  });
+
+  return Array.from(groupedMap.values());
+}
+
 function ScheduleTable({ scheduleList, onEdit, onDelete }) {
   return (
     <div className="table-wrapper">
@@ -123,8 +201,18 @@ function ScheduleTable({ scheduleList, onEdit, onDelete }) {
               <td>{item.sun}</td>
               <td>
                 <div className="action-buttons">
-                  <Button text="수정" color="lightGray" width={60} onClick={() => onEdit(item)} />
-                  <Button text="삭제" color="red" width={60} onClick={() => onDelete(item.id)} />
+                  <Button
+                    text="수정"
+                    color="lightGray"
+                    width={60}
+                    onClick={() => onEdit(item)}
+                  />
+                  <Button
+                    text="삭제"
+                    color="red"
+                    width={60}
+                    onClick={() => onDelete(item.id)}
+                  />
                 </div>
               </td>
             </tr>
@@ -135,17 +223,40 @@ function ScheduleTable({ scheduleList, onEdit, onDelete }) {
   );
 }
 
-export default function ScheduleTab() {
+export default function ScheduleTab({ classId, classroomId }) {
+  const params = useParams();
+  const activeClassId =
+    classId ?? classroomId ?? params.classroomId ?? params.classId ?? params.id;
+
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [scheduleStudent, setScheduleStudent] = useState("");
   const [daySchedules, setDaySchedules] = useState({});
+  const [students, setStudents] = useState([]);
+  const [scheduleList, setScheduleList] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [scheduleList, setScheduleList] = useState([
-    { id: 1, studentName: "김민지", mon: "16:00", tue: "—", wed: "16:00", thu: "—", fri: "17:00", sat: "10:00", sun: "—" },
-    { id: 2, studentName: "박서준", mon: "15:00", tue: "15:00", wed: "15:00", thu: "15:00", fri: "15:00", sat: "—", sun: "—" },
-    { id: 3, studentName: "이서연", mon: "17:00", tue: "—", wed: "17:00", thu: "—", fri: "—", sat: "14:00", sun: "14:00" },
-  ]);
+  const fetchSchedules = useCallback(async () => {
+    if (!activeClassId) return;
+    try {
+      const [schedulesData, studentsData] = await Promise.all([
+        getClassSchedules(activeClassId),
+        getClassStudents(activeClassId).catch(() => []),
+      ]);
+
+      const safeStudents = Array.isArray(studentsData) ? studentsData : [];
+      const safeSchedules = Array.isArray(schedulesData) ? schedulesData : [];
+
+      setStudents(safeStudents);
+      setScheduleList(groupSchedulesByStudent(safeSchedules, safeStudents));
+    } catch (error) {
+      console.error("시간표 목록 조회 실패:", error);
+    }
+  }, [activeClassId]);
+
+  useEffect(() => {
+    fetchSchedules();
+  }, [fetchSchedules]);
 
   const toggleDaySelection = (dayKey) => {
     setDaySchedules((prev) => {
@@ -187,7 +298,9 @@ export default function ScheduleTab() {
     setIsAdding(true);
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
+    if (isSubmitting) return;
+
     const selectedKeys = Object.keys(daySchedules);
     const hasEmptyTime = selectedKeys.some((key) => !daySchedules[key]);
 
@@ -196,46 +309,83 @@ export default function ScheduleTab() {
       return;
     }
 
-    const dayUpdates = {};
-    DAYS_OPTIONS.forEach((d) => {
-      dayUpdates[d.key] = daySchedules[d.key] || "—";
-    });
+    const trimmedName = scheduleStudent.trim();
+    const matchedStudent = students.find((s) => s.name === trimmedName);
+    const existingRow =
+      scheduleList.find((item) => item.id === editingId) ||
+      scheduleList.find((item) => item.studentName === trimmedName);
 
-    if (editingId) {
-      setScheduleList((prev) =>
-        prev.map((item) =>
-          item.id === editingId
-            ? { ...item, studentName: scheduleStudent.trim(), ...dayUpdates }
-            : item
-        )
-      );
-    } else {
-      setScheduleList((prev) => {
-        const existingIndex = prev.findIndex(
-          (item) => item.studentName === scheduleStudent.trim()
-        );
+    const targetStudentId = matchedStudent?.studentId ?? existingRow?.studentId;
 
-        if (existingIndex > -1) {
-          return prev.map((item, idx) =>
-            idx === existingIndex ? { ...item, ...dayUpdates } : item
-          );
-        }
-        return [
-          ...prev,
-          {
-            id: Date.now(),
-            studentName: scheduleStudent.trim(),
-            ...dayUpdates,
-          },
-        ];
-      });
+    if (!targetStudentId) {
+      alert("수업에 등록된 학생 이름을 정확히 입력해주세요.");
+      return;
     }
 
-    setIsAdding(false);
+    const existingIdsByDay = existingRow?.scheduleIdsByDay || {};
+    const requests = [];
+
+    DAYS_OPTIONS.forEach((d) => {
+      const nextTime = daySchedules[d.key];
+      const existingScheduleId = existingIdsByDay[d.key];
+
+      if (nextTime) {
+        const { start_time, end_time } = buildIsoRangeForDay(d.key, nextTime);
+        if (existingScheduleId) {
+          requests.push(
+            updateClassSchedule(activeClassId, existingScheduleId, {
+              start_time,
+              end_time,
+            })
+          );
+        } else {
+          requests.push(
+            createClassSchedule(activeClassId, {
+              student_id: targetStudentId,
+              start_time,
+              end_time,
+            })
+          );
+        }
+      } else if (existingScheduleId) {
+        requests.push(deleteClassSchedule(activeClassId, existingScheduleId));
+      }
+    });
+
+    try {
+      setIsSubmitting(true);
+      await Promise.all(requests);
+      await fetchSchedules();
+      setIsAdding(false);
+      setEditingId(null);
+    } catch (error) {
+      alert(error.message || "시간표 저장에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDelete = (id) => {
-    setScheduleList((prev) => prev.filter((item) => item.id !== id));
+  const handleDelete = async (id) => {
+    if (isSubmitting) return;
+    const targetRow = scheduleList.find((item) => item.id === id);
+    if (!targetRow) return;
+
+    const scheduleIds = Object.values(targetRow.scheduleIdsByDay || {});
+    if (scheduleIds.length === 0) return;
+
+    try {
+      setIsSubmitting(true);
+      await Promise.all(
+        scheduleIds.map((scheduleId) =>
+          deleteClassSchedule(activeClassId, scheduleId)
+        )
+      );
+      await fetchSchedules();
+    } catch (error) {
+      alert(error.message || "시간표 삭제에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -244,23 +394,40 @@ export default function ScheduleTab() {
       {!isAdding ? (
         <section className="schedule-section">
           <h2 className="section-title">요일별 시간표</h2>
-          <ScheduleTable scheduleList={scheduleList} onEdit={handleEdit} onDelete={handleDelete} />
+          <ScheduleTable
+            scheduleList={scheduleList}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
           <div className="bottom-action-bar">
-            <Button text="+ 학생 시간표 등록" color="blue" width={140} onClick={handleOpenForm} />
+            <Button
+              text="+ 학생 시간표 등록"
+              color="blue"
+              width={140}
+              onClick={handleOpenForm}
+            />
           </div>
         </section>
       ) : (
         <>
           <section className="form-section">
-            <h2 className="form-title">{editingId ? "학생 시간표 수정" : "학생 시간표 등록"}</h2>
+            <h2 className="form-title">
+              {editingId ? "학생 시간표 수정" : "학생 시간표 등록"}
+            </h2>
             <div className="schedule-top-row">
               <input
                 type="text"
+                list="schedule-student-options"
                 placeholder="학생 이름 입력"
                 value={scheduleStudent}
                 onChange={(e) => setScheduleStudent(e.target.value)}
                 className="form-control"
               />
+              <datalist id="schedule-student-options">
+                {students.map((student) => (
+                  <option key={student.studentId} value={student.name} />
+                ))}
+              </datalist>
               <Button
                 text={editingId ? "수정" : "등록"}
                 color="blue"
@@ -271,7 +438,10 @@ export default function ScheduleTab() {
 
             <div className="day-select-group">
               {DAYS_OPTIONS.map((d) => {
-                const isSelected = Object.prototype.hasOwnProperty.call(daySchedules, d.key);
+                const isSelected = Object.prototype.hasOwnProperty.call(
+                  daySchedules,
+                  d.key
+                );
                 const timeValue = daySchedules[d.key] || "";
 
                 return (
@@ -285,13 +455,21 @@ export default function ScheduleTab() {
                     </button>
 
                     {isSelected && (
-                      <div className={`time-input-box ${!timeValue ? "is-empty" : ""}`}>
-                        {!timeValue && <span className="time-placeholder">시간 선택</span>}
+                      <div
+                        className={`time-input-box ${
+                          !timeValue ? "is-empty" : ""
+                        }`}
+                      >
+                        {!timeValue && (
+                          <span className="time-placeholder">시간 선택</span>
+                        )}
                         <input
                           type="time"
                           value={timeValue}
                           onClick={(e) => e.currentTarget.showPicker?.()}
-                          onChange={(e) => handleDayTimeChange(d.key, e.target.value)}
+                          onChange={(e) =>
+                            handleDayTimeChange(d.key, e.target.value)
+                          }
                           className="day-time-input"
                         />
                       </div>
@@ -304,7 +482,11 @@ export default function ScheduleTab() {
 
           <section className="list-section">
             <h2 className="section-title">등록된 시간표</h2>
-            <ScheduleTable scheduleList={scheduleList} onEdit={handleEdit} onDelete={handleDelete} />
+            <ScheduleTable
+              scheduleList={scheduleList}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           </section>
         </>
       )}
