@@ -6,6 +6,7 @@ export default function ClassCalendar({ period, onPeriodChange, classroom, selec
     const prefix = period.year + '-' + String(period.month).padStart(2, '0') + '-';
     return (
         <Calendar
+            highlightToday
             period={period}
             onPeriodChange={onPeriodChange}
             events={calendarEvents(classroom.calendar || [], classes, period, weeklySchedules)}
