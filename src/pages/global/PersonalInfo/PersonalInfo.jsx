@@ -1,66 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { jwtDecode } from "jwt-decode";
 import Button from "../../../components/Button/Button";
 import Nav from "../../../components/Nav/Nav";
+import {
+  authApiRequest,
+  fetchCurrentUserProfile,
+  isAuthenticatedSession,
+  logoutAuthSession,
+} from "../../../utils/auth";
 import "./PersonalInfo.css";
-
-// Leave the default API origin empty so local requests use Vite's /api proxy.
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
-
-function getUserIdFromAccessToken(accessToken) {
-  let claims;
-
-  try {
-    claims = jwtDecode(accessToken);
-  } catch {
-    throw new Error("로그인 토큰을 읽을 수 없습니다. 다시 로그인해 주세요.");
-  }
-
-  const userId = claims.userId ?? claims.user_id ?? claims.uid ?? claims.id ?? claims.user?.id ?? claims.sub;
-  const userIdString = typeof userId === "number" ? String(userId) : userId;
-
-  if (typeof userIdString !== "string" || !/^\d+$/.test(userIdString)) {
-    throw new Error("accessToken에서 사용자 ID를 찾지 못했습니다. 토큰의 userId 또는 sub 값을 확인해 주세요.");
-  }
-
-  return userIdString;
-}
-
-async function apiRequest(path, { method = "GET", token, body, signal } = {}) {
-  const headers = new Headers();
-  let requestBody = body;
-
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-  if (body !== undefined && !(body instanceof FormData)) {
-    headers.set("Content-Type", "application/json");
-    requestBody = JSON.stringify(body);
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers,
-    body: requestBody,
-    signal,
-  });
-  const responseText = await response.text();
-  let result = null;
-
-  if (responseText) {
-    try {
-      result = JSON.parse(responseText);
-    } catch {
-      result = { message: responseText };
-    }
-  }
-
-  if (!response.ok || result?.success === false) {
-    throw new Error(
-      result?.error?.message || result?.message || `요청에 실패했습니다. (${response.status})`,
-    );
-  }
-
-  return result && Object.hasOwn(result, "data") ? result.data : result;
-}
 
 function normalizeProfile(data, fallback = {}) {
   return {
@@ -86,7 +33,7 @@ export default function PersonalInfo({ onNavigate }) {
   const [message, setMessage] = useState("");
   const [messageKind, setMessageKind] = useState("error");
   const [profileError, setProfileError] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => isAuthenticatedSession());
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isCodeSent, setIsCodeSent] = useState(false);
@@ -95,29 +42,18 @@ export default function PersonalInfo({ onNavigate }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    const accessToken = localStorage.getItem("accessToken");
 
-    if (!accessToken) {
-      setProfileError("로그인 후 내 정보를 확인할 수 있어요.");
-      setIsLoading(false);
-      return () => controller.abort();
-    }
-
-    let userId;
-    try {
-      userId = getUserIdFromAccessToken(accessToken);
-    } catch (error) {
-      setProfileError(getErrorMessage(error, "사용자 정보를 확인할 수 없습니다."));
-      setIsLoading(false);
-      return () => controller.abort();
-    }
-
-    apiRequest(`/api/users/${userId}`, { token: accessToken, signal: controller.signal })
+    fetchCurrentUserProfile({ signal: controller.signal })
       .then((data) => {
         if (controller.signal.aborted) return;
-        const nextProfile = normalizeProfile(data, { id: userId });
+        if (!data) {
+          setProfileError("로그인 후 내 정보를 확인할 수 있어요.");
+          return;
+        }
+        const nextProfile = normalizeProfile(data);
         setProfile(nextProfile);
         setDraftName(nextProfile.name);
+        setProfileError("");
       })
       .catch((error) => {
         if (!controller.signal.aborted) {
@@ -158,13 +94,6 @@ export default function PersonalInfo({ onNavigate }) {
       return;
     }
 
-    const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) {
-      setMessage("로그인 정보가 없습니다. 다시 로그인해 주세요.");
-      setMessageKind("error");
-      return;
-    }
-
     setIsSaving(true);
     setMessage("");
 
@@ -172,9 +101,8 @@ export default function PersonalInfo({ onNavigate }) {
       let nextProfile = profile;
 
       if (nextName !== profile.name) {
-        const updatedProfile = await apiRequest("/api/setting/username", {
+        const updatedProfile = await authApiRequest("/api/setting/username", {
           method: "PATCH",
-          token: accessToken,
           body: { name: nextName },
         });
         nextProfile = normalizeProfile(updatedProfile, { ...profile, name: nextName });
@@ -184,9 +112,8 @@ export default function PersonalInfo({ onNavigate }) {
       if (pendingPhoto) {
         const formData = new FormData();
         formData.append("file", pendingPhoto);
-        const uploadedFile = await apiRequest("/api/files/images", {
+        const uploadedFile = await authApiRequest("/api/files/images", {
           method: "POST",
-          token: accessToken,
           body: formData,
         });
         const profileImageId = Number(uploadedFile?.fileId);
@@ -200,9 +127,8 @@ export default function PersonalInfo({ onNavigate }) {
         }
 
         try {
-          const updatedProfile = await apiRequest("/api/setting/profile-image", {
+          const updatedProfile = await authApiRequest("/api/setting/profile-image", {
             method: "PATCH",
-            token: accessToken,
             body: { profileImageId },
           });
           nextProfile = normalizeProfile(updatedProfile, { ...nextProfile, photo: uploadedFile.imageUrl });
@@ -210,7 +136,7 @@ export default function PersonalInfo({ onNavigate }) {
         } catch (error) {
           if (uploadedFile.fileId != null) {
             try {
-              await apiRequest(`/api/files/${uploadedFile.fileId}`, { method: "DELETE", token: accessToken });
+              await authApiRequest(`/api/files/${uploadedFile.fileId}`, { method: "DELETE" });
             } catch {
               // Keep the profile update error as the visible message.
             }
@@ -219,6 +145,9 @@ export default function PersonalInfo({ onNavigate }) {
         }
       }
 
+      if (nextProfile.name) {
+        localStorage.setItem("userName", nextProfile.name);
+      }
       setDraftName(nextProfile.name);
       setPendingPhoto(null);
       setPhotoPreview("");
@@ -259,7 +188,7 @@ export default function PersonalInfo({ onNavigate }) {
     setIsSendingCode(true);
     setMessage("");
     try {
-      await apiRequest("/api/user/email/send-code", {
+      await authApiRequest("/api/user/email/send-code", {
         method: "POST",
         body: { email_id: profile.email },
       });
@@ -286,17 +215,10 @@ export default function PersonalInfo({ onNavigate }) {
       return;
     }
 
-    const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) {
-      setMessage("로그인 정보가 없습니다. 다시 로그인해 주세요.");
-      setMessageKind("error");
-      return;
-    }
-
     setIsDeleting(true);
     setMessage("");
     try {
-      const verification = await apiRequest("/api/user/email/verify-code", {
+      const verification = await authApiRequest("/api/user/email/verify-code", {
         method: "POST",
         body: {
           email_id: profile.email,
@@ -308,8 +230,8 @@ export default function PersonalInfo({ onNavigate }) {
         throw new Error("인증코드가 올바르지 않습니다.");
       }
 
-      await apiRequest(`/api/users/${profile.id}`, { method: "DELETE", token: accessToken });
-      ["accessToken", "refreshToken", "token", "role", "userName"].forEach((key) => localStorage.removeItem(key));
+      await authApiRequest(`/api/users/${profile.id}`, { method: "DELETE" });
+      await logoutAuthSession();
       onNavigate?.("login");
     } catch (error) {
       setMessage(getErrorMessage(error, "계정을 삭제하지 못했습니다."));

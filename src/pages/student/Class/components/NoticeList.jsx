@@ -7,33 +7,39 @@ function NoticeList({ notices = [], onSelectNotice }) {
     return (
         <div className="notice-list-view">
             <h2 className="notice-view-title">공지 목록</h2>
-            <div className="notice-card-list">
-                {notices.map((notice) => (
-                    <div
-                        key={notice.id}
-                        className="notice-item-card"
-                        onClick={() => onSelectNotice(notice)}
-                    >
-                        <div className="notice-item-body">
-                            <span className="notice-item-meta">
-                                {notice.author} · {notice.date}
-                            </span>
-                            <h3 className="notice-item-title">{notice.title}</h3>
-                            <p className="notice-item-excerpt">{notice.excerpt}</p>
-                        </div>
-                        <button
-                            type="button"
-                            className="notice-view-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onSelectNotice(notice);
-                            }}
+            {notices.length > 0 ? (
+                <div className="notice-card-list">
+                    {notices.map((notice) => (
+                        <div
+                            key={notice.id}
+                            className="notice-item-card"
+                            onClick={() => onSelectNotice(notice)}
                         >
-                            공지 보기
-                        </button>
-                    </div>
-                ))}
-            </div>
+                            <div className="notice-item-body">
+                                <span className="notice-item-meta">
+                                    {notice.author} · {notice.date}
+                                </span>
+                                <h3 className="notice-item-title">{notice.title}</h3>
+                                <p className="notice-item-excerpt">{notice.excerpt}</p>
+                            </div>
+                            <button
+                                type="button"
+                                className="notice-view-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSelectNotice(notice);
+                                }}
+                            >
+                                공지 보기
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="content-card">
+                    <p className="empty-state-text">등록된 공지가 없어요.</p>
+                </div>
+            )}
         </div>
     );
 }

@@ -131,6 +131,31 @@
     border-bottom: none;
 }
 
+.class-table .table-empty-cell {
+    text-align: center;
+    color: #999999;
+    padding: 28px 0;
+    font-size: 14px;
+}
+
+.empty-state-text {
+    margin: 0;
+    padding: 16px 0;
+    text-align: center;
+    font-size: 14px;
+    color: #999999;
+}
+
+.status-fallback-text {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    background-color: #F4F5F7;
+    color: #555555;
+    font-size: 12px;
+    font-weight: 600;
+}
+
 /* 최근 출석 카드 */
 .recent-attendance-card {
     margin-bottom: 32px;
@@ -318,6 +343,60 @@
 
 .apply-input.input-error {
     border-color: #F04444;
+}
+
+.apply-error-message {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: #F04444;
+}
+
+.makeup-slot-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.makeup-slot-item {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ECECEC;
+    border-radius: 10px;
+    background-color: #FFFFFF;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    color: #111111;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.makeup-slot-item.is-selected {
+    border-color: #0099FF;
+    background-color: #F0F8FF;
+    font-weight: 600;
+}
+
+.makeup-slot-item:disabled {
+    background-color: #F8F9FA;
+    color: #999999;
+    cursor: not-allowed;
+}
+
+.makeup-slot-capacity {
+    font-size: 12px;
+    color: #767B81;
+}
+
+.makeup-slot-empty {
+    padding: 16px;
+    border: 1px dashed #DCDCDC;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #767B81;
+    text-align: center;
 }
 
 .apply-textarea {

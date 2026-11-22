@@ -7,44 +7,67 @@ import { formatToKoreanDate } from '../constants';
 /**
  * 결석 신청 폼 및 신청 내역 화면 (view12)
  */
-function AbsenceApply({ items = [], onSubmit, onCancel }) {
+function AbsenceApply({
+    items = [],
+    calendarEvents = {},
+    calendarYear,
+    calendarMonth,
+    onMonthChange,
+    onSubmit,
+    onCancel,
+}) {
     const [absenceDate, setAbsenceDate] = useState('');
-    const [absenceDay, setAbsenceDay] = useState(null);
     const [absenceReason, setAbsenceReason] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
 
-    const handleSelectDateFromCalendar = (day) => {
-        setAbsenceDay(day);
+    // 달력에서 선택한 연·월·일을 YYYY-MM-DD 형식으로 저장
+    const handleSelectDateFromCalendar = (day, year, month) => {
+        const monthStr = String(month).padStart(2, '0');
         const dayStr = String(day).padStart(2, '0');
-        setAbsenceDate(`2026-08-${dayStr}`);
+        setAbsenceDate(`${year}-${monthStr}-${dayStr}`);
+        setSubmitError('');
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!absenceDate || !absenceDate.trim()) return;
+        if (!absenceDate || !absenceDate.trim() || isSubmitting) return;
 
-        onSubmit({
-            id: Date.now(),
-            date: formatToKoreanDate(absenceDate),
-            reason: absenceReason.trim() || '기타 사유',
-            status: '대기중',
-            canCancel: true,
-        });
-
-        setAbsenceDate('');
-        setAbsenceDay(null);
-        setAbsenceReason('');
+        setIsSubmitting(true);
+        setSubmitError('');
+        try {
+            await onSubmit({
+                id: Date.now(),
+                rawDate: absenceDate,
+                date: formatToKoreanDate(absenceDate),
+                reason: absenceReason.trim() || '기타 사유',
+                status: '대기중',
+                canCancel: true,
+            });
+            setAbsenceDate('');
+            setAbsenceReason('');
+        } catch (err) {
+            setSubmitError(err?.message || '결석 신청에 실패했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
         <div className="apply-view-wrapper">
             <h2 className="apply-section-guide-title">신청할 날짜를 선택해주세요</h2>
             <div className="apply-two-columns">
-                {/* 좌측 캘린더 (날짜 클릭 지원) */}
+                {/* 좌측 캘린더 (실제 출결 일정 및 연·월 연동) */}
                 <div className="apply-calendar-column">
                     <Calendar
+                        highlightToday
                         mode="attendance"
+                        events={calendarEvents}
+                        year={calendarYear}
+                        month={calendarMonth}
+                        onMonthChange={onMonthChange}
                         onSelectDate={handleSelectDateFromCalendar}
-                        selectedDate={absenceDay}
+                        selectedDate={absenceDate}
                     />
                 </div>
 
@@ -61,12 +84,10 @@ function AbsenceApply({ items = [], onSubmit, onCancel }) {
                             required
                             className="apply-input"
                             value={absenceDate}
+                            disabled={isSubmitting}
                             onChange={(e) => {
                                 setAbsenceDate(e.target.value);
-                                if (e.target.value.includes('-')) {
-                                    const day = parseInt(e.target.value.split('-')[2], 10);
-                                    setAbsenceDay(day);
-                                }
+                                setSubmitError('');
                             }}
                         />
 
@@ -78,11 +99,24 @@ function AbsenceApply({ items = [], onSubmit, onCancel }) {
                             className="apply-textarea"
                             placeholder="사유를 입력해주세요"
                             value={absenceReason}
+                            disabled={isSubmitting}
                             onChange={(e) => setAbsenceReason(e.target.value)}
                         />
 
+                        {submitError && (
+                            <p className="apply-error-message" role="alert">
+                                {submitError}
+                            </p>
+                        )}
+
                         <div className="apply-submit-btn-wrap">
-                            <Button text="신청하기" color="blue" width={140} type="submit" />
+                            <Button
+                                text={isSubmitting ? '신청 중...' : '신청하기'}
+                                color="blue"
+                                width={140}
+                                type="submit"
+                                disabled={isSubmitting}
+                            />
                         </div>
                     </form>
                 </div>

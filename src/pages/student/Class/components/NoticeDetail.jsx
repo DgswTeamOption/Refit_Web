@@ -15,18 +15,9 @@ function NoticeDetail({ notice, onBack }) {
                 <h2 className="notice-detail-title">{notice.title}</h2>
                 <div className="notice-detail-divider" />
                 <div className="notice-detail-body">
-                    {notice.content.map((paragraph, idx) => (
+                    {(notice.content || []).map((paragraph, idx) => (
                         <p key={idx} className="notice-detail-paragraph">
-                            {paragraph.startsWith('신청 링크:') ? (
-                                <>
-                                    신청 링크:{' '}
-                                    <a href="#apply" className="notice-inline-link">
-                                        https://refit.example/apply
-                                    </a>
-                                </>
-                            ) : (
-                                paragraph
-                            )}
+                            {paragraph}
                         </p>
                     ))}
                 </div>

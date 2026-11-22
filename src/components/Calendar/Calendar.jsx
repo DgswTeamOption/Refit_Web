@@ -5,13 +5,59 @@ import { CalendarContainer } from './Calendar.styles';
 import CalendarBlock from './CalendarBlock';
 import './Calendar.css';
 
-function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate, period, onPeriodChange, events, highlightToday = false }) {
-    // 2026년 8월 기준 (Figma 시안 기준)
-    const [internalYear, setYear] = useState(2026);
-    const [internalMonth, setMonth] = useState(7); // 0-indexed (7 = 8월)
+const DEFAULT_CLASS_EVENTS = {
+    4: ['lavender', 'mint'],
+    6: ['lavender', 'mint'],
+    11: ['peach', 'lavender', 'yellow'],
+    13: ['lavender', 'mint', 'yellow'],
+    18: ['lavender', 'mint'],
+    20: ['lavender', 'mint'],
+    25: ['peach', 'lavender', 'yellow'],
+    27: ['peach', 'lavender', 'yellow'],
+};
+
+const DEFAULT_ATTENDANCE_EVENTS = {
+    4: ['darkGray', 'blue'],
+    6: ['darkGray', 'blue'],
+    11: ['red', 'blue', 'yellow'],
+    13: ['red', 'blue', 'yellow'],
+    18: ['darkGray', 'blue'],
+    20: ['darkGray', 'blue'],
+    25: ['red', 'blue', 'yellow'],
+    27: ['red', 'blue', 'yellow'],
+};
+
+function Calendar({
+    mode = 'class',
+    classes = null,
+    events = null,
+    year: controlledYear,
+    month: controlledMonth, // 1-indexed (1 ~ 12)
+    onMonthChange,
+    period,
+    onPeriodChange,
+    onSelectDate,
+    selectedDate,
+    highlightToday = false,
+}) {
+    const [internalYear, setInternalYear] = useState(() => new Date().getFullYear());
+    const [internalMonth, setInternalMonth] = useState(() => new Date().getMonth()); // 0-indexed
     const [today] = useState(() => new Date());
-    const year = period?.year ?? internalYear;
-    const month = period ? period.month - 1 : internalMonth;
+
+    const isControlledByPeriod = Boolean(period && typeof period.year === 'number' && typeof period.month === 'number');
+    const isControlledByProps = typeof controlledYear === 'number' && typeof controlledMonth === 'number';
+
+    const year = isControlledByPeriod
+        ? period.year
+        : isControlledByProps
+            ? controlledYear
+            : internalYear;
+    const month = isControlledByPeriod
+        ? period.month - 1
+        : isControlledByProps
+            ? controlledMonth - 1
+            : internalMonth; // 0-indexed
+
     const todayDate = highlightToday && year === today.getFullYear() && month === today.getMonth()
         ? today.getDate()
         : null;
@@ -19,62 +65,49 @@ function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate, 
     const firstDayIndex = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
 
-    const handlePrevMonth = () => {
+    const updateMonth = (nextYear, nextMonthZeroBased) => {
+        const nextMonthOneBased = nextMonthZeroBased + 1;
+
+        if (!isControlledByPeriod && !isControlledByProps) {
+            setInternalYear(nextYear);
+            setInternalMonth(nextMonthZeroBased);
+        }
         if (onPeriodChange) {
-            const previous = new Date(year, month - 1, 1);
-            onPeriodChange({ year: previous.getFullYear(), month: previous.getMonth() + 1 });
-            return;
+            onPeriodChange({ year: nextYear, month: nextMonthOneBased });
         }
-        if (month === 0) {
-            setYear((prev) => prev - 1);
-            setMonth(11);
-        } else {
-            setMonth((prev) => prev - 1);
+        if (onMonthChange) {
+            onMonthChange(nextYear, nextMonthOneBased);
         }
+    };
+
+    const handlePrevMonth = () => {
+        const previous = new Date(year, month - 1, 1);
+        updateMonth(previous.getFullYear(), previous.getMonth());
     };
 
     const handleNextMonth = () => {
-        if (onPeriodChange) {
-            const next = new Date(year, month + 1, 1);
-            onPeriodChange({ year: next.getFullYear(), month: next.getMonth() + 1 });
-            return;
-        }
-        if (month === 11) {
-            setYear((prev) => prev + 1);
-            setMonth(0);
-        } else {
-            setMonth((prev) => prev + 1);
-        }
+        const next = new Date(year, month + 1, 1);
+        updateMonth(next.getFullYear(), next.getMonth());
     };
 
     const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
-
     const isClassEmpty = Array.isArray(classes) && classes.length === 0;
 
-    // 시안(view1 vs view5/view10)에 따른 날짜별 도트 매핑
-    const classEvents = isClassEmpty ? {} : {
-        4: ['lavender', 'mint'],
-        6: ['lavender', 'mint'],
-        11: ['peach', 'lavender', 'yellow'],
-        13: ['lavender', 'mint', 'yellow'],
-        18: ['lavender', 'mint'],
-        20: ['lavender', 'mint'],
-        25: ['peach', 'lavender', 'yellow'],
-        27: ['peach', 'lavender', 'yellow'],
-    };
+    // events prop이 전달되면 실제 데이터만 사용 (미전달 시 기존 공용 호환 유지)
+    const activeEvents = events !== null && events !== undefined
+        ? events
+        : mode === 'attendance'
+            ? DEFAULT_ATTENDANCE_EVENTS
+            : (isClassEmpty ? {} : DEFAULT_CLASS_EVENTS);
 
-    const attendanceEvents = {
-        4: ['darkGray', 'blue'],
-        6: ['darkGray', 'blue'],
-        11: ['red', 'blue', 'yellow'],
-        13: ['red', 'blue', 'yellow'],
-        18: ['darkGray', 'blue'],
-        20: ['darkGray', 'blue'],
-        25: ['red', 'blue', 'yellow'],
-        27: ['red', 'blue', 'yellow'],
+    const checkSelected = (date) => {
+        if (typeof selectedDate === 'string' && selectedDate.includes('-')) {
+            const monthStr = String(month + 1).padStart(2, '0');
+            const dayStr = String(date).padStart(2, '0');
+            return selectedDate === `${year}-${monthStr}-${dayStr}`;
+        }
+        return selectedDate === date;
     };
-
-    const activeEvents = events ?? (mode === 'attendance' ? attendanceEvents : classEvents);
 
     return (
         <CalendarContainer>
@@ -107,8 +140,8 @@ function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate, 
                         key={date}
                         date={date}
                         colors={activeEvents[date] || []}
-                        onClick={onSelectDate}
-                        isSelected={selectedDate === date}
+                        onClick={onSelectDate ? (day) => onSelectDate(day, year, month + 1) : undefined}
+                        isSelected={checkSelected(date)}
                         isToday={todayDate === date}
                     />
                 ))}
@@ -124,7 +157,8 @@ function Calendar({ mode = 'class', classes = null, onSelectDate, selectedDate, 
                             { id: 'math1', title: '수학1', color: 'yellow' },
                             { id: 'math2', title: '수학2', color: 'mint' },
                         ]).map((cls) => {
-                            const formattedColor = cls.color[0].toUpperCase() + cls.color.slice(1);
+                            const color = cls.color || 'blue';
+                            const formattedColor = color[0].toUpperCase() + color.slice(1);
                             return (
                                 <div key={cls.id} className="CalendarFootTag">
                                     <div className={`CalendarCircle CalendarCircle${formattedColor}`} />
