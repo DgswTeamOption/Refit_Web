@@ -168,6 +168,13 @@
   margin-bottom: 1px;
 }
 
+.makeup-setting-notice {
+  margin: 12px 0 0;
+  color: #8a4d31;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 /* 테이블 레이아웃 및 셀 규격 */
 .teacher-overview-page .table-wrapper {
   width: 100%;

@@ -2,14 +2,9 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Button from "../../../../components/Button/Button";
 import {
-  getClassSchedules,
   getMakeupAvailabilities,
-  createMakeupAvailability,
-  updateMakeupAvailability,
   deleteMakeupAvailability,
 } from "../../../../api/overviewApi";
-
-const DAY_NAMES_KO = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
 
 function normalizeValidId(value) {
   if (value === undefined || value === null) return "";
@@ -44,41 +39,10 @@ function parseLocalDateAndTime(rawDateTime) {
   };
 }
 
-function getKoreanDayFromDate(dateStr) {
-  if (!dateStr || !dateStr.includes("-")) return "";
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const dt = new Date(y, m - 1, d);
-  return DAY_NAMES_KO[dt.getDay()] || "";
-}
-
-function mapScheduleOption(item, index) {
-  const scheduleId = item?.scheduleId ?? item?.schedule_id ?? item?.id ?? index;
-  const studentName =
-    item?.studentName ??
-    item?.student_name ??
-    item?.name ??
-    item?.student?.name ??
-    "학생";
-  const rawStart = item?.start_time ?? item?.startTime;
-  const { date, time } = parseLocalDateAndTime(rawStart);
-  const dayLabel = getKoreanDayFromDate(date);
-  const dateLabel = date
-    ? (() => {
-        const [year, month, day] = date.split("-").map(Number);
-        return `${year}년 ${month}월 ${day}일`;
-      })()
-    : "";
-
-  return {
-    scheduleId,
-    label: `${studentName}${dateLabel || dayLabel || time ? " (" : ""}${[
-      dateLabel,
-      dayLabel,
-      time,
-    ]
-      .filter(Boolean)
-      .join(" ")}${dateLabel || dayLabel || time ? ")" : ""}`,
-  };
+function formatKoreanMonthDay(date) {
+  if (!date) return "-";
+  const match = String(date).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  return match ? `${Number(match[2])}월 ${Number(match[3])}일` : date;
 }
 
 function mapAvailabilityItem(item, index) {
@@ -88,6 +52,8 @@ function mapAvailabilityItem(item, index) {
     item?.start_time ??
     item?.startTime;
   const { date, time } = parseLocalDateAndTime(rawMakeup);
+  const rawEnd = item?.end_time ?? item?.endTime;
+  const { time: endTime } = parseLocalDateAndTime(rawEnd);
 
   return {
     id:
@@ -96,11 +62,9 @@ function mapAvailabilityItem(item, index) {
       item?.availability_id ??
       item?.makeupAvailabilityId ??
       index,
-    scheduleId: item?.schedule_id ?? item?.scheduleId ?? null,
-    capacity: item?.capacity ?? 1,
     date,
     startTime: time,
-    endTime: item?.capacity ? `정원 ${item.capacity}명` : "-",
+    endTime,
   };
 }
 
@@ -112,7 +76,7 @@ function SettingTable({ availableList, loading, error, onEdit, onDelete }) {
           <tr>
             <th>날짜</th>
             <th>시작 시간</th>
-            <th>정원</th>
+            <th>종료 시간</th>
             <th>관리</th>
           </tr>
         </thead>
@@ -132,7 +96,7 @@ function SettingTable({ availableList, loading, error, onEdit, onDelete }) {
           ) : (
             availableList.map((item) => (
               <tr key={item.id}>
-                <td>{item.date || "-"}</td>
+                <td>{formatKoreanMonthDay(item.date)}</td>
                 <td>{item.startTime || "-"}</td>
                 <td>{item.endTime || "-"}</td>
                 <td>
@@ -157,18 +121,15 @@ export default function MakeupSettingTab({ classId, classroomId }) {
     normalizeValidId(classroomId) ||
     normalizeValidId(params.classId ?? params.classroomId ?? params.id);
 
-  const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [selectedScheduleId, setSelectedScheduleId] = useState("");
   const [settingDate, setSettingDate] = useState("");
   const [settingStartTime, setSettingStartTime] = useState("");
-  const [settingCapacity, setSettingCapacity] = useState(1);
+  const [settingEndTime, setSettingEndTime] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
 
-  const [scheduleOptions, setScheduleOptions] = useState([]);
   const [availableList, setAvailableList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
 
   const fetchAvailabilities = useCallback(async () => {
     if (!resolvedClassId) {
@@ -179,46 +140,18 @@ export default function MakeupSettingTab({ classId, classroomId }) {
     setLoading(true);
     setError("");
     try {
-      const scheduleRes = await getClassSchedules(resolvedClassId);
-      const rawSchedules = Array.isArray(scheduleRes)
-        ? scheduleRes
-        : scheduleRes?.schedules || scheduleRes?.content || scheduleRes?.items || [];
-
-      const mappedSchedules = rawSchedules.map(mapScheduleOption);
-      setScheduleOptions(mappedSchedules);
-
-      if (mappedSchedules.length === 0) {
-        setAvailableList([]);
-        setError("등록된 수업 일정이 없습니다. 먼저 '스케줄 관리' 탭에서 수업 일정을 등록해주세요.");
-        return;
-      }
-
-      setSelectedScheduleId((prev) => prev || String(mappedSchedules[0].scheduleId));
-
-      const results = await Promise.allSettled(
-        mappedSchedules.map((s) =>
-          getMakeupAvailabilities({ schedule_id: s.scheduleId })
-        )
-      );
-
-      const merged = [];
-      const seenIds = new Set();
-
-      results.forEach((result) => {
-        if (result.status !== "fulfilled") return;
-        const val = result.value;
-        const list = Array.isArray(val)
-          ? val
-          : val?.availabilities || val?.content || val?.items || val?.list || [];
-        list.map(mapAvailabilityItem).forEach((mappedItem) => {
-          if (!seenIds.has(mappedItem.id)) {
-            seenIds.add(mappedItem.id);
-            merged.push(mappedItem);
-          }
-        });
+      const classIdNumber = Number(resolvedClassId);
+      const availabilityRes = await getMakeupAvailabilities({
+        class_id: Number.isNaN(classIdNumber) ? resolvedClassId : classIdNumber,
       });
-
-      setAvailableList(merged);
+      const list = Array.isArray(availabilityRes)
+        ? availabilityRes
+        : availabilityRes?.availabilities ||
+          availabilityRes?.content ||
+          availabilityRes?.items ||
+          availabilityRes?.list ||
+          [];
+      setAvailableList(list.map(mapAvailabilityItem));
     } catch (err) {
       setError(err.message || "보강 가능 시간을 불러오지 못했습니다.");
       setAvailableList([]);
@@ -231,86 +164,35 @@ export default function MakeupSettingTab({ classId, classroomId }) {
     fetchAvailabilities();
   }, [fetchAvailabilities]);
 
-  const handleOpenForm = () => {
-    if (scheduleOptions.length === 0) {
-      alert("먼저 '스케줄 관리' 탭에서 학생 시간표(수업 일정)를 등록해주세요.");
-      return;
-    }
-    setEditingId(null);
-    setSelectedScheduleId(String(scheduleOptions[0].scheduleId));
-    setSettingDate("");
-    setSettingStartTime("");
-    setSettingCapacity(1);
-    setIsAdding(true);
-  };
-
   const handleCancelForm = () => {
     setEditingId(null);
     setSettingDate("");
     setSettingStartTime("");
-    setSettingCapacity(1);
-    setIsAdding(false);
+    setSettingEndTime("");
+    setSaveMessage("");
   };
 
   const handleEdit = (item) => {
     setEditingId(item.id);
-    if (item.scheduleId) {
-      setSelectedScheduleId(String(item.scheduleId));
-    }
     setSettingDate(item.date);
     setSettingStartTime(item.startTime);
-    setSettingCapacity(item.capacity || 1);
-    setIsAdding(true);
+    setSettingEndTime(item.endTime || "");
+    setSaveMessage("");
   };
 
-  const handleSave = async () => {
-    const targetScheduleId = selectedScheduleId || scheduleOptions[0]?.scheduleId;
-    if (!targetScheduleId) {
-      alert("수업 일정이 없습니다. 먼저 '스케줄 관리' 탭에서 수업 일정을 등록해주세요.");
+  const handleSave = () => {
+    setSaveMessage("");
+    if (!settingDate || !settingStartTime || !settingEndTime) {
+      setSaveMessage("날짜와 시작 시간, 종료 시간을 모두 입력해주세요.");
       return;
     }
-    if (!settingDate || !settingStartTime) {
-      alert("날짜와 시작 시간을 모두 입력해주세요.");
+    if (settingEndTime <= settingStartTime) {
+      setSaveMessage("종료 시간은 시작 시간보다 늦어야 합니다.");
       return;
     }
-    if (saving) return;
-
-    setSaving(true);
-    try {
-      const numericClassId = Number(resolvedClassId);
-      const normalizedClassId = Number.isNaN(numericClassId)
-        ? resolvedClassId
-        : numericClassId;
-      const numericScheduleId = Number(targetScheduleId);
-      const normalizedScheduleId = Number.isNaN(numericScheduleId)
-        ? targetScheduleId
-        : numericScheduleId;
-      const [hh, mm] = settingStartTime.split(":");
-      const makeupDateTime = `${settingDate}T${hh.padStart(2, "0")}:${mm}:00`;
-      const normalizedCapacity = Math.max(1, Number(settingCapacity) || 1);
-
-      if (editingId) {
-        await updateMakeupAvailability(editingId, {
-          capacity: normalizedCapacity,
-          makeup_time: makeupDateTime,
-        });
-      } else {
-        await createMakeupAvailability({
-          capacity: normalizedCapacity,
-          class_id: normalizedClassId,
-          schedule_id: normalizedScheduleId,
-          makeup_time: [makeupDateTime],
-        });
-      }
-
-      await fetchAvailabilities();
-      setEditingId(null);
-      setIsAdding(false);
-    } catch (err) {
-      alert(err.message || "보강 가능 시간 저장에 실패했습니다.");
-    } finally {
-      setSaving(false);
-    }
+    setSaveMessage(
+      "현재 API는 수업 일정(schedule_id)과 시작 시각(makeup_time)을 요구하지만 종료 시간 필드는 없습니다. 수업 연결 방식과 종료 시간 저장을 백엔드에서 지원해야 등록할 수 있습니다."
+    );
   };
 
   const handleDelete = async (id) => {
@@ -324,88 +206,69 @@ export default function MakeupSettingTab({ classId, classroomId }) {
 
   return (
     <>
-      {!isAdding ? (
-        <>
-          <div className="section-header-title">보강 가능 시간</div>
-          <SettingTable
-            availableList={availableList}
-            loading={loading}
-            error={error}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-          <div className="bottom-action-bar">
-            <Button text="+ 가능 시간 추가" color="blue" width={130} onClick={handleOpenForm} />
-          </div>
-        </>
-      ) : (
-        <>
-          <section className="form-section">
-            <h2 className="form-title">{editingId ? "보강 가능 시간 수정" : "보강 가능 시간 추가"}</h2>
-            <div className="form-row">
-              {scheduleOptions.length > 0 && (
-                <div className="form-group">
-                  <label>수업 일정</label>
-                  <select
-                    value={selectedScheduleId}
-                    onChange={(e) => setSelectedScheduleId(e.target.value)}
-                    className="form-control"
-                  >
-                    {scheduleOptions.map((opt) => (
-                      <option key={opt.scheduleId} value={opt.scheduleId}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              <div className="form-group">
-                <label>날짜</label>
-                <input
-                  type="date"
-                  value={settingDate}
-                  onChange={(e) => setSettingDate(e.target.value)}
-                  className="form-control"
-                />
-              </div>
-              <div className="form-group">
-                <label>시작 시간</label>
-                <input
-                  type="time"
-                  value={settingStartTime}
-                  onChange={(e) => setSettingStartTime(e.target.value)}
-                  className="form-control"
-                />
-              </div>
-              <div className="form-group">
-                <label>수용 인원</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={settingCapacity}
-                  onChange={(e) => setSettingCapacity(e.target.value)}
-                  className="form-control"
-                />
-              </div>
-              <div className="form-submit" style={{ display: "flex", gap: "8px" }}>
-                <Button text={editingId ? "수정" : "저장"} color="blue" width={90} onClick={handleSave} />
-                <Button text="취소" color="lightGray" width={80} onClick={handleCancelForm} />
-              </div>
-            </div>
-          </section>
-
-          <section className="list-section">
-            <h2 className="section-title">등록된 가능 시간</h2>
-            <SettingTable
-              availableList={availableList}
-              loading={loading}
-              error={error}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+      <section className="form-section">
+        <h2 className="form-title">보강 가능 시간</h2>
+        <div className="form-row">
+          <div className="form-group">
+            <label>날짜</label>
+            <input
+              type="date"
+              value={settingDate}
+              onChange={(e) => {
+                setSettingDate(e.target.value);
+                setSaveMessage("");
+              }}
+              className="form-control"
             />
-          </section>
-        </>
-      )}
+          </div>
+          <div className="form-group">
+            <label>시작 시간</label>
+            <input
+              type="time"
+              value={settingStartTime}
+              onChange={(e) => {
+                setSettingStartTime(e.target.value);
+                setSaveMessage("");
+              }}
+              className="form-control"
+            />
+          </div>
+          <div className="form-group">
+            <label>종료 시간</label>
+            <input
+              type="time"
+              value={settingEndTime}
+              onChange={(e) => {
+                setSettingEndTime(e.target.value);
+                setSaveMessage("");
+              }}
+              className="form-control"
+            />
+          </div>
+          <div className="form-submit" style={{ display: "flex", gap: "8px" }}>
+            <Button text={editingId !== null ? "수정" : "저장"} color="blue" width={90} onClick={handleSave} />
+            {editingId !== null && (
+              <Button text="취소" color="lightGray" width={80} onClick={handleCancelForm} />
+            )}
+          </div>
+        </div>
+        {saveMessage && (
+          <p role="status" className="makeup-setting-notice">
+            {saveMessage}
+          </p>
+        )}
+      </section>
+
+      <section className="list-section">
+        <h2 className="section-title">등록된 가능 시간</h2>
+        <SettingTable
+          availableList={availableList}
+          loading={loading}
+          error={error}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </section>
     </>
   );
 }
