@@ -62,12 +62,22 @@ function mapScheduleOption(item, index) {
   const rawStart = item?.start_time ?? item?.startTime;
   const { date, time } = parseLocalDateAndTime(rawStart);
   const dayLabel = getKoreanDayFromDate(date);
+  const dateLabel = date
+    ? (() => {
+        const [year, month, day] = date.split("-").map(Number);
+        return `${year}년 ${month}월 ${day}일`;
+      })()
+    : "";
 
   return {
     scheduleId,
-    label: `${studentName}${dayLabel ? ` (${dayLabel}` : ""}${
-      time ? ` ${time})` : dayLabel ? ")" : ""
-    }`,
+    label: `${studentName}${dateLabel || dayLabel || time ? " (" : ""}${[
+      dateLabel,
+      dayLabel,
+      time,
+    ]
+      .filter(Boolean)
+      .join(" ")}${dateLabel || dayLabel || time ? ")" : ""}`,
   };
 }
 
@@ -282,8 +292,6 @@ export default function MakeupSettingTab({ classId, classroomId }) {
       if (editingId) {
         await updateMakeupAvailability(editingId, {
           capacity: normalizedCapacity,
-          class_id: normalizedClassId,
-          schedule_id: normalizedScheduleId,
           makeup_time: makeupDateTime,
         });
       } else {
