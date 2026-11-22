@@ -1,6 +1,6 @@
 import Button from '../../../../components/Button/Button.jsx';
 
-export default function NoticesList({ notices, onCreate, onOpen }) {
+export default function NoticesList({ notices, onCreate, onOpen, loading = false, error = '', onRetry }) {
     return (
         <section className="notices-page" aria-labelledby="notices-list-title">
             <div className="notices-list__toolbar">
@@ -8,8 +8,11 @@ export default function NoticesList({ notices, onCreate, onOpen }) {
                 <Button text="+ 공지하기" width={168} onClick={onCreate} />
             </div>
 
+            {loading && <p role="status">공지 목록을 불러오는 중입니다.</p>}
+            {error && <div role="alert"><p>{error}</p><Button text="다시 시도" onClick={onRetry} /></div>}
+
             <div className="notices-list__cards">
-                {notices.map((notice) => (
+                {!loading && !error && notices.map((notice) => (
                     <article key={notice.id} className="notices-list__card">
                         <div className="notices-list__copy">
                             <p className="notices-meta">{notice.author} · {notice.date}</p>
@@ -28,7 +31,7 @@ export default function NoticesList({ notices, onCreate, onOpen }) {
                         </button>
                     </article>
                 ))}
-                {notices.length === 0 && (
+                {!loading && !error && notices.length === 0 && (
                     <p className="notices-empty">등록된 공지가 없습니다.</p>
                 )}
             </div>

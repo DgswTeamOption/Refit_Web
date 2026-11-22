@@ -60,6 +60,7 @@ function AbsenceApply({
                 {/* 좌측 캘린더 (실제 출결 일정 및 연·월 연동) */}
                 <div className="apply-calendar-column">
                     <Calendar
+                        highlightToday
                         mode="attendance"
                         events={calendarEvents}
                         year={calendarYear}

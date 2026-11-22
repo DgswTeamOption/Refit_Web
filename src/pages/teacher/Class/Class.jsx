@@ -1,285 +1,187 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import SubNav from '../../../components/SubNav/SubNav.jsx';
-import Calendar from '../../../components/Calendar/Calendar.jsx';
-import Condition from '../../../components/Condition/Condition.jsx';
 import Button from '../../../components/Button/Button.jsx';
 import Nav from '../../../components/Nav/Nav.jsx';
+import * as teacherApi from '../../../api/teacher.js';
+import { currentPeriod, dateKey, noticeForView } from '../teacherViewData.js';
+import ClassHome from './components/ClassHome.jsx';
 import Notices from './notices/Notices.jsx';
 import NoticesEditor from './notices/NoticesEditor.jsx';
 import NoticesList from './notices/NoticesList.jsx';
-import { getTeacherClassTitle } from '../classData.js';
 import './Class.css';
 import './notices/notices.css';
 
-const RECENT_ATTENDANCE = [
-    { date: '8월 27일', status: '출석' },
-    { date: '8월 25일', status: '결석' },
-    { date: '8월 20일', status: '보강' },
-];
-
-const NOTICE_AUTHOR = '선생님';
-const INITIAL_NOTICES = [
-    {
-        id: 'presentation',
-        author: NOTICE_AUTHOR,
-        date: '2026. 08. 20',
-        title: '(역량 수행평가안내) 자기성장보고서 & 북 프리젠테이션',
-        content: [
-            '재학생을 대상으로 특강을 할 학생 전문가를 모집합니다.',
-            '신청 링크에서 신청서를 작성해주세요.',
-            '1. 대상: 재학생 전체',
-            '2. 모집 기간: ~ 2026. 9. 11 (금)까지',
-            '3. 특강 가능 일시: 설문 참고',
-            '4. 특강 시간: 40분 ~ 50분',
-            '5. 참여 학생 지원 사항: 필요한 자료 및 도서를 구입할 수 있는 문화상품권 25,000원 증정',
-            '신청 링크: https://refit.example/apply',
-        ].join('\n'),
-    },
-    {
-        id: 'semester',
-        author: NOTICE_AUTHOR,
-        date: '2026. 08. 18',
-        title: '2학기 수업 일정 안내',
-        content: '이번 달 수업 및 보강 일정을 안내합니다.',
-    },
-    {
-        id: 'textbook',
-        author: NOTICE_AUTHOR,
-        date: '2026. 08. 20',
-        title: '교재 준비 안내',
-        content: '다음 수업 전까지 교재를 준비해주세요.',
-    },
-];
-
-const NOTICE_DATE_FORMAT = new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-});
-const VIEW_LABELS = {
-    home: '수업 홈',
-    list: '공지 목록',
-    detail: '수업 공지',
-    delete: '공지 삭제 확인',
-    edit: '공지 수정',
-    create: '공지 작성',
-};
-
-function readNotices(classId) {
-    try {
-        const storedNotices = JSON.parse(sessionStorage.getItem('refit:teacher:' + classId + ':notices'));
-        return Array.isArray(storedNotices) ? storedNotices : INITIAL_NOTICES;
-    } catch {
-        return INITIAL_NOTICES;
-    }
-}
-
-function ClassHome({ classTitle, notices, onCreate, onOpen, onList }) {
-    return (
-        <div className="teacher-class__layout">
-            <aside className="teacher-class__calendar" aria-label="수업 달력">
-                <Calendar />
-            </aside>
-
-            <div className="teacher-class__content">
-                <section className="teacher-class__summary" aria-labelledby="class-attendance-title">
-                    <h2 id="class-attendance-title">이번달 출석 현황</h2>
-                    <div className="teacher-class__totals">
-                        <div className="teacher-class__total teacher-class__total--attendance" aria-label="출석 12회 중 10회">
-                            <Condition status="출석" /><span>10/12</span>
-                        </div>
-                        <div className="teacher-class__total teacher-class__total--absence" aria-label="결석 1회">
-                            <Condition status="결석" /><span>1</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section className="teacher-class__attendance" aria-labelledby="class-recent-title">
-                    <h2 id="class-recent-title">최근 출석</h2>
-                    <table>
-                        <thead>
-                        <tr>
-                            <th scope="col">날짜</th>
-                            <th scope="col">수업</th>
-                            <th scope="col">상태</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {RECENT_ATTENDANCE.map((item) => (
-                            <tr key={item.date}>
-                                <td>{item.date}</td>
-                                <td>{classTitle}</td>
-                                <td><Condition status={item.status} /></td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </section>
-
-                <section className="teacher-class__notices" aria-labelledby="class-notices-title">
-                    <div className="teacher-class__notice-toolbar">
-                        <h2 id="class-notices-title">공지</h2>
-                        <Button text="+ 공지하기" width={170} onClick={onCreate} />
-                    </div>
-                    <div className="teacher-class__notice-list">
-                        {notices.slice(0, 2).map((notice) => (
-                            <article key={notice.id} className="teacher-class__notice">
-                                <p className="teacher-class__notice-meta">{notice.author} · {notice.date}</p>
-                                <h3>{notice.title}</h3>
-                                <p className="teacher-class__notice-content">{notice.content.split('\n', 2).join(' ')}</p>
-                                <button
-                                    type="button"
-                                    className="teacher-class__notice-open"
-                                    aria-label={`${notice.title} 공지 보기`}
-                                    onClick={() => onOpen(notice.id)}
-                                />
-                            </article>
-                        ))}
-                        {notices.length === 0 && (
-                            <p className="notices-empty">등록된 공지가 없습니다.</p>
-                        )}
-                    </div>
-                    <button type="button" className="notices-link teacher-class__notice-more" onClick={onList}>
-                        더보기
-                    </button>
-                </section>
-            </div>
-        </div>
-    );
-}
+const VIEW_LABELS = { home: '수업 홈', list: '공지 목록', detail: '수업 공지', delete: '공지 삭제 확인', edit: '공지 수정', create: '공지 작성' };
+const emptyResource = (data) => ({ data, loading: true, error: '' });
 
 export default function Class() {
+    const { classId } = useParams();
+    if (!/^[1-9]\d*$/.test(classId || '')) {
+        return (
+            <main className="teacher-class__main">
+                <p role="alert">유효한 수업이 아닙니다. 내 수업에서 수업을 다시 선택해주세요.</p>
+                <Link to="/teacher">내 수업으로 이동</Link>
+            </main>
+        );
+    }
+    return <ClassPage key={classId} classId={classId} />;
+}
+
+function ClassPage({ classId }) {
     const navigate = useNavigate();
-    const { classId = 'english1' } = useParams();
-    const { state } = useLocation();
-    const classTitle = getTeacherClassTitle(classId, state?.classTitle);
-    const [notices, setNotices] = useState(() => readNotices(classId));
+    const [period, setPeriod] = useState(currentPeriod);
+    const [selectedDate, setSelectedDate] = useState(dateKey);
+    const [home, setHome] = useState(() => emptyResource(null));
+    const [summary, setSummary] = useState(() => emptyResource([]));
+    const [notices, setNotices] = useState(() => emptyResource([]));
+    const [attendance, setAttendance] = useState(() => emptyResource([]));
+    const [detail, setDetail] = useState(() => emptyResource(null));
     const [view, setView] = useState({ type: 'home' });
-    const selectedNotice = notices.find((notice) => notice.id === view.noticeId);
+    const [reload, setReload] = useState(0);
+    const [saving, setSaving] = useState(false);
+    const [actionError, setActionError] = useState('');
     const bodyView = view.type === 'delete' ? 'detail' : view.type;
 
     useEffect(() => {
-        try {
-            sessionStorage.setItem('refit:teacher:' + classId + ':notices', JSON.stringify(notices));
-        } catch {
-            // Keep the current in-memory notices if browser storage is unavailable.
-        }
-    }, [classId, notices]);
+        const controller = new AbortController();
+        const options = { year: period.year, month: period.month, signal: controller.signal };
+        const requests = [
+            [teacherApi.getClassroomHome(classId, options), setHome, null],
+            [teacherApi.getAttendanceSummary(classId, options), setSummary, []],
+            [teacherApi.listNotices(classId, options), setNotices, []],
+        ];
+        requests.forEach(([request, setResource, initial]) => {
+            request.then((data) => {
+                if (!controller.signal.aborted) setResource({ data, loading: false, error: '' });
+            }).catch((failure) => {
+                if (!controller.signal.aborted) setResource({ data: initial, loading: false, error: failure.message });
+            });
+        });
+        return () => controller.abort();
+    }, [classId, period.year, period.month, reload]);
 
     useEffect(() => {
-        window.scrollTo(0, 0);
-    }, [bodyView]);
+        const controller = new AbortController();
+        teacherApi.getClassAttendances(classId, selectedDate, { signal: controller.signal })
+            .then((data) => { if (!controller.signal.aborted) setAttendance({ data, loading: false, error: '' }); })
+            .catch((failure) => { if (!controller.signal.aborted) setAttendance({ data: [], loading: false, error: failure.message }); });
+        return () => controller.abort();
+    }, [classId, selectedDate, reload]);
 
-    function showList() {
-        setView({ type: 'list' });
+    useEffect(() => {
+        if (!view.noticeId) return;
+        const controller = new AbortController();
+        teacherApi.getNotice(classId, view.noticeId, { signal: controller.signal })
+            .then((data) => { if (!controller.signal.aborted) setDetail({ data, loading: false, error: '' }); })
+            .catch((failure) => { if (!controller.signal.aborted) setDetail({ data: null, loading: false, error: failure.message }); });
+        return () => controller.abort();
+    }, [classId, view.noticeId, reload]);
+
+    useEffect(() => { window.scrollTo(0, 0); }, [bodyView]);
+
+    function show(next) {
+        if (saving) return;
+        if (next.noticeId && next.noticeId !== view.noticeId) setDetail(emptyResource(null));
+        setActionError('');
+        setView(next);
     }
 
-    function showDetail(noticeId) {
-        setView({ type: 'detail', noticeId });
+    function resetMonthResources() {
+        setHome(emptyResource(null));
+        setSummary(emptyResource([]));
+        setNotices(emptyResource([]));
     }
 
-    function createNotice({ title, content }) {
-        const notice = {
-            id: crypto.randomUUID(),
-            author: NOTICE_AUTHOR,
-            date: NOTICE_DATE_FORMAT.format(new Date()).replace(/\.$/, ''),
-            title,
-            content,
-        };
-
-        setNotices((previous) => [notice, ...previous]);
-        showList();
+    function retry() {
+        resetMonthResources();
+        setAttendance(emptyResource([]));
+        if (view.noticeId) setDetail(emptyResource(null));
+        setReload((value) => value + 1);
     }
 
-    function editNotice(fields) {
-        setNotices((previous) => previous.map((notice) => (
-            notice.id === view.noticeId ? { ...notice, ...fields } : notice
-        )));
-        showList();
+    function changePeriod(next) {
+        resetMonthResources();
+        setAttendance(emptyResource([]));
+        setPeriod(next);
+        const today = dateKey();
+        const first = next.year + '-' + String(next.month).padStart(2, '0') + '-01';
+        setSelectedDate(today.slice(0, 7) === first.slice(0, 7) ? today : first);
     }
 
-    function deleteNotice() {
-        setNotices((previous) => previous.filter((notice) => notice.id !== view.noticeId));
-        showList();
+    function selectDate(value) {
+        if (value === selectedDate) return;
+        const [year, month] = value.split('-').map(Number);
+        if (period.year !== year || period.month !== month) resetMonthResources();
+        setAttendance(emptyResource([]));
+        setPeriod((previous) => previous.year === year && previous.month === month ? previous : { year, month });
+        setSelectedDate(value);
     }
 
+    async function saveNotice(fields) {
+        if (saving) return;
+        setSaving(true);
+        setActionError('');
+        try {
+            if (view.type === 'edit') await teacherApi.updateNotice(classId, view.noticeId, fields);
+            else await teacherApi.createNotice(classId, fields);
+            setView({ type: 'list' });
+            retry();
+        } catch (failure) {
+            setActionError(failure.message);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    async function removeNotice() {
+        if (saving) return;
+        setSaving(true);
+        setActionError('');
+        try {
+            await teacherApi.deleteNotice(classId, view.noticeId);
+            setView({ type: 'list' });
+            retry();
+        } catch (failure) {
+            setActionError(failure.message);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    const classTitle = home.data?.name || '수업';
+    const selectedNotice = detail.data && String(detail.data.noticeId) === String(view.noticeId)
+        ? noticeForView(detail.data, home.data?.teacherName) : null;
     let body;
-    if (view.type === 'home') {
-        body = (
-            <ClassHome
-                classTitle={classTitle}
-                notices={notices}
-                onCreate={() => setView({ type: 'create', from: 'home' })}
-                onOpen={showDetail}
-                onList={showList}
-            />
-        );
+    if (home.loading) {
+        body = <p role="status">수업 정보를 불러오는 중입니다.</p>;
+    } else if (home.error || !home.data) {
+        body = <div role="alert"><p>{home.error || '수업 정보를 찾을 수 없습니다.'}</p><Button text="다시 시도" onClick={retry} /><Link to="/teacher">내 수업으로 이동</Link></div>;
+    } else if (view.type === 'home') {
+        body = <ClassHome classroom={home.data} period={period} onPeriodChange={changePeriod} selectedDate={selectedDate} onSelectDate={selectDate} summary={summary} attendance={attendance} notices={notices} onRetry={retry} onCreate={() => show({ type: 'create', from: 'home' })} onOpen={(noticeId) => show({ type: 'detail', noticeId })} onList={() => show({ type: 'list' })} />;
     } else if (view.type === 'create') {
-        body = (
-            <NoticesEditor
-                mode="create"
-                onCancel={() => setView({ type: view.from })}
-                onSave={createNotice}
-            />
-        );
-    } else if (view.type === 'edit' && selectedNotice) {
-        body = (
-            <NoticesEditor
-                mode="edit"
-                notice={selectedNotice}
-                onCancel={() => showDetail(view.noticeId)}
-                onSave={editNotice}
-            />
-        );
-    } else if (selectedNotice) {
-        body = (
-            <Notices
-                notice={selectedNotice}
-                isConfirmingDelete={view.type === 'delete'}
-                onEdit={() => setView({ type: 'edit', noticeId: view.noticeId })}
-                onRequestDelete={() => setView({ type: 'delete', noticeId: view.noticeId })}
-                onCancelDelete={() => showDetail(view.noticeId)}
-                onConfirmDelete={deleteNotice}
-            />
-        );
+        body = <NoticesEditor mode="create" saving={saving} error={actionError} onCancel={() => show({ type: view.from })} onSave={saveNotice} />;
+    } else if (view.type === 'list') {
+        body = <NoticesList notices={notices.data.map((item) => noticeForView(item, home.data.teacherName))} loading={notices.loading} error={notices.error} onRetry={retry} onCreate={() => show({ type: 'create', from: 'list' })} onOpen={(noticeId) => show({ type: 'detail', noticeId })} />;
+    } else if (detail.loading) {
+        body = <p role="status">공지를 불러오는 중입니다.</p>;
+    } else if (detail.error || !selectedNotice) {
+        body = <div role="alert"><p>{detail.error || '공지를 찾을 수 없습니다.'}</p><Button text="다시 시도" onClick={retry} /><Button text="공지 목록" onClick={() => show({ type: 'list' })} /></div>;
+    } else if (view.type === 'edit') {
+        body = <NoticesEditor key={selectedNotice.id} mode="edit" notice={selectedNotice} saving={saving} error={actionError} onCancel={() => show({ type: 'detail', noticeId: view.noticeId })} onSave={saveNotice} />;
     } else {
-        body = (
-            <NoticesList
-                notices={notices}
-                onCreate={() => setView({ type: 'create', from: 'list' })}
-                onOpen={showDetail}
-            />
-        );
+        body = <Notices notice={selectedNotice} saving={saving} error={actionError} isConfirmingDelete={view.type === 'delete'} onEdit={() => show({ type: 'edit', noticeId: view.noticeId })} onRequestDelete={() => show({ type: 'delete', noticeId: view.noticeId })} onCancelDelete={() => show({ type: 'detail', noticeId: view.noticeId })} onConfirmDelete={removeNotice} />;
     }
 
     return (
         <div className="teacher-class">
             <main className="teacher-class__main">
-                <Nav
-                    label="현재 위치"
-                    items={[
-                        { text: '홈', link: '/teacher' },
-                        { text: classTitle, onClick: () => setView({ type: 'home' }) },
-                        { text: VIEW_LABELS[view.type] },
-                    ]}
-                />
-
+                <Nav label="현재 위치" items={[{ text: '홈', link: '/teacher' }, { text: classTitle, onClick: () => show({ type: 'home' }) }, { text: VIEW_LABELS[view.type] }]} />
                 <h1 className="teacher-class__title">{classTitle}</h1>
-                <SubNav
-                    defaultKey="main"
-                    onChange={(key) => {
-                        if (key === 'main') {
-                            setView({ type: 'home' });
-                            return;
-                        }
-                        navigate(
-                            '/teacher/class/' + classId + '/management?tab=' + key,
-                            { state: { classTitle } },
-                        );
-                    }}
-                />
-
+                <SubNav activeKey="main" onChange={(key) => {
+                    if (key === 'main') show({ type: 'home' });
+                    else if (!saving) navigate('/teacher/class/' + classId + '/management?tab=' + key, { state: { classTitle } });
+                }} />
                 {body}
             </main>
         </div>

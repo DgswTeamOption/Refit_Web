@@ -345,6 +345,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                     <div className="class-two-columns">
                         <aside className="class-calendar-aside">
                             <Calendar
+                                highlightToday
                                 mode="attendance"
                                 events={calendarEvents}
                                 year={calendarDate.year}

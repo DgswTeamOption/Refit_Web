@@ -1,6 +1,6 @@
 import React from 'react';
 
-function CalendarBlock({ date, isWeekend, colors, onClick, isSelected }) {
+function CalendarBlock({ date, isWeekend, colors, onClick, isSelected, isToday }) {
     if (date !== undefined && date !== null && date !== '') {
         const isClickable = typeof date === 'number' && typeof onClick === 'function';
         return (
@@ -8,6 +8,7 @@ function CalendarBlock({ date, isWeekend, colors, onClick, isSelected }) {
                 className={`CalendarBlock ${isSelected ? 'is-selected' : ''} ${isClickable ? 'is-clickable' : ''}`}
                 onClick={isClickable ? () => onClick(date) : undefined}
                 role={isClickable ? 'button' : undefined}
+                aria-current={isToday ? 'date' : undefined}
                 tabIndex={isClickable ? 0 : undefined}
                 onKeyDown={isClickable ? (e) => {
                     if (e.key === 'Enter' || e.key === ' ') {

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import Button from '../../../../components/Button/Button.jsx';
 
-export default function NoticesEditor({ mode, notice, onCancel, onSave }) {
+export default function NoticesEditor({ mode, notice, onCancel, onSave, saving = false, error = '' }) {
     const isEdit = mode === 'edit';
     const [title, setTitle] = useState(notice?.title ?? '');
     const [content, setContent] = useState(notice?.content ?? '');
@@ -15,6 +15,7 @@ export default function NoticesEditor({ mode, notice, onCancel, onSave }) {
 
     function handleSubmit(event) {
         event.preventDefault();
+        if (saving) return;
         setSubmitted(true);
 
         const trimmedTitle = title.trim();
@@ -44,6 +45,8 @@ export default function NoticesEditor({ mode, notice, onCancel, onSave }) {
                         id="notice-title"
                         type="text"
                         value={title}
+                        maxLength={100}
+                        disabled={saving}
                         placeholder="공지 제목을 입력해주세요"
                         onChange={(event) => setTitle(event.target.value)}
                         aria-invalid={titleMissing}
@@ -63,6 +66,8 @@ export default function NoticesEditor({ mode, notice, onCancel, onSave }) {
                         ref={contentRef}
                         id="notice-content"
                         value={content}
+                        maxLength={10000}
+                        disabled={saving}
                         placeholder="공지 내용을 입력해주세요"
                         onChange={(event) => setContent(event.target.value)}
                         aria-invalid={contentMissing}
@@ -77,17 +82,21 @@ export default function NoticesEditor({ mode, notice, onCancel, onSave }) {
                 </div>
             </form>
 
+            {error && <p className="notices-editor__error" role="alert">{error}</p>}
+
             <div className="notices-actions notices-editor__actions">
                 <Button
                     text={isEdit ? '수정 취소' : '작성 취소'}
                     color="lightGray"
                     width={150}
                     onClick={onCancel}
+                    disabled={saving}
                 />
                 <Button
-                    text={isEdit ? '수정 완료' : '공지하기'}
+                    text={saving ? '저장 중…' : isEdit ? '수정 완료' : '공지하기'}
                     width={164}
                     onClick={() => formRef.current.requestSubmit()}
+                    disabled={saving}
                 />
             </div>
         </section>

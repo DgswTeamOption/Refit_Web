@@ -34,51 +34,67 @@ function Calendar({
     year: controlledYear,
     month: controlledMonth, // 1-indexed (1 ~ 12)
     onMonthChange,
+    period,
+    onPeriodChange,
     onSelectDate,
     selectedDate,
+    highlightToday = false,
 }) {
     const [internalYear, setInternalYear] = useState(() => new Date().getFullYear());
     const [internalMonth, setInternalMonth] = useState(() => new Date().getMonth()); // 0-indexed
+    const [today] = useState(() => new Date());
 
-    const isControlledDate =
-        typeof controlledYear === 'number' && typeof controlledMonth === 'number';
-    const year = isControlledDate ? controlledYear : internalYear;
-    const month = isControlledDate ? controlledMonth - 1 : internalMonth; // 0-indexed
+    const isControlledByPeriod = Boolean(period && typeof period.year === 'number' && typeof period.month === 'number');
+    const isControlledByProps = typeof controlledYear === 'number' && typeof controlledMonth === 'number';
+
+    const year = isControlledByPeriod
+        ? period.year
+        : isControlledByProps
+            ? controlledYear
+            : internalYear;
+    const month = isControlledByPeriod
+        ? period.month - 1
+        : isControlledByProps
+            ? controlledMonth - 1
+            : internalMonth; // 0-indexed
+
+    const todayDate = highlightToday && year === today.getFullYear() && month === today.getMonth()
+        ? today.getDate()
+        : null;
 
     const firstDayIndex = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
 
     const updateMonth = (nextYear, nextMonthZeroBased) => {
-        if (!isControlledDate) {
+        const nextMonthOneBased = nextMonthZeroBased + 1;
+
+        if (!isControlledByPeriod && !isControlledByProps) {
             setInternalYear(nextYear);
             setInternalMonth(nextMonthZeroBased);
         }
+        if (onPeriodChange) {
+            onPeriodChange({ year: nextYear, month: nextMonthOneBased });
+        }
         if (onMonthChange) {
-            onMonthChange(nextYear, nextMonthZeroBased + 1);
+            onMonthChange(nextYear, nextMonthOneBased);
         }
     };
 
     const handlePrevMonth = () => {
-        if (month === 0) {
-            updateMonth(year - 1, 11);
-        } else {
-            updateMonth(year, month - 1);
-        }
+        const previous = new Date(year, month - 1, 1);
+        updateMonth(previous.getFullYear(), previous.getMonth());
     };
 
     const handleNextMonth = () => {
-        if (month === 11) {
-            updateMonth(year + 1, 0);
-        } else {
-            updateMonth(year, month + 1);
-        }
+        const next = new Date(year, month + 1, 1);
+        updateMonth(next.getFullYear(), next.getMonth());
     };
 
     const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
     const isClassEmpty = Array.isArray(classes) && classes.length === 0;
 
     // events prop이 전달되면 실제 데이터만 사용 (미전달 시 기존 공용 호환 유지)
-    const activeEvents = events !== null
+    const activeEvents = events !== null && events !== undefined
         ? events
         : mode === 'attendance'
             ? DEFAULT_ATTENDANCE_EVENTS
@@ -126,6 +142,7 @@ function Calendar({
                         colors={activeEvents[date] || []}
                         onClick={onSelectDate ? (day) => onSelectDate(day, year, month + 1) : undefined}
                         isSelected={checkSelected(date)}
+                        isToday={todayDate === date}
                     />
                 ))}
             </div>

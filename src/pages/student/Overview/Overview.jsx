@@ -215,6 +215,7 @@ function Overview({ onSelectClass }) {
                 {/* 좌측 캘린더 영역 */}
                 <aside className="overview-calendar-aside">
                     <Calendar
+                        highlightToday
                         mode="class"
                         classes={classes}
                         events={classes.length === 0 ? {} : calendarEvents}
