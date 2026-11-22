@@ -3,6 +3,7 @@ import "./Condition.css";
 const conditionColors = {
     "결석": "red",
     "거절됨": "red",
+    "취소됨": "gray",
     "출석": "blue",
     "수락됨": "blue",
     "보강": "yellow",

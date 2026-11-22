@@ -130,6 +130,7 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   const [availableList, setAvailableList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
 
   const fetchAvailabilities = useCallback(async () => {
     if (!resolvedClassId) {
@@ -196,11 +197,12 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   };
 
   const handleDelete = async (id) => {
+    setActionError("");
     try {
       await deleteMakeupAvailability(id);
       setAvailableList((prev) => prev.filter((item) => item.id !== id));
     } catch (err) {
-      alert(err.message || "보강 가능 시간 삭제에 실패했습니다.");
+      setActionError(err.message || "보강 가능 시간 삭제에 실패했습니다.");
     }
   };
 
@@ -261,6 +263,11 @@ export default function MakeupSettingTab({ classId, classroomId }) {
 
       <section className="list-section">
         <h2 className="section-title">등록된 가능 시간</h2>
+        {actionError && (
+          <p role="alert" className="makeup-setting-notice">
+            {actionError}
+          </p>
+        )}
         <SettingTable
           availableList={availableList}
           loading={loading}
