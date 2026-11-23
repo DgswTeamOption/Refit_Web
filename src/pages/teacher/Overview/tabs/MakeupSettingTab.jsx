@@ -3,7 +3,11 @@ import { useParams } from "react-router-dom";
 import Button from "../../../../components/Button/Button";
 import {
   getMakeupAvailabilities,
+  createMakeupAvailability,
+  updateMakeupAvailability,
   deleteMakeupAvailability,
+  getClassSchedules,
+  getClassStudents,
 } from "../../../../api/overviewApi";
 
 function normalizeValidId(value) {
@@ -45,16 +49,79 @@ function formatKoreanMonthDay(date) {
   return match ? `${Number(match[2])}월 ${Number(match[3])}일` : date;
 }
 
-function mapAvailabilityItem(item, index) {
-  const rawMakeup =
-    item?.makeup_time ??
-    item?.makeupTime ??
-    item?.start_time ??
-    item?.startTime;
-  const { date, time } = parseLocalDateAndTime(rawMakeup);
-  const rawEnd = item?.end_time ?? item?.endTime;
-  const { time: endTime } = parseLocalDateAndTime(rawEnd);
+function extractList(response, keys) {
+  if (Array.isArray(response)) return response;
+  if (!response || typeof response !== "object") return [];
+  for (const key of keys) {
+    if (Array.isArray(response[key])) return response[key];
+  }
+  return [];
+}
 
+function getScheduleId(item) {
+  return item?.scheduleId ?? item?.schedule_id;
+}
+
+function getScheduleOptionLabel(item, studentNames) {
+  const studentId = item?.studentId ?? item?.student_id;
+  const studentName =
+    item?.studentName ??
+    item?.student_name ??
+    studentNames.get(String(studentId)) ??
+    (studentId ? `학생 ${studentId}` : "수업");
+  const { date, time } = parseLocalDateAndTime(
+    item?.startTime ?? item?.start_time
+  );
+  const scheduleTime = [date ? formatKoreanMonthDay(date) : "", time]
+    .filter(Boolean)
+    .join(" ");
+  return scheduleTime ? `${studentName} · ${scheduleTime}` : studentName;
+}
+
+function mapScheduleOptions(response, studentsResponse) {
+  const students = extractList(studentsResponse, [
+    "students",
+    "members",
+    "content",
+    "items",
+    "list",
+  ]);
+  const studentNames = new Map(
+    students.map((student) => [
+      String(student?.studentId ?? student?.student_id ?? student?.id),
+      student?.name ?? student?.studentName ?? student?.student_name ?? "학생",
+    ])
+  );
+  const uniqueSchedules = new Map();
+
+  extractList(response, ["schedules", "content", "items", "list"]).forEach(
+    (item) => {
+      const scheduleId = getScheduleId(item);
+      if (
+        scheduleId === undefined ||
+        scheduleId === null ||
+        String(scheduleId).trim() === ""
+      ) {
+        return;
+      }
+      const key = String(scheduleId);
+      if (!uniqueSchedules.has(key)) {
+        uniqueSchedules.set(key, {
+          id: key,
+          label: getScheduleOptionLabel(item, studentNames),
+        });
+      }
+    }
+  );
+
+  return Array.from(uniqueSchedules.values()).sort((a, b) =>
+    a.label.localeCompare(b.label, "ko")
+  );
+}
+
+function mapAvailabilityItem(item, index, scheduleLabels) {
+  const { date, time } = parseLocalDateAndTime(item?.makeup_time ?? item?.makeupTime);
+  const scheduleId = item?.schedule_id ?? item?.scheduleId;
   return {
     id:
       item?.id ??
@@ -62,9 +129,18 @@ function mapAvailabilityItem(item, index) {
       item?.availability_id ??
       item?.makeupAvailabilityId ??
       index,
+    scheduleId:
+      scheduleId === undefined || scheduleId === null ? "" : String(scheduleId),
+    scheduleLabel:
+      scheduleLabels.get(String(scheduleId)) ||
+      (scheduleId ? `수업 일정 ${scheduleId}` : "-"),
     date,
     startTime: time,
-    endTime,
+    capacity: item?.capacity ?? 1,
+    minCapacity: item?.min_capacity ?? item?.minCapacity ?? 1,
+    canChangeTime: item?.can_change_time ?? item?.canChangeTime ?? true,
+    canDelete: item?.can_delete ?? item?.canDelete ?? true,
+    lockReason: item?.lock_reason ?? item?.lockReason ?? "",
   };
 }
 
@@ -74,9 +150,9 @@ function SettingTable({ availableList, loading, error, onEdit, onDelete }) {
       <table className="setting-table">
         <thead>
           <tr>
-            <th>날짜</th>
-            <th>시작 시간</th>
-            <th>종료 시간</th>
+            <th>수업 일정</th>
+            <th>보강 시간</th>
+            <th>수용 인원</th>
             <th>관리</th>
           </tr>
         </thead>
@@ -96,14 +172,32 @@ function SettingTable({ availableList, loading, error, onEdit, onDelete }) {
           ) : (
             availableList.map((item) => (
               <tr key={item.id}>
-                <td>{formatKoreanMonthDay(item.date)}</td>
-                <td>{item.startTime || "-"}</td>
-                <td>{item.endTime || "-"}</td>
+                <td>{item.scheduleLabel}</td>
+                <td>
+                  {[item.date ? formatKoreanMonthDay(item.date) : "", item.startTime]
+                    .filter(Boolean)
+                    .join(" ") || "-"}
+                </td>
+                <td>{item.capacity}명</td>
                 <td>
                   <div className="action-buttons">
-                    <Button text="수정" color="lightGray" width={60} onClick={() => onEdit(item)} />
-                    <Button text="삭제" color="red" width={60} onClick={() => onDelete(item.id)} />
+                    <Button
+                      text="수정"
+                      color="lightGray"
+                      width={60}
+                      onClick={() => onEdit(item)}
+                    />
+                    <Button
+                      text="삭제"
+                      color="red"
+                      width={60}
+                      disabled={!item.canDelete}
+                      onClick={() => onDelete(item.id)}
+                    />
                   </div>
+                  {item.lockReason && !item.canChangeTime && (
+                    <small>{item.lockReason}</small>
+                  )}
                 </td>
               </tr>
             ))
@@ -122,40 +216,68 @@ export default function MakeupSettingTab({ classId, classroomId }) {
     normalizeValidId(params.classId ?? params.classroomId ?? params.id);
 
   const [editingId, setEditingId] = useState(null);
-  const [settingDate, setSettingDate] = useState("");
-  const [settingStartTime, setSettingStartTime] = useState("");
-  const [settingEndTime, setSettingEndTime] = useState("");
+  const [selectedScheduleId, setSelectedScheduleId] = useState("");
+  const [settingDateTime, setSettingDateTime] = useState("");
+  const [capacity, setCapacity] = useState(1);
   const [saveMessage, setSaveMessage] = useState("");
 
+  const [scheduleOptions, setScheduleOptions] = useState([]);
   const [availableList, setAvailableList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [scheduleError, setScheduleError] = useState("");
   const [actionError, setActionError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchAvailabilities = useCallback(async () => {
     if (!resolvedClassId) {
       setAvailableList([]);
+      setScheduleOptions([]);
       return;
     }
 
     setLoading(true);
     setError("");
+    setScheduleError("");
     try {
       const classIdNumber = Number(resolvedClassId);
-      const availabilityRes = await getMakeupAvailabilities({
-        class_id: Number.isNaN(classIdNumber) ? resolvedClassId : classIdNumber,
-      });
-      const list = Array.isArray(availabilityRes)
-        ? availabilityRes
-        : availabilityRes?.availabilities ||
-          availabilityRes?.content ||
-          availabilityRes?.items ||
-          availabilityRes?.list ||
-          [];
-      setAvailableList(list.map(mapAvailabilityItem));
-    } catch (err) {
-      setError(err.message || "보강 가능 시간을 불러오지 못했습니다.");
-      setAvailableList([]);
+      const normalizedClassId = Number.isNaN(classIdNumber)
+        ? resolvedClassId
+        : classIdNumber;
+      const [availabilityResult, schedulesResult, studentsResult] =
+        await Promise.allSettled([
+          getMakeupAvailabilities({ class_id: normalizedClassId }),
+          getClassSchedules(normalizedClassId),
+          getClassStudents(normalizedClassId),
+        ]);
+
+      let mappedSchedules = [];
+      if (schedulesResult.status === "fulfilled") {
+        mappedSchedules = mapScheduleOptions(
+          schedulesResult.value,
+          studentsResult.status === "fulfilled" ? studentsResult.value : []
+        );
+        setScheduleOptions(mappedSchedules);
+      } else {
+        setScheduleOptions([]);
+        setScheduleError(schedulesResult.reason?.message || "수업 일정을 불러오지 못했습니다.");
+      }
+
+      if (availabilityResult.status === "fulfilled") {
+        const list = extractList(availabilityResult.value, [
+          "availabilities",
+          "content",
+          "items",
+          "list",
+        ]);
+        const scheduleLabels = new Map(mappedSchedules.map((item) => [item.id, item.label]));
+        setAvailableList(
+          list.map((item, index) => mapAvailabilityItem(item, index, scheduleLabels))
+        );
+      } else {
+        setError(availabilityResult.reason?.message || "보강 가능 시간을 불러오지 못했습니다.");
+        setAvailableList([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -167,40 +289,89 @@ export default function MakeupSettingTab({ classId, classroomId }) {
 
   const handleCancelForm = () => {
     setEditingId(null);
-    setSettingDate("");
-    setSettingStartTime("");
-    setSettingEndTime("");
+    setSelectedScheduleId("");
+    setSettingDateTime("");
+    setCapacity(1);
     setSaveMessage("");
   };
 
   const handleEdit = (item) => {
     setEditingId(item.id);
-    setSettingDate(item.date);
-    setSettingStartTime(item.startTime);
-    setSettingEndTime(item.endTime || "");
+    setSelectedScheduleId(item.scheduleId);
+    setSettingDateTime(
+      item.date && item.startTime ? `${item.date}T${item.startTime}` : ""
+    );
+    setCapacity(
+      Math.max(Number(item.minCapacity) || 1, Number(item.capacity) || 1)
+    );
     setSaveMessage("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaveMessage("");
-    if (!settingDate || !settingStartTime || !settingEndTime) {
-      setSaveMessage("날짜와 시작 시간, 종료 시간을 모두 입력해주세요.");
+    const scheduleIdNumber = Number(selectedScheduleId);
+    if (
+      editingId === null &&
+      (!Number.isInteger(scheduleIdNumber) || scheduleIdNumber < 1)
+    ) {
+      setSaveMessage("연결할 수업 일정을 선택해주세요.");
       return;
     }
-    if (settingEndTime <= settingStartTime) {
-      setSaveMessage("종료 시간은 시작 시간보다 늦어야 합니다.");
+    const minCapacity =
+      editingId !== null
+        ? Number(
+            availableList.find((item) => item.id === editingId)?.minCapacity
+          ) || 1
+        : 1;
+    if (
+      !settingDateTime ||
+      !Number.isInteger(Number(capacity)) ||
+      Number(capacity) < minCapacity
+    ) {
+      setSaveMessage(`보강 날짜와 시간을 입력하고 수용 인원을 ${minCapacity}명 이상으로 설정해주세요.`);
       return;
     }
-    setSaveMessage(
-      "현재 API는 수업 일정(schedule_id)과 시작 시각(makeup_time)을 요구하지만 종료 시간 필드는 없습니다. 수업 연결 방식과 종료 시간 저장을 백엔드에서 지원해야 등록할 수 있습니다."
-    );
+
+    const normalizedClassId = Number(resolvedClassId);
+    if (!Number.isInteger(normalizedClassId) || normalizedClassId < 1) {
+      setSaveMessage("수업 정보를 확인할 수 없습니다. 페이지를 새로고침해주세요.");
+      return;
+    }
+    const makeupTime = `${settingDateTime}:00`;
+    const payload = {
+      capacity: Number(capacity),
+      makeup_time: makeupTime,
+    };
+
+    setSubmitting(true);
+    try {
+      if (editingId !== null) {
+        await updateMakeupAvailability(editingId, payload);
+      } else {
+        await createMakeupAvailability({
+          ...payload,
+          class_id: normalizedClassId,
+          schedule_id: scheduleIdNumber,
+          makeup_time: [makeupTime],
+        });
+      }
+      await fetchAvailabilities();
+      handleCancelForm();
+    } catch (err) {
+      setSaveMessage(err.message || "보강 가능 시간 저장에 실패했습니다.");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  const editingItem = availableList.find((item) => item.id === editingId);
 
   const handleDelete = async (id) => {
     setActionError("");
     try {
       await deleteMakeupAvailability(id);
       setAvailableList((prev) => prev.filter((item) => item.id !== id));
+      if (editingId === id) handleCancelForm();
     } catch (err) {
       setActionError(err.message || "보강 가능 시간 삭제에 실패했습니다.");
     }
@@ -209,60 +380,91 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   return (
     <>
       <section className="form-section">
-        <h2 className="form-title">보강 가능 시간</h2>
+        <h2 className="form-title">
+          {editingId !== null ? "보강 가능 시간 수정" : "보강 가능 시간 등록"}
+        </h2>
         <div className="form-row">
           <div className="form-group">
-            <label>날짜</label>
-            <input
-              type="date"
-              value={settingDate}
+            <label>수업 일정</label>
+            <select
+              className="form-control"
+              value={selectedScheduleId}
+      disabled={editingId !== null || scheduleOptions.length === 0}
               onChange={(e) => {
-                setSettingDate(e.target.value);
+                setSelectedScheduleId(e.target.value);
+                setSaveMessage("");
+              }}
+            >
+              <option value="">수업 일정 선택</option>
+              {selectedScheduleId && !scheduleOptions.some((item) => item.id === selectedScheduleId) && (
+                <option value={selectedScheduleId}>수업 일정 {selectedScheduleId}</option>
+              )}
+              {scheduleOptions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>보강 날짜·시간</label>
+            <input
+              type="datetime-local"
+              value={settingDateTime}
+              disabled={editingId !== null && editingItem?.canChangeTime === false}
+              onChange={(e) => {
+                setSettingDateTime(e.target.value);
                 setSaveMessage("");
               }}
               className="form-control"
             />
           </div>
           <div className="form-group">
-            <label>시작 시간</label>
+            <label>수용 인원</label>
             <input
-              type="time"
-              value={settingStartTime}
+              type="number"
+              min={editingId !== null ? editingItem?.minCapacity || 1 : 1}
+              step="1"
+              value={capacity}
               onChange={(e) => {
-                setSettingStartTime(e.target.value);
-                setSaveMessage("");
-              }}
-              className="form-control"
-            />
-          </div>
-          <div className="form-group">
-            <label>종료 시간</label>
-            <input
-              type="time"
-              value={settingEndTime}
-              onChange={(e) => {
-                setSettingEndTime(e.target.value);
+                setCapacity(e.target.value);
                 setSaveMessage("");
               }}
               className="form-control"
             />
           </div>
           <div className="form-submit" style={{ display: "flex", gap: "8px" }}>
-            <Button text={editingId !== null ? "수정" : "저장"} color="blue" width={90} onClick={handleSave} />
+            <Button
+              text={submitting ? "저장 중" : editingId !== null ? "수정" : "저장"}
+              color="blue"
+              width={90}
+              disabled={submitting || (editingId === null && scheduleOptions.length === 0)}
+              onClick={handleSave}
+            />
             {editingId !== null && (
               <Button text="취소" color="lightGray" width={80} onClick={handleCancelForm} />
             )}
           </div>
         </div>
+        {scheduleError && (
+          <p role="alert" className="makeup-setting-notice">
+            {scheduleError}
+          </p>
+        )}
+        {!scheduleError && scheduleOptions.length === 0 && (
+          <p className="makeup-setting-notice">
+            연결할 수업 일정이 없습니다. 먼저 스케줄 관리 탭에서 일정을 등록해주세요.
+          </p>
+        )}
         {saveMessage && (
-          <p role="status" className="makeup-setting-notice">
+          <p role="alert" className="makeup-setting-notice">
             {saveMessage}
           </p>
         )}
       </section>
 
       <section className="list-section">
-        <h2 className="section-title">등록된 가능 시간</h2>
+        <h2 className="section-title">등록된 보강 가능 시간</h2>
         {actionError && (
           <p role="alert" className="makeup-setting-notice">
             {actionError}

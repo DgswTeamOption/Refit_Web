@@ -75,7 +75,6 @@ export default function AbsenceTab({ classId, classroomId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [processingId, setProcessingId] = useState(null);
-  const [editingId, setEditingId] = useState(null);
   const [actionMessages, setActionMessages] = useState({});
 
   const fetchAbsences = useCallback(async () => {
@@ -112,6 +111,11 @@ export default function AbsenceTab({ classId, classroomId }) {
 
   const handleApprove = async (id) => {
     if (processingId === id) return;
+    const confirmed = window.confirm(
+      "이 결석 신청을 승인할까요? 승인 후에는 결석 상태를 수정할 수 없습니다."
+    );
+    if (!confirmed) return;
+
     setProcessingId(id);
     try {
       await approveAbsence(id);
@@ -121,7 +125,6 @@ export default function AbsenceTab({ classId, classroomId }) {
         return next;
       });
       updateLocalStatus(id, "수락됨");
-      setEditingId(null);
       await fetchAbsences();
     } catch (err) {
       const message = err.message || "결석 수락 처리에 실패했습니다.";
@@ -142,7 +145,6 @@ export default function AbsenceTab({ classId, classroomId }) {
         return next;
       });
       updateLocalStatus(id, "거절됨");
-      setEditingId(null);
       await fetchAbsences();
     } catch (err) {
       const message = err.message || "결석 거절 처리에 실패했습니다.";
@@ -188,7 +190,7 @@ export default function AbsenceTab({ classId, classroomId }) {
                 </td>
                 <td>
                   <div className="action-buttons">
-                    {item.status === "대기중" || editingId === item.id ? (
+                    {item.status === "대기중" ? (
                       <>
                         <Button
                           text="수락"
@@ -206,19 +208,7 @@ export default function AbsenceTab({ classId, classroomId }) {
                         />
                       </>
                     ) : (
-                      <Button
-                        text="수정"
-                        color="lightGray"
-                        width={60}
-                        onClick={() => {
-                          setActionMessages((prev) => {
-                            const next = { ...prev };
-                            delete next[item.id];
-                            return next;
-                          });
-                          setEditingId(item.id);
-                        }}
-                      />
+                      <span>-</span>
                     )}
                   </div>
                   {actionMessages[item.id] && (
