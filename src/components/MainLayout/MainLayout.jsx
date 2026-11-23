@@ -1,9 +1,12 @@
+import { lazy, Suspense } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Footer from '../Footer/Footer.jsx';
 import GlobalNavigation from '../GlobalNavigation/GlobalNavigation.jsx';
 import Header from '../Header/Header.jsx';
-import { normalizeRole } from '../../utils/auth.js';
+import { isAuthenticatedSession, normalizeRole } from '../../utils/auth.js';
 import '../../styles/global-pages.css';
+
+const TeacherChatbot = lazy(() => import('../TeacherChatbot/TeacherChatbot.jsx'));
 
 const PAGE_PATHS = {
     introduce: '/introduce',
@@ -21,6 +24,10 @@ export default function MainLayout() {
         ? normalizeRole(localStorage.getItem('role'))
         : '';
     const activeRole = savedRole || (isTeacherPage ? 'teacher' : isStudentPage ? 'student' : '');
+    const showTeacherChatbot = isTeacherPage
+        && savedRole === 'teacher'
+        && isAuthenticatedSession();
+    const classId = pathname.match(/^\/teacher\/class\/(\d+)/)?.[1] ?? '';
     const homePath = activeRole === 'teacher'
         ? '/teacher'
         : activeRole === 'student'
@@ -32,6 +39,11 @@ export default function MainLayout() {
         <div className="global-site">
             <Header showServiceMenu onLogoClick={() => navigate(homePath)} />
             <Outlet />
+            {showTeacherChatbot && (
+                <Suspense fallback={null}>
+                    <TeacherChatbot initialClassId={classId} />
+                </Suspense>
+            )}
             {showFooter && (
                 <GlobalNavigation
                     variant="footer"
