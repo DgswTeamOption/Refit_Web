@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import SubNav from "../../../components/SubNav/SubNav";
 import Nav from "../../../components/Nav/Nav";
@@ -9,6 +9,7 @@ import MakeupTab from "../Overview/tabs/MakeupTab";
 import MakeupSettingTab from "../Overview/tabs/MakeupSettingTab";
 import ScheduleTab from "../Overview/tabs/ScheduleTab";
 import { getTeacherClassTitle } from "../classData";
+import { getTeacherClasses } from "../../../api/overviewApi";
 import "./Home.css";
 
 export default function Home() {
@@ -18,7 +19,47 @@ export default function Home() {
   const { state } = useLocation();
   const activeClassId = classId ?? "english1";
   const activeTab = searchParams.get("tab") || "makeup";
-  const classTitle = getTeacherClassTitle(activeClassId, state?.classTitle);
+  const [classLookup, setClassLookup] = useState({ id: null, title: "" });
+  const passedClassTitle =
+    state?.classTitle && String(state.classTitle) !== String(activeClassId)
+      ? state.classTitle
+      : "";
+
+  useEffect(() => {
+    let isActive = true;
+
+    getTeacherClasses()
+      .then((response) => {
+        if (!isActive) return;
+        const classes = Array.isArray(response)
+          ? response
+          : response?.classes || response?.items || [];
+        const classItem = classes.find(
+          (item) =>
+            String(item?.id ?? item?.classroomId ?? item?.classroom_id) ===
+            String(activeClassId)
+        );
+        setClassLookup({
+          id: activeClassId,
+          title: classItem?.name ?? classItem?.title ?? "",
+        });
+      })
+      .catch(() => {
+        if (isActive) setClassLookup({ id: activeClassId, title: "" });
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [activeClassId]);
+
+  const classTitle =
+    classLookup.id === activeClassId && classLookup.title
+      ? classLookup.title
+      : passedClassTitle ||
+        (Number.isNaN(Number(activeClassId))
+          ? getTeacherClassTitle(activeClassId)
+          : "수업");
 
   const handleTabChange = (key) => {
     if (key === "main") {

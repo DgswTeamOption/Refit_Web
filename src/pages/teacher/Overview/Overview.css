@@ -1,4 +1,3 @@
-/* 교사용 공통 레이아웃 */
 .teacher-layout,
 .teacher-layout * {
     box-sizing: border-box;
@@ -78,7 +77,6 @@
     width: 100%;
 }
 
-/* 메인 화면 */
 .teacher-overview__main {
     display: grid;
     grid-template-columns: 420px minmax(0, 1fr);
@@ -95,7 +93,6 @@
     min-width: 0;
 }
 
-/* 내 수업 제목과 만들기 버튼 */
 .teacher-overview__toolbar {
     display: flex;
     align-items: center;
@@ -117,7 +114,6 @@
     border-radius: 9px;
 }
 
-/* 수업 카드 */
 .teacher-overview__grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -187,7 +183,6 @@
     }
 }
 
-/* 팝업 */
 .teacher-overview .overview-modal {
     position: fixed;
     inset: 0;
@@ -216,7 +211,6 @@
     line-height: 28px;
 }
 
-/* 제목 입력 */
 .overview-modal__label {
     display: block;
     margin-bottom: 8px;
@@ -265,7 +259,6 @@
     line-height: 18px;
 }
 
-/* 입력칸과 같은 너비로 버튼 배치 */
 .overview-modal__actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -285,7 +278,6 @@
     outline-offset: 3px;
 }
 
-/* 삭제 확인 */
 .overview-modal--delete h2 {
     margin-bottom: 0;
 }
@@ -315,7 +307,6 @@
     background: #d93c3c;
 }
 
-/* 화면 너비에 따른 배치 */
 @media (max-width: 1100px) {
     .teacher-overview__main {
         grid-template-columns: 340px minmax(0, 1fr);
@@ -348,7 +339,6 @@
         padding: 24px;
     }
 }
-/* 수업 만들기 팝업 간격 */
 .teacher-overview .overview-modal--create {
     padding-bottom: 14px;
 }
@@ -357,7 +347,6 @@
     margin-bottom: 16px;
 }
 
-/* 배너 사진 선택 영역 */
 .overview-modal__photo {
     margin-top: 16px;
 }
@@ -456,4 +445,11 @@
     height: 100%;
     opacity: 0;
     cursor: pointer;
+}
+
+.teacher-overview-page .absence-action-message {
+    margin: 8px 0;
+    color: #d93c3c;
+    font-size: 12px;
+    line-height: 18px;
 }
