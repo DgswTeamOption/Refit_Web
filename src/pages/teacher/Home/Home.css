@@ -168,6 +168,23 @@
   margin-bottom: 1px;
 }
 
+.makeup-setting-form-row {
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.makeup-schedule-group {
+  width: 300px;
+}
+
+.makeup-schedule-group .form-control {
+  width: 100%;
+}
+
+.makeup-datetime-control {
+  width: 360px;
+}
+
 .makeup-setting-notice {
   margin: 12px 0 0;
   color: #8a4d31;
@@ -322,6 +339,18 @@
 
   .teacher-overview-page .sub-nav__list {
     gap: 28px;
+  }
+}
+
+@media (max-width: 700px) {
+  .makeup-setting-form-row .form-group,
+  .makeup-schedule-group,
+  .makeup-datetime-control {
+    width: 100%;
+  }
+
+  .makeup-setting-form-row .form-control {
+    width: 100%;
   }
 }
 

@@ -217,6 +217,7 @@ export default function MakeupSettingTab({ classId, classroomId }) {
 
   const [editingId, setEditingId] = useState(null);
   const [selectedScheduleId, setSelectedScheduleId] = useState("");
+  const [scheduleSearch, setScheduleSearch] = useState("");
   const [settingDateTime, setSettingDateTime] = useState("");
   const [capacity, setCapacity] = useState(1);
   const [saveMessage, setSaveMessage] = useState("");
@@ -290,6 +291,7 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   const handleCancelForm = () => {
     setEditingId(null);
     setSelectedScheduleId("");
+    setScheduleSearch("");
     setSettingDateTime("");
     setCapacity(1);
     setSaveMessage("");
@@ -298,6 +300,7 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   const handleEdit = (item) => {
     setEditingId(item.id);
     setSelectedScheduleId(item.scheduleId);
+    setScheduleSearch("");
     setSettingDateTime(
       item.date && item.startTime ? `${item.date}T${item.startTime}` : ""
     );
@@ -365,6 +368,15 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   };
 
   const editingItem = availableList.find((item) => item.id === editingId);
+  const normalizedScheduleSearch = scheduleSearch.trim().toLocaleLowerCase("ko-KR");
+  const filteredScheduleOptions = normalizedScheduleSearch
+    ? scheduleOptions.filter((item) =>
+        item.label.toLocaleLowerCase("ko-KR").includes(normalizedScheduleSearch)
+      )
+    : scheduleOptions;
+  const selectedScheduleOption = scheduleOptions.find(
+    (item) => item.id === selectedScheduleId
+  );
 
   const handleDelete = async (id) => {
     setActionError("");
@@ -383,23 +395,42 @@ export default function MakeupSettingTab({ classId, classroomId }) {
         <h2 className="form-title">
           {editingId !== null ? "보강 가능 시간 수정" : "보강 가능 시간 등록"}
         </h2>
-        <div className="form-row">
-          <div className="form-group">
-            <label>수업 일정</label>
+        <div className="form-row makeup-setting-form-row">
+          <div className="form-group makeup-schedule-group">
+            <label htmlFor="makeup-schedule-search">학생·일정 검색</label>
+            <input
+              id="makeup-schedule-search"
+              type="search"
+              className="form-control makeup-schedule-search"
+              value={scheduleSearch}
+              disabled={editingId !== null || scheduleOptions.length === 0}
+              onChange={(e) => setScheduleSearch(e.target.value)}
+              placeholder="학생 이름, 날짜 또는 시간"
+            />
+            <label htmlFor="makeup-schedule-select">수업 일정</label>
             <select
-              className="form-control"
+              id="makeup-schedule-select"
+              className="form-control makeup-schedule-select"
               value={selectedScheduleId}
-      disabled={editingId !== null || scheduleOptions.length === 0}
+              disabled={editingId !== null || scheduleOptions.length === 0}
               onChange={(e) => {
                 setSelectedScheduleId(e.target.value);
+                setScheduleSearch("");
                 setSaveMessage("");
               }}
             >
-              <option value="">수업 일정 선택</option>
-              {selectedScheduleId && !scheduleOptions.some((item) => item.id === selectedScheduleId) && (
-                <option value={selectedScheduleId}>수업 일정 {selectedScheduleId}</option>
-              )}
-              {scheduleOptions.map((item) => (
+              <option value="">
+                {scheduleOptions.length === 0
+                  ? "선택할 수업 일정 없음"
+                  : `수업 일정 선택 (${filteredScheduleOptions.length}/${scheduleOptions.length})`}
+              </option>
+              {selectedScheduleId &&
+                !filteredScheduleOptions.some((item) => item.id === selectedScheduleId) && (
+                  <option value={selectedScheduleId}>
+                    {selectedScheduleOption?.label || `수업 일정 ${selectedScheduleId}`}
+                  </option>
+                )}
+              {filteredScheduleOptions.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.label}
                 </option>
@@ -411,12 +442,12 @@ export default function MakeupSettingTab({ classId, classroomId }) {
             <input
               type="datetime-local"
               value={settingDateTime}
+              className="form-control makeup-datetime-control"
               disabled={editingId !== null && editingItem?.canChangeTime === false}
               onChange={(e) => {
                 setSettingDateTime(e.target.value);
                 setSaveMessage("");
               }}
-              className="form-control"
             />
           </div>
           <div className="form-group">
