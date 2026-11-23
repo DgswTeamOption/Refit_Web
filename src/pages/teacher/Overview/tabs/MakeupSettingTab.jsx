@@ -112,14 +112,17 @@ function mapScheduleOptions(response, studentsResponse) {
           item?.student_name ??
           studentNames.get(String(studentId)) ??
           (studentId ? `학생 ${studentId}` : "수업");
+        const { date, time } = parseLocalDateAndTime(
+          item?.startTime ?? item?.start_time
+        );
+        const label = getScheduleOptionLabel(item, studentNames);
         uniqueSchedules.set(key, {
           id: key,
-          label: getScheduleOptionLabel(item, studentNames),
-          studentKey:
-            studentId === undefined || studentId === null || String(studentId).trim() === ""
-              ? `name:${studentName}`
-              : `id:${String(studentId)}`,
-          studentName,
+          label,
+          searchText: [label, studentName, date, time, formatKoreanMonthDay(date)]
+            .filter(Boolean)
+            .join(" ")
+            .toLocaleLowerCase("ko-KR"),
         });
       }
     }
@@ -228,9 +231,6 @@ export default function MakeupSettingTab({ classId, classroomId }) {
 
   const [editingId, setEditingId] = useState(null);
   const [selectedScheduleId, setSelectedScheduleId] = useState("");
-  const [selectedStudentKey, setSelectedStudentKey] = useState("");
-  const [studentSearch, setStudentSearch] = useState("");
-  const [studentPickerOpen, setStudentPickerOpen] = useState(false);
   const [scheduleSearch, setScheduleSearch] = useState("");
   const [schedulePickerOpen, setSchedulePickerOpen] = useState(false);
   const [settingDateTime, setSettingDateTime] = useState("");
@@ -306,9 +306,6 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   const handleCancelForm = () => {
     setEditingId(null);
     setSelectedScheduleId("");
-    setSelectedStudentKey("");
-    setStudentSearch("");
-    setStudentPickerOpen(false);
     setScheduleSearch("");
     setSchedulePickerOpen(false);
     setSettingDateTime("");
@@ -320,10 +317,7 @@ export default function MakeupSettingTab({ classId, classroomId }) {
     setEditingId(item.id);
     setSelectedScheduleId(item.scheduleId);
     const schedule = scheduleOptions.find((option) => option.id === item.scheduleId);
-    setSelectedStudentKey(schedule?.studentKey || "");
-    setStudentSearch(schedule?.studentName || "");
-    setStudentPickerOpen(false);
-    setScheduleSearch(schedule?.label || "");
+    setScheduleSearch(schedule?.label || item.scheduleLabel || "");
     setSchedulePickerOpen(false);
     setSettingDateTime(
       item.date && item.startTime ? `${item.date}T${item.startTime}` : ""
@@ -394,29 +388,16 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   };
 
   const editingItem = availableList.find((item) => item.id === editingId);
-  const studentOptions = Array.from(
-    new Map(
-      scheduleOptions.map((item) => [item.studentKey, {
-        key: item.studentKey,
-        name: item.studentName,
-      }])
-    ).values()
-  ).sort((a, b) => a.name.localeCompare(b.name, "ko"));
-  const normalizedStudentSearch = studentSearch.trim().toLocaleLowerCase("ko-KR");
-  const filteredStudentOptions = normalizedStudentSearch
-    ? studentOptions.filter((item) =>
-        item.name.toLocaleLowerCase("ko-KR").includes(normalizedStudentSearch)
+  const scheduleSearchTokens = scheduleSearch
+    .trim()
+    .toLocaleLowerCase("ko-KR")
+    .split(/[\s,·]+/)
+    .filter(Boolean);
+  const filteredScheduleOptions = scheduleSearchTokens.length
+    ? scheduleOptions.filter((item) =>
+        scheduleSearchTokens.every((token) => item.searchText.includes(token))
       )
-    : studentOptions;
-  const studentScheduleOptions = selectedStudentKey
-    ? scheduleOptions.filter((item) => item.studentKey === selectedStudentKey)
-    : scheduleOptions;
-  const normalizedScheduleSearch = scheduleSearch.trim().toLocaleLowerCase("ko-KR");
-  const filteredScheduleOptions = normalizedScheduleSearch
-    ? studentScheduleOptions.filter((item) =>
-        item.label.toLocaleLowerCase("ko-KR").includes(normalizedScheduleSearch)
-      )
-    : studentScheduleOptions;
+    : [];
   const [makeupDateValue = "", makeupTimeValue = ""] = settingDateTime.split("T");
 
   const updateMakeupDateTime = (part, value) => {
@@ -443,71 +424,10 @@ export default function MakeupSettingTab({ classId, classroomId }) {
           {editingId !== null ? "보강 가능 시간 수정" : "보강 가능 시간 등록"}
         </h2>
         <div className="form-row makeup-setting-form-row">
-          <div className="form-group makeup-student-group">
-            <label htmlFor="makeup-student-search">학생 검색</label>
-            <div
-              className="makeup-student-picker"
-              onBlur={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget)) {
-                  setStudentPickerOpen(false);
-                }
-              }}
-            >
-              <input
-                id="makeup-student-search"
-                type="search"
-                autoComplete="off"
-                className="form-control"
-                role="combobox"
-                aria-autocomplete="list"
-                aria-expanded={studentPickerOpen && Boolean(studentSearch.trim())}
-                aria-controls="makeup-student-options"
-                value={studentSearch}
-                disabled={editingId !== null || scheduleOptions.length === 0}
-                onFocus={() => setStudentPickerOpen(true)}
-                onChange={(event) => {
-                  setStudentSearch(event.target.value);
-                  setSelectedStudentKey("");
-                  setSelectedScheduleId("");
-                  setScheduleSearch("");
-                  setSchedulePickerOpen(false);
-                  setStudentPickerOpen(true);
-                  setSaveMessage("");
-                }}
-                placeholder={scheduleOptions.length ? "예: 김민지" : "선택할 학생 없음"}
-              />
-              {studentPickerOpen && studentSearch.trim() && editingId === null && scheduleOptions.length > 0 && (
-                <div id="makeup-student-options" className="makeup-student-options" role="listbox">
-                  {filteredStudentOptions.length ? filteredStudentOptions.map((student) => (
-                    <button
-                      key={student.key}
-                      type="button"
-                      role="option"
-                      aria-selected={selectedStudentKey === student.key}
-                      className="makeup-student-option"
-                      onClick={() => {
-                        setSelectedStudentKey(student.key);
-                        setStudentSearch(student.name);
-                        setSelectedScheduleId("");
-                        setScheduleSearch("");
-                        setSchedulePickerOpen(false);
-                        setStudentPickerOpen(false);
-                        setSaveMessage("");
-                      }}
-                    >
-                      {student.name}
-                    </button>
-                  )) : (
-                    <div className="makeup-student-empty">검색 결과가 없습니다.</div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
           <div className="form-group makeup-schedule-group">
             <label htmlFor="makeup-schedule-search">수업 일정</label>
             <div
-              className="makeup-student-picker"
+              className="makeup-autocomplete"
               onBlur={(event) => {
                 if (!event.currentTarget.contains(event.relatedTarget)) {
                   setSchedulePickerOpen(false);
@@ -532,22 +452,19 @@ export default function MakeupSettingTab({ classId, classroomId }) {
                   setSchedulePickerOpen(true);
                   setSaveMessage("");
                 }}
-                placeholder="예: 김민지, 11월 25일 18:38"
+                placeholder={scheduleOptions.length ? "예: 김민지, 11월 25일 18:38" : "등록된 수업 일정 없음"}
               />
               {schedulePickerOpen && scheduleSearch.trim() && editingId === null && scheduleOptions.length > 0 && (
-                <div id="makeup-schedule-options" className="makeup-student-options" role="listbox">
+                <div id="makeup-schedule-options" className="makeup-autocomplete-options" role="listbox">
                   {filteredScheduleOptions.length ? filteredScheduleOptions.slice(0, 30).map((item) => (
                     <button
                       key={item.id}
                       type="button"
                       role="option"
                       aria-selected={selectedScheduleId === item.id}
-                      className="makeup-student-option"
+                      className="makeup-autocomplete-option"
                       onClick={() => {
                         setSelectedScheduleId(item.id);
-                        setSelectedStudentKey(item.studentKey);
-                        setStudentSearch(item.studentName);
-                        setStudentPickerOpen(false);
                         setScheduleSearch(item.label);
                         setSchedulePickerOpen(false);
                         setSaveMessage("");
@@ -556,10 +473,10 @@ export default function MakeupSettingTab({ classId, classroomId }) {
                       {item.label}
                     </button>
                   )) : (
-                    <div className="makeup-student-empty">일치하는 수업 일정이 없습니다.</div>
+                    <div className="makeup-autocomplete-empty">일치하는 수업 일정이 없습니다.</div>
                   )}
                   {filteredScheduleOptions.length > 30 && (
-                    <div className="makeup-student-empty">검색어를 더 입력하면 결과를 좁힐 수 있습니다.</div>
+                    <div className="makeup-autocomplete-empty">검색어를 더 입력하면 결과를 좁힐 수 있습니다.</div>
                   )}
                 </div>
               )}
