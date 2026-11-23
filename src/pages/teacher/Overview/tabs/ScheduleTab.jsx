@@ -569,6 +569,7 @@ export default function ScheduleTab({ classId, classroomId }) {
           try {
             if (editingItem && ruleId !== undefined && ruleId !== null) {
               await updateClassScheduleRule(resolvedClassId, ruleId, {
+                student_id: data.student_id,
                 day_of_week: data.day_of_week,
                 start_time: data.start_time,
                 end_time: data.end_time,

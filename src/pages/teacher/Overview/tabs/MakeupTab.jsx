@@ -37,8 +37,10 @@ function formatMakeupTime(rawTime) {
 }
 
 function normalizeMakeupStatus(rawStatus) {
+  if (rawStatus === 0 || rawStatus === "0") return "대기중";
   if (rawStatus === 1 || rawStatus === "1") return "수락됨";
   if (rawStatus === 2 || rawStatus === "2") return "거절됨";
+  if (rawStatus === 3 || rawStatus === "3") return "취소됨";
   const str = String(rawStatus ?? "").trim().toUpperCase();
   if (["APPROVED", "ACCEPTED", "수락", "수락됨", "승인", "승인됨"].includes(str)) {
     return "수락됨";
@@ -46,10 +48,13 @@ function normalizeMakeupStatus(rawStatus) {
   if (["REJECTED", "DECLINED", "거절", "거절됨"].includes(str)) {
     return "거절됨";
   }
+  if (["CANCELED", "CANCELLED", "취소", "취소됨"].includes(str)) {
+    return "취소됨";
+  }
   return "대기중";
 }
 
-function mapMakeupItem(item, index) {
+function mapMakeupItem(item) {
   const rawDate =
     item?.date ??
     item?.makeupDate ??
@@ -65,7 +70,7 @@ function mapMakeupItem(item, index) {
     item?.start_time;
 
   return {
-    id: item?.id ?? item?.makeupId ?? item?.makeup_id ?? index,
+    id: item?.id ?? item?.makeupId ?? item?.makeup_id ?? null,
     studentName:
       item?.studentName ??
       item?.student_name ??
@@ -91,6 +96,8 @@ export default function MakeupTab({ classId, classroomId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [processingId, setProcessingId] = useState(null);
+  const [editingSelection, setEditingSelection] = useState(null);
+  const editingId = editingSelection?.classId === resolvedClassId ? editingSelection.id : null;
 
   useEffect(() => {
     if (!resolvedClassId) {
@@ -131,11 +138,13 @@ export default function MakeupTab({ classId, classroomId }) {
   };
 
   const handleApprove = async (id) => {
+    if (id === undefined || id === null || id === "") return;
     if (processingId === id) return;
     setProcessingId(id);
     try {
       await approveMakeup(id);
       updateLocalStatus(id, "수락됨");
+      setEditingSelection(null);
     } catch (err) {
       alert(err.message || "보강 수락 처리에 실패했습니다.");
     } finally {
@@ -144,11 +153,13 @@ export default function MakeupTab({ classId, classroomId }) {
   };
 
   const handleReject = async (id) => {
+    if (id === undefined || id === null || id === "") return;
     if (processingId === id) return;
     setProcessingId(id);
     try {
       await rejectMakeup(id);
       updateLocalStatus(id, "거절됨");
+      setEditingSelection(null);
     } catch (err) {
       alert(err.message || "보강 거절 처리에 실패했습니다.");
     } finally {
@@ -182,8 +193,8 @@ export default function MakeupTab({ classId, classroomId }) {
               <td colSpan={5}>등록된 보강 정보가 없습니다.</td>
             </tr>
           ) : (
-            makeupList.map((item) => (
-              <tr key={item.id}>
+            makeupList.map((item, index) => (
+              <tr key={item.id ?? `makeup-${index}`}>
                 <td>{item.studentName}</td>
                 <td>{item.date}</td>
                 <td>{item.time}</td>
@@ -192,28 +203,44 @@ export default function MakeupTab({ classId, classroomId }) {
                 </td>
                 <td>
                   <div className="action-buttons">
-                    {item.status === "대기중" ? (
+                    {item.status === "대기중" || editingId === item.id ? (
                       <>
                         <Button
                           text="수락"
                           color="blue"
                           width={60}
+                          disabled={item.id === null || processingId === item.id}
                           onClick={() => handleApprove(item.id)}
                         />
                         <Button
                           text="거절"
                           color="red"
                           width={60}
+                          disabled={item.id === null || processingId === item.id}
                           onClick={() => handleReject(item.id)}
                         />
+                        {editingId === item.id && item.status !== "대기중" && (
+                          <Button
+                            text="취소"
+                            color="lightGray"
+                            width={60}
+                            disabled={item.id === null || processingId === item.id}
+                            onClick={() => setEditingSelection(null)}
+                          />
+                        )}
                       </>
-                    ) : (
+                    ) : item.status === "수락됨" || item.status === "거절됨" ? (
                       <Button
                         text="수정"
                         color="lightGray"
                         width={60}
-                        onClick={() => updateLocalStatus(item.id, "대기중")}
+                        disabled={item.id === null || processingId === item.id}
+                        onClick={() =>
+                          setEditingSelection({ classId: resolvedClassId, id: item.id })
+                        }
                       />
+                    ) : (
+                      <span>-</span>
                     )}
                   </div>
                 </td>

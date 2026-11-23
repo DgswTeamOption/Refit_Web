@@ -28,6 +28,7 @@ function formatAbsenceDate(rawDate) {
 function normalizeAbsenceStatus(rawStatus) {
   if (rawStatus === 1 || rawStatus === "1" || rawStatus === true) return "수락됨";
   if (rawStatus === 2 || rawStatus === "2" || rawStatus === false) return "거절됨";
+  if (rawStatus === 3 || rawStatus === "3") return "취소됨";
   const str = String(rawStatus ?? "").trim().toUpperCase();
   if (["APPROVED", "수락", "수락됨", "승인", "승인됨"].includes(str)) return "수락됨";
   if (["REJECTED", "거절", "거절됨", "반려", "반려됨"].includes(str)) return "거절됨";
@@ -35,8 +36,8 @@ function normalizeAbsenceStatus(rawStatus) {
   return "대기중";
 }
 
-function mapAbsenceItem(item, index) {
-  const id = item?.id ?? item?.absenceId ?? item?.absence_id ?? index;
+function mapAbsenceItem(item) {
+  const id = item?.id ?? item?.absenceId ?? item?.absence_id ?? null;
 
   return {
     id,
@@ -60,7 +61,9 @@ function mapAbsenceItem(item, index) {
       item?.absence_reason ??
       item?.content ??
       "-",
-    status: normalizeAbsenceStatus(item?.status),
+    status: normalizeAbsenceStatus(
+      item?.approval_status ?? item?.approvalStatus ?? item?.status
+    ),
   };
 }
 
@@ -110,6 +113,7 @@ export default function AbsenceTab({ classId, classroomId }) {
   };
 
   const handleApprove = async (id) => {
+    if (id === undefined || id === null || id === "") return;
     if (processingId === id) return;
     const confirmed = window.confirm(
       "이 결석 신청을 승인할까요? 승인 후에는 결석 상태를 수정할 수 없습니다."
@@ -135,6 +139,7 @@ export default function AbsenceTab({ classId, classroomId }) {
   };
 
   const handleReject = async (id) => {
+    if (id === undefined || id === null || id === "") return;
     if (processingId === id) return;
     setProcessingId(id);
     try {
@@ -180,8 +185,8 @@ export default function AbsenceTab({ classId, classroomId }) {
               <td colSpan={5}>등록된 결석 정보가 없습니다.</td>
             </tr>
           ) : (
-            absenceList.map((item) => (
-              <tr key={item.id}>
+            absenceList.map((item, index) => (
+              <tr key={item.id ?? `absence-${index}`}>
                 <td>{item.studentName}</td>
                 <td>{item.date}</td>
                 <td>{item.reason}</td>
@@ -196,14 +201,14 @@ export default function AbsenceTab({ classId, classroomId }) {
                           text="수락"
                           color="blue"
                           width={60}
-                          disabled={processingId === item.id}
+                          disabled={item.id === null || processingId === item.id}
                           onClick={() => handleApprove(item.id)}
                         />
                         <Button
                           text="거절"
                           color="red"
                           width={60}
-                          disabled={processingId === item.id}
+                          disabled={item.id === null || processingId === item.id}
                           onClick={() => handleReject(item.id)}
                         />
                       </>

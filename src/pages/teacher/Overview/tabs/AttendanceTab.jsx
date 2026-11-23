@@ -39,6 +39,7 @@ function normalizeAttendanceStatus(rawStatus) {
   if (["PRESENT", "ATTENDED", "출석"].includes(str)) return "출석";
   if (["ABSENT", "결석"].includes(str)) return "결석";
   if (["LATE", "지각"].includes(str)) return "지각";
+  if (["MAKEUP", "보강"].includes(str)) return "보강";
   return "대기중";
 }
 
@@ -50,17 +51,19 @@ function toApiAttendanceStatus(uiStatus) {
 }
 
 function mapAttendanceItem(item, index) {
-  const targetId =
+  const scheduleId =
     item?.scheduleId ??
     item?.schedule_id ??
-    item?.attendanceId ??
-    item?.attendance_id ??
+    item?.schedule?.id ??
+    item?.schedule?.scheduleId ??
     item?.id ??
-    index;
+    null;
+  const rowId =
+    item?.attendanceId ?? item?.attendance_id ?? scheduleId ?? `attendance-${index}`;
 
   return {
-    id: targetId,
-    scheduleId: targetId,
+    id: rowId,
+    scheduleId,
     studentName:
       item?.studentName ??
       item?.student_name ??
@@ -88,6 +91,9 @@ export default function AttendanceTab({ classId, classroomId, date }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [processingId, setProcessingId] = useState(null);
+  const [editingSelection, setEditingSelection] = useState(null);
+  const editScope = `${resolvedClassId}:${targetDate}`;
+  const editingId = editingSelection?.scope === editScope ? editingSelection.id : null;
 
   useEffect(() => {
     setDisplayDate(formatKoreanDate(targetDate));
@@ -142,13 +148,15 @@ export default function AttendanceTab({ classId, classroomId, date }) {
   }, [resolvedClassId, targetDate]);
 
   const handleStartEditAttendance = (id) => {
-    setAttendanceList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status: "대기중" } : item))
-    );
+    setEditingSelection({ scope: editScope, id });
   };
 
   const handleSelectAttendance = async (item, newStatus) => {
     if (!resolvedClassId || processingId === item.id) return;
+    if (item.scheduleId === undefined || item.scheduleId === null || item.scheduleId === "") {
+      alert("수업 일정 ID를 확인할 수 없어 출석 상태를 변경하지 못했습니다.");
+      return;
+    }
     setProcessingId(item.id);
     try {
       await updateClassAttendance(
@@ -161,6 +169,7 @@ export default function AttendanceTab({ classId, classroomId, date }) {
           row.id === item.id ? { ...row, status: newStatus } : row
         )
       );
+      setEditingSelection(null);
     } catch (err) {
       alert(err.message || "출석 상태 변경에 실패했습니다.");
     } finally {
@@ -202,18 +211,20 @@ export default function AttendanceTab({ classId, classroomId, date }) {
                   </td>
                   <td>
                     <div className="action-buttons">
-                      {item.status === "대기중" ? (
+                      {item.status === "대기중" || editingId === item.id ? (
                         <>
                           <Button
                             text="출석"
                             color="blue"
                             width={60}
+                            disabled={processingId === item.id}
                             onClick={() => handleSelectAttendance(item, "출석")}
                           />
                           <Button
                             text="결석"
                             color="red"
                             width={60}
+                            disabled={processingId === item.id}
                             onClick={() => handleSelectAttendance(item, "결석")}
                           />
                         </>
@@ -222,6 +233,7 @@ export default function AttendanceTab({ classId, classroomId, date }) {
                           text="수정"
                           color="lightGray"
                           width={60}
+                          disabled={processingId === item.id}
                           onClick={() => handleStartEditAttendance(item.id)}
                         />
                       )}
