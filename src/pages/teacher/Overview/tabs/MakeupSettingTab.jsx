@@ -106,9 +106,20 @@ function mapScheduleOptions(response, studentsResponse) {
       }
       const key = String(scheduleId);
       if (!uniqueSchedules.has(key)) {
+        const studentId = item?.studentId ?? item?.student_id;
+        const studentName =
+          item?.studentName ??
+          item?.student_name ??
+          studentNames.get(String(studentId)) ??
+          (studentId ? `학생 ${studentId}` : "수업");
         uniqueSchedules.set(key, {
           id: key,
           label: getScheduleOptionLabel(item, studentNames),
+          studentKey:
+            studentId === undefined || studentId === null || String(studentId).trim() === ""
+              ? `name:${studentName}`
+              : `id:${String(studentId)}`,
+          studentName,
         });
       }
     }
@@ -217,7 +228,11 @@ export default function MakeupSettingTab({ classId, classroomId }) {
 
   const [editingId, setEditingId] = useState(null);
   const [selectedScheduleId, setSelectedScheduleId] = useState("");
+  const [selectedStudentKey, setSelectedStudentKey] = useState("");
+  const [studentSearch, setStudentSearch] = useState("");
+  const [studentPickerOpen, setStudentPickerOpen] = useState(false);
   const [scheduleSearch, setScheduleSearch] = useState("");
+  const [schedulePickerOpen, setSchedulePickerOpen] = useState(false);
   const [settingDateTime, setSettingDateTime] = useState("");
   const [capacity, setCapacity] = useState(1);
   const [saveMessage, setSaveMessage] = useState("");
@@ -291,7 +306,11 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   const handleCancelForm = () => {
     setEditingId(null);
     setSelectedScheduleId("");
+    setSelectedStudentKey("");
+    setStudentSearch("");
+    setStudentPickerOpen(false);
     setScheduleSearch("");
+    setSchedulePickerOpen(false);
     setSettingDateTime("");
     setCapacity(1);
     setSaveMessage("");
@@ -300,7 +319,12 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   const handleEdit = (item) => {
     setEditingId(item.id);
     setSelectedScheduleId(item.scheduleId);
-    setScheduleSearch("");
+    const schedule = scheduleOptions.find((option) => option.id === item.scheduleId);
+    setSelectedStudentKey(schedule?.studentKey || "");
+    setStudentSearch(schedule?.studentName || "");
+    setStudentPickerOpen(false);
+    setScheduleSearch(schedule?.label || "");
+    setSchedulePickerOpen(false);
     setSettingDateTime(
       item.date && item.startTime ? `${item.date}T${item.startTime}` : ""
     );
@@ -326,8 +350,10 @@ export default function MakeupSettingTab({ classId, classroomId }) {
             availableList.find((item) => item.id === editingId)?.minCapacity
           ) || 1
         : 1;
+    const [makeupDate, makeupTimeValue] = settingDateTime.split("T");
     if (
-      !settingDateTime ||
+      !makeupDate ||
+      !makeupTimeValue ||
       !Number.isInteger(Number(capacity)) ||
       Number(capacity) < minCapacity
     ) {
@@ -368,15 +394,36 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   };
 
   const editingItem = availableList.find((item) => item.id === editingId);
+  const studentOptions = Array.from(
+    new Map(
+      scheduleOptions.map((item) => [item.studentKey, {
+        key: item.studentKey,
+        name: item.studentName,
+      }])
+    ).values()
+  ).sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  const normalizedStudentSearch = studentSearch.trim().toLocaleLowerCase("ko-KR");
+  const filteredStudentOptions = normalizedStudentSearch
+    ? studentOptions.filter((item) =>
+        item.name.toLocaleLowerCase("ko-KR").includes(normalizedStudentSearch)
+      )
+    : studentOptions;
+  const studentScheduleOptions = selectedStudentKey
+    ? scheduleOptions.filter((item) => item.studentKey === selectedStudentKey)
+    : scheduleOptions;
   const normalizedScheduleSearch = scheduleSearch.trim().toLocaleLowerCase("ko-KR");
   const filteredScheduleOptions = normalizedScheduleSearch
-    ? scheduleOptions.filter((item) =>
+    ? studentScheduleOptions.filter((item) =>
         item.label.toLocaleLowerCase("ko-KR").includes(normalizedScheduleSearch)
       )
-    : scheduleOptions;
-  const selectedScheduleOption = scheduleOptions.find(
-    (item) => item.id === selectedScheduleId
-  );
+    : studentScheduleOptions;
+  const [makeupDateValue = "", makeupTimeValue = ""] = settingDateTime.split("T");
+
+  const updateMakeupDateTime = (part, value) => {
+    const [date = "", time = ""] = settingDateTime.split("T");
+    setSettingDateTime(part === "date" ? `${value}T${time}` : `${date}T${value}`);
+    setSaveMessage("");
+  };
 
   const handleDelete = async (id) => {
     setActionError("");
@@ -396,61 +443,150 @@ export default function MakeupSettingTab({ classId, classroomId }) {
           {editingId !== null ? "보강 가능 시간 수정" : "보강 가능 시간 등록"}
         </h2>
         <div className="form-row makeup-setting-form-row">
-          <div className="form-group makeup-schedule-group">
-            <label htmlFor="makeup-schedule-search">학생·일정 검색</label>
-            <input
-              id="makeup-schedule-search"
-              type="search"
-              className="form-control makeup-schedule-search"
-              value={scheduleSearch}
-              disabled={editingId !== null || scheduleOptions.length === 0}
-              onChange={(e) => setScheduleSearch(e.target.value)}
-              placeholder="학생 이름, 날짜 또는 시간"
-            />
-            <label htmlFor="makeup-schedule-select">수업 일정</label>
-            <select
-              id="makeup-schedule-select"
-              className="form-control makeup-schedule-select"
-              value={selectedScheduleId}
-              disabled={editingId !== null || scheduleOptions.length === 0}
-              onChange={(e) => {
-                setSelectedScheduleId(e.target.value);
-                setScheduleSearch("");
-                setSaveMessage("");
+          <div className="form-group makeup-student-group">
+            <label htmlFor="makeup-student-search">학생 검색</label>
+            <div
+              className="makeup-student-picker"
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) {
+                  setStudentPickerOpen(false);
+                }
               }}
             >
-              <option value="">
-                {scheduleOptions.length === 0
-                  ? "선택할 수업 일정 없음"
-                  : `수업 일정 선택 (${filteredScheduleOptions.length}/${scheduleOptions.length})`}
-              </option>
-              {selectedScheduleId &&
-                !filteredScheduleOptions.some((item) => item.id === selectedScheduleId) && (
-                  <option value={selectedScheduleId}>
-                    {selectedScheduleOption?.label || `수업 일정 ${selectedScheduleId}`}
-                  </option>
-                )}
-              {filteredScheduleOptions.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
+              <input
+                id="makeup-student-search"
+                type="search"
+                autoComplete="off"
+                className="form-control"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={studentPickerOpen && Boolean(studentSearch.trim())}
+                aria-controls="makeup-student-options"
+                value={studentSearch}
+                disabled={editingId !== null || scheduleOptions.length === 0}
+                onFocus={() => setStudentPickerOpen(true)}
+                onChange={(event) => {
+                  setStudentSearch(event.target.value);
+                  setSelectedStudentKey("");
+                  setSelectedScheduleId("");
+                  setScheduleSearch("");
+                  setSchedulePickerOpen(false);
+                  setStudentPickerOpen(true);
+                  setSaveMessage("");
+                }}
+                placeholder={scheduleOptions.length ? "예: 김민지" : "선택할 학생 없음"}
+              />
+              {studentPickerOpen && studentSearch.trim() && editingId === null && scheduleOptions.length > 0 && (
+                <div id="makeup-student-options" className="makeup-student-options" role="listbox">
+                  {filteredStudentOptions.length ? filteredStudentOptions.map((student) => (
+                    <button
+                      key={student.key}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedStudentKey === student.key}
+                      className="makeup-student-option"
+                      onClick={() => {
+                        setSelectedStudentKey(student.key);
+                        setStudentSearch(student.name);
+                        setSelectedScheduleId("");
+                        setScheduleSearch("");
+                        setSchedulePickerOpen(false);
+                        setStudentPickerOpen(false);
+                        setSaveMessage("");
+                      }}
+                    >
+                      {student.name}
+                    </button>
+                  )) : (
+                    <div className="makeup-student-empty">검색 결과가 없습니다.</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="form-group">
-            <label>보강 날짜·시간</label>
-            <input
-              type="datetime-local"
-              value={settingDateTime}
-              className="form-control makeup-datetime-control"
-              disabled={editingId !== null && editingItem?.canChangeTime === false}
-              onChange={(e) => {
-                setSettingDateTime(e.target.value);
-                setSaveMessage("");
+          <div className="form-group makeup-schedule-group">
+            <label htmlFor="makeup-schedule-search">수업 일정</label>
+            <div
+              className="makeup-student-picker"
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) {
+                  setSchedulePickerOpen(false);
+                }
               }}
-            />
+            >
+              <input
+                id="makeup-schedule-search"
+                type="search"
+                autoComplete="off"
+                className="form-control"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={schedulePickerOpen && Boolean(scheduleSearch.trim())}
+                aria-controls="makeup-schedule-options"
+                value={scheduleSearch}
+                disabled={editingId !== null || scheduleOptions.length === 0}
+                onFocus={() => setSchedulePickerOpen(true)}
+                onChange={(event) => {
+                  setScheduleSearch(event.target.value);
+                  setSelectedScheduleId("");
+                  setSchedulePickerOpen(true);
+                  setSaveMessage("");
+                }}
+                placeholder="예: 김민지, 11월 25일 18:38"
+              />
+              {schedulePickerOpen && scheduleSearch.trim() && editingId === null && scheduleOptions.length > 0 && (
+                <div id="makeup-schedule-options" className="makeup-student-options" role="listbox">
+                  {filteredScheduleOptions.length ? filteredScheduleOptions.slice(0, 30).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedScheduleId === item.id}
+                      className="makeup-student-option"
+                      onClick={() => {
+                        setSelectedScheduleId(item.id);
+                        setSelectedStudentKey(item.studentKey);
+                        setStudentSearch(item.studentName);
+                        setStudentPickerOpen(false);
+                        setScheduleSearch(item.label);
+                        setSchedulePickerOpen(false);
+                        setSaveMessage("");
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  )) : (
+                    <div className="makeup-student-empty">일치하는 수업 일정이 없습니다.</div>
+                  )}
+                  {filteredScheduleOptions.length > 30 && (
+                    <div className="makeup-student-empty">검색어를 더 입력하면 결과를 좁힐 수 있습니다.</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="form-group">
+          <div className="form-group makeup-datetime-group">
+            <label>보강 날짜와 시간</label>
+            <div className="makeup-datetime-fields">
+              <input
+                type="date"
+                aria-label="보강 날짜"
+                value={makeupDateValue}
+                className="form-control makeup-date-control"
+                disabled={editingId !== null && editingItem?.canChangeTime === false}
+                onChange={(e) => updateMakeupDateTime("date", e.target.value)}
+              />
+              <input
+                type="time"
+                aria-label="보강 시간"
+                value={makeupTimeValue}
+                className="form-control makeup-time-control"
+                disabled={editingId !== null && editingItem?.canChangeTime === false}
+                onChange={(e) => updateMakeupDateTime("time", e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="form-group makeup-capacity-group">
             <label>수용 인원</label>
             <input
               type="number"
@@ -469,7 +605,7 @@ export default function MakeupSettingTab({ classId, classroomId }) {
               text={submitting ? "저장 중" : editingId !== null ? "수정" : "저장"}
               color="blue"
               width={90}
-              disabled={submitting || (editingId === null && scheduleOptions.length === 0)}
+              disabled={submitting || (editingId === null && (!selectedScheduleId || scheduleOptions.length === 0))}
               onClick={handleSave}
             />
             {editingId !== null && (
