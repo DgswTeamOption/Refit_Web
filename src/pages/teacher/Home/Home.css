@@ -174,13 +174,24 @@
 }
 
 .makeup-schedule-group {
-  width: 500px;
+  width: 460px;
 }
 
 .makeup-schedule-group .form-control {
   width: 100%;
   height: 48px;
   font-size: 16px;
+}
+
+.makeup-capacity-group .form-control {
+  width: 100%;
+  height: 48px;
+  font-size: 16px;
+}
+
+.makeup-setting-form-row .form-submit button {
+  height: 48px;
+  font-size: 14px;
 }
 
 .makeup-autocomplete {
@@ -228,16 +239,16 @@
 }
 
 .makeup-datetime-group {
-  width: 420px;
+  width: 460px;
 }
 
 .makeup-capacity-group {
-  width: 120px;
+  width: 110px;
 }
 
 .makeup-datetime-fields {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(145px, 0.9fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
