@@ -18,6 +18,7 @@ function formatClassList(list = []) {
     return list.map((item, index) => ({
         ...item,
         title: item.name,
+        bannerImageUrl: item.bannerImageUrl || item.banner_image_url || item.imageUrl || item.image_url || '',
         color: CLASS_COLORS[index % CLASS_COLORS.length],
     }));
 }
@@ -166,6 +167,7 @@ export default function Overview({ hidden }) {
                                     <ClassBlock
                                         title={item.title}
                                         color={item.color}
+                                        bannerImageUrl={item.bannerImageUrl}
                                         onLeave={() => setModal({ type: 'delete', item })}
                                     />
                                     <Link

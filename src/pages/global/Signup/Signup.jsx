@@ -82,7 +82,7 @@ export default function Signup({ onNavigate }) {
             setGoogleIdToken("");
             setGoogleSignupProfile(null);
             setStep("information");
-            setMessage("Google 인증은 완료됐지만 서버가 ID 토큰을 거부했습니다. 서버가 쉼표로 구분된 Google Client ID를 각각 허용하는지 확인해 주세요.");
+            setMessage(error.message || "Google 인증을 확인하지 못했습니다. 다시 인증해 주세요.");
             return;
           }
           throw error;
@@ -99,7 +99,7 @@ export default function Signup({ onNavigate }) {
         name: registeredProfile?.name || name,
         userId: registeredProfile?.id,
       });
-      onNavigate("login");
+      onNavigate(registeredRole);
     } catch (error) {
       setMessage(error.message || "Google 회원가입에 실패했습니다.");
     } finally {

@@ -18,7 +18,7 @@ function formatClassItem(item, index = 0) {
         title: item.name || item.title || '수업',
         classCode: item.classCode || '',
         teacherName: item.teacherName || '',
-        bannerImageUrl: item.bannerImageUrl || '',
+        bannerImageUrl: item.bannerImageUrl || item.banner_image_url || item.imageUrl || item.image_url || '',
         color: item.color || CLASS_COLORS[index % CLASS_COLORS.length],
     };
 }
@@ -257,6 +257,7 @@ function Overview({ onSelectClass }) {
                                     <ClassBlock
                                         title={cls.title}
                                         color={cls.color}
+                                        bannerImageUrl={cls.bannerImageUrl}
                                         onLeave={(e) => {
                                             e.stopPropagation();
                                             handleOpenLeaveModal(cls);
