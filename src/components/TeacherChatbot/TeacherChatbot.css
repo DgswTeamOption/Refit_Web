@@ -21,32 +21,67 @@
 .teacher-chatbot__launcher {
     right: max(24px, env(safe-area-inset-right));
     bottom: max(24px, env(safe-area-inset-bottom));
-    display: inline-flex;
+    display: grid;
     align-items: center;
     justify-content: center;
-    gap: 9px;
-    min-width: 132px;
-    min-height: 52px;
-    padding: 0 19px;
+    width: 52px;
+    height: 52px;
+    padding: 0;
     border: 0;
-    border-radius: 999px;
-    background: var(--chatbot-blue);
-    box-shadow: 0 10px 28px rgb(0 104 190 / 24%);
+    border-radius: 15px;
+    background: transparent;
+    box-shadow: 0 8px 22px rgb(29 57 79 / 18%);
     color: #fff;
-    font-size: 15px;
-    font-weight: 700;
-    transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
 .teacher-chatbot__launcher:hover {
     transform: translateY(-2px);
-    background: #0087e6;
-    box-shadow: 0 13px 30px rgb(0 104 190 / 28%);
+    box-shadow: 0 11px 26px rgb(29 57 79 / 22%);
 }
 
-.teacher-chatbot__launcher > svg {
-    width: 22px;
-    height: 22px;
+.teacher-chatbot__launcher-mark,
+.teacher-chatbot__brand-icon {
+    position: relative;
+    display: block;
+    flex: 0 0 auto;
+    overflow: hidden;
+    background: #f5f7f9;
+}
+
+.teacher-chatbot__launcher-mark {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+}
+
+.teacher-chatbot__launcher-mark img,
+.teacher-chatbot__brand-icon img {
+    position: absolute;
+    width: 505px;
+    max-width: none;
+    height: 848px;
+}
+
+.teacher-chatbot__launcher-mark img {
+    top: -46px;
+    left: -58px;
+}
+
+.teacher-chatbot__brand-icon img {
+    top: -51px;
+    left: -63px;
+}
+
+.teacher-chatbot__launcher.is-open {
+    background: #f3f5f7;
+    box-shadow: 0 6px 18px rgb(25 43 60 / 12%);
+    color: #7e8790;
+}
+
+.teacher-chatbot__launcher.is-open > svg {
+    width: 25px;
+    height: 25px;
 }
 
 .teacher-chatbot__launcher:focus-visible,
@@ -57,12 +92,12 @@
 
 .teacher-chatbot__panel {
     right: max(24px, env(safe-area-inset-right));
-    bottom: 88px;
+    bottom: 92px;
     display: flex;
     flex-direction: column;
-    width: min(400px, calc(100vw - 32px));
-    height: min(650px, calc(100dvh - 112px));
-    min-height: min(400px, calc(100dvh - 112px));
+    width: min(440px, calc(100vw - 32px));
+    height: min(760px, calc(100dvh - 124px));
+    min-height: min(480px, calc(100dvh - 124px));
     overflow: hidden;
     border: 1px solid var(--chatbot-border);
     border-radius: 20px;
@@ -78,7 +113,8 @@
     justify-content: space-between;
     gap: 12px;
     flex: 0 0 auto;
-    padding: 18px 18px 16px;
+    min-height: 68px;
+    padding: 13px 18px;
     border-bottom: 1px solid #f0f1f2;
 }
 
@@ -90,24 +126,14 @@
 }
 
 .teacher-chatbot__brand-icon {
-    display: grid;
     width: 42px;
     height: 42px;
-    flex: 0 0 auto;
-    place-items: center;
-    border-radius: 14px;
-    background: var(--color-chatbot-bg, #eff8ff);
-    color: var(--chatbot-blue);
-}
-
-.teacher-chatbot__brand-icon svg {
-    width: 23px;
-    height: 23px;
+    border-radius: 13px;
 }
 
 .teacher-chatbot__brand h2 {
     margin: 0;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 750;
     line-height: 22px;
 }
@@ -121,44 +147,46 @@
 
 .teacher-chatbot__close {
     display: grid;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     flex: 0 0 auto;
     place-items: center;
     border: 0;
-    border-radius: 50%;
-    background: var(--color-chatbot-close, #f4f5f7);
-    color: #555;
+    border-radius: 8px;
+    background: transparent;
+    color: #7e8790;
 }
 
 .teacher-chatbot__close svg {
-    width: 20px;
-    height: 20px;
+    width: 21px;
+    height: 21px;
 }
 
 .teacher-chatbot__context {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 8px;
     flex: 0 0 auto;
-    padding: 12px 18px;
-    border-bottom: 1px solid #f0f1f2;
+    padding: 8px 10px;
+    border: 1px solid #edf0f2;
+    border-radius: 10px;
     background: #fff;
 }
 
 .teacher-chatbot__context label {
     color: #666;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
 }
 
 .teacher-chatbot__context select {
     min-width: 0;
-    max-width: 245px;
-    min-height: 36px;
-    padding: 0 30px 0 11px;
-    border: 1px solid #e5e7e9;
-    border-radius: 8px;
+    max-width: 260px;
+    min-height: 30px;
+    padding: 0 28px 0 8px;
+    border: 0;
+    border-radius: 7px;
     background: #fff;
     color: #333;
     font-size: 13px;
@@ -168,12 +196,12 @@
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    gap: 18px;
+    gap: 14px;
     min-height: 0;
-    padding: 18px;
+    padding: 16px 18px 18px;
     overflow: auto;
     overscroll-behavior: contain;
-    background: #fbfcfd;
+    background: #fff;
     scrollbar-gutter: stable;
 }
 
@@ -181,7 +209,7 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    max-width: 90%;
+    max-width: 92%;
 }
 
 .teacher-chatbot__message--user {
@@ -190,6 +218,7 @@
 
 .teacher-chatbot__message--assistant {
     align-self: flex-start;
+    max-width: 100%;
 }
 
 .teacher-chatbot__message-label {
@@ -200,31 +229,72 @@
 }
 
 .teacher-chatbot__bubble {
-    padding: 12px 14px;
-    border-radius: 15px;
+    padding: 0;
+    border-radius: 0;
     background: #fff;
-    box-shadow: 0 2px 8px rgb(30 50 70 / 5%);
     color: #25292d;
-    font-size: 14px;
-    line-height: 1.55;
+    font-size: 13px;
+    line-height: 1.6;
     overflow-wrap: anywhere;
 }
 
+.teacher-chatbot__greeting {
+    margin: 0 0 5px;
+    color: #15191d;
+    font-size: 16px;
+    font-weight: 750;
+    line-height: 1.45;
+}
+
+.teacher-chatbot__message--assistant .teacher-chatbot__bubble > p {
+    color: #717980;
+}
+
+.teacher-chatbot__welcome-card {
+    margin-top: 14px;
+    padding: 13px 14px;
+    border-radius: 14px;
+    background: #eff8ff;
+}
+
+.teacher-chatbot__welcome-card strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #0789e8;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.teacher-chatbot__welcome-card p {
+    margin: 0;
+    color: #7b8791;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
 .teacher-chatbot__message--user .teacher-chatbot__bubble {
-    border-bottom-right-radius: 5px;
-    background: var(--chatbot-blue);
-    color: #fff;
+    padding: 9px 13px;
+    border-radius: 13px 13px 4px 13px;
+    background: #edf7ff;
+    color: #0789e8;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .teacher-chatbot__message--assistant .teacher-chatbot__bubble {
-    border: 1px solid #edf0f2;
-    border-bottom-left-radius: 5px;
+    border: 0;
 }
 
 .teacher-chatbot__message.is-error .teacher-chatbot__bubble {
-    border-color: #f2cccc;
+    padding: 10px 12px;
+    border: 1px solid #f2cccc;
+    border-radius: 12px;
     background: #fff7f7;
     color: #9c2828;
+}
+
+.teacher-chatbot__message.is-error .teacher-chatbot__bubble > p {
+    color: inherit;
 }
 
 .teacher-chatbot__bubble > p {
@@ -305,33 +375,57 @@
 
 .teacher-chatbot__quick-questions {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     margin-top: auto;
-    padding-top: 4px;
+    padding-top: 2px;
 }
 
 .teacher-chatbot__quick-questions p {
-    margin: 0 0 1px;
-    color: var(--chatbot-muted);
+    margin: 0 0 2px;
+    color: #7f878e;
     font-size: 12px;
+    font-weight: 650;
 }
 
 .teacher-chatbot__quick-questions button {
-    min-height: 42px;
-    padding: 9px 12px;
-    border: 1px solid #dcecf7;
-    border-radius: 10px;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 16px;
+    align-items: center;
+    gap: 9px;
+    min-height: 43px;
+    padding: 7px 10px;
+    border: 1px solid #eceff1;
+    border-radius: 11px;
     background: #fff;
-    color: #24648d;
+    color: #3d444a;
     font-size: 12px;
     font-weight: 600;
     text-align: left;
-    transition: border-color 150ms ease, background-color 150ms ease;
+    transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
 }
 
 .teacher-chatbot__quick-questions button:hover {
-    border-color: var(--chatbot-blue);
-    background: var(--color-chatbot-bg, #eff8ff);
+    border-color: #b8dff9;
+    background: #fbfdff;
+    box-shadow: 0 3px 10px rgb(23 99 154 / 6%);
+}
+
+.teacher-chatbot__quick-number {
+    display: grid;
+    width: 23px;
+    height: 23px;
+    place-items: center;
+    border-radius: 8px;
+    background: #eff8ff;
+    color: #0793f4;
+    font-size: 9px;
+    font-weight: 750;
+}
+
+.teacher-chatbot__quick-questions button > svg {
+    width: 16px;
+    height: 16px;
+    color: #a0a8ae;
 }
 
 .teacher-chatbot__loading,
@@ -347,8 +441,8 @@
 }
 
 .teacher-chatbot__composer {
-    display: grid;
-    gap: 8px;
+    position: relative;
+    display: block;
     flex: 0 0 auto;
     padding: 12px 14px 14px;
     border-top: 1px solid #edf0f2;
@@ -358,12 +452,12 @@
 .teacher-chatbot__composer textarea {
     display: block;
     width: 100%;
-    min-height: 42px;
+    min-height: 78px;
     max-height: 112px;
-    resize: vertical;
-    padding: 11px 12px;
-    border: 1px solid #e3e7ea;
-    border-radius: 10px;
+    resize: none;
+    padding: 12px 54px 34px 12px;
+    border: 1px solid transparent;
+    border-radius: 14px;
     outline: none;
     background: var(--color-chatbot-input-bg, #f5f6f8);
     color: #20252a;
@@ -384,23 +478,30 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+    position: absolute;
+    right: 22px;
+    bottom: 22px;
+    left: 24px;
+    pointer-events: none;
 }
 
 .teacher-chatbot__composer-actions > span {
     color: #8a9298;
     font-size: 10px;
+    pointer-events: auto;
 }
 
 .teacher-chatbot__composer-actions button {
     display: grid;
-    width: 42px;
-    height: 42px;
+    width: 34px;
+    height: 34px;
     flex: 0 0 auto;
     place-items: center;
     border: 0;
-    border-radius: 12px;
+    border-radius: 10px;
     background: var(--chatbot-blue);
     color: #fff;
+    pointer-events: auto;
 }
 
 .teacher-chatbot__composer-actions button:disabled {
@@ -442,8 +543,18 @@
     .teacher-chatbot__launcher {
         right: max(16px, env(safe-area-inset-right));
         bottom: calc(16px + env(safe-area-inset-bottom));
-        min-width: 120px;
-        min-height: 48px;
+        width: 48px;
+        height: 48px;
+    }
+
+    .teacher-chatbot__launcher-mark {
+        width: 48px;
+        height: 48px;
+    }
+
+    .teacher-chatbot__launcher-mark img {
+        top: -48px;
+        left: -58px;
     }
 }
 

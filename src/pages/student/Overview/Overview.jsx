@@ -257,6 +257,7 @@ function Overview({ onSelectClass }) {
                                     <ClassBlock
                                         title={cls.title}
                                         color={cls.color}
+                                        bannerImageUrl={cls.bannerImageUrl}
                                         onLeave={(e) => {
                                             e.stopPropagation();
                                             handleOpenLeaveModal(cls);

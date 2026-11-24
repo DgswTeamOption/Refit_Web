@@ -166,6 +166,7 @@ export default function Overview({ hidden }) {
                                     <ClassBlock
                                         title={item.title}
                                         color={item.color}
+                                        bannerImageUrl={item.bannerImageUrl}
                                         onLeave={() => setModal({ type: 'delete', item })}
                                     />
                                     <Link

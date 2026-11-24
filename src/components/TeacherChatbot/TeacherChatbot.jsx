@@ -3,9 +3,10 @@ import { listChatbotClasses, queryChatbot } from '../../api/chatbot.js';
 import './TeacherChatbot.css';
 
 const QUICK_QUESTIONS = [
-    '이번 달 현황 알려줘',
-    '보강 미제안 학생 알려줘',
-    '보강 시간 추천해줘',
+    { label: '학생 개인 정보 한눈에 보기', prompt: '학생 개인 정보를 한눈에 보여줘' },
+    { label: '이번 달 결석·보강 현황', prompt: '이번 달 결석과 보강 현황을 알려줘' },
+    { label: '보강 시간을 제안하지 않은 학생', prompt: '보강 시간을 제안하지 않은 학생을 알려줘' },
+    { label: '보강 시간 추천받기', prompt: '신청이 많은 보강 시간을 추천해줘' },
 ];
 
 function isNumericValue(value) {
@@ -117,24 +118,27 @@ function ResultDetails({ result }) {
 }
 
 function ChatMessage({ message }) {
-    const isAssistant = message.role === 'assistant';
-
     return (
         <article className={`teacher-chatbot__message teacher-chatbot__message--${message.role}${message.isError ? ' is-error' : ''}`}>
-            {isAssistant && <span className="teacher-chatbot__message-label">Refit AI</span>}
             <div className="teacher-chatbot__bubble">
-                <p>{message.text}</p>
-                {isAssistant && <ResultDetails result={message.result} />}
+                {message.greeting && <h3 className="teacher-chatbot__greeting">{message.greeting}</h3>}
+                {message.text && <p>{message.text}</p>}
+                {message.feature && (
+                    <div className="teacher-chatbot__welcome-card">
+                        <strong>{message.feature.title}</strong>
+                        <p>{message.feature.description}</p>
+                    </div>
+                )}
+                {message.role === 'assistant' && <ResultDetails result={message.result} />}
             </div>
         </article>
     );
 }
 
-function ChatbotIcon({ className = '' }) {
+function MinimizeIcon() {
     return (
-        <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M20 11.4a7.7 7.7 0 0 1-8 7.4 8.5 8.5 0 0 1-3.4-.7L4 19l1.1-3.5a7 7 0 0 1-1.1-3.8 7.7 7.7 0 0 1 8-7.4 7.7 7.7 0 0 1 8 7.1Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-            <path d="M8.2 11.8h.1m3.6 0h.1m3.6 0h.1" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
     );
 }
@@ -156,13 +160,26 @@ function CloseIcon() {
     );
 }
 
+function ChevronRightIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="m9 5 7 7-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    );
+}
+
 export default function TeacherChatbot({ initialClassId = '' }) {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
         {
             id: 'welcome',
             role: 'assistant',
-            text: '안녕하세요, 선생님. 출결과 보강 정보를 확인해 드릴게요.',
+            greeting: '안녕하세요, 선생님.',
+            text: '학생의 출결 확인부터 보강 일정까지,\n필요한 정보를 바로 찾아드릴게요.',
+            feature: {
+                title: '출결과 보강을 한곳에서',
+                description: '출석·결석·보강 현황을 확인하고 우리 수업에 맞는 보강 시간을 찾아보세요.',
+            },
         },
     ]);
     const [input, setInput] = useState('');
@@ -315,7 +332,9 @@ export default function TeacherChatbot({ initialClassId = '' }) {
                 >
                     <header className="teacher-chatbot__header">
                         <div className="teacher-chatbot__brand">
-                            <span className="teacher-chatbot__brand-icon"><ChatbotIcon /></span>
+                            <span className="teacher-chatbot__brand-icon" aria-hidden="true">
+                                <img src="/introduce/ai.webp" alt="" width="505" height="848" />
+                            </span>
                             <div>
                                 <h2 id="teacher-chatbot-title">Refit AI</h2>
                                 <p>선생님을 위한 출결·보강 도우미</p>
@@ -328,43 +347,46 @@ export default function TeacherChatbot({ initialClassId = '' }) {
                                 setIsOpen(false);
                                 launcherRef.current?.focus();
                             }}
-                            aria-label="Refit AI 닫기"
+                            aria-label="Refit AI 최소화"
                         >
-                            <CloseIcon />
+                            <MinimizeIcon />
                         </button>
                     </header>
 
-                    <div className="teacher-chatbot__context">
-                        <label htmlFor="teacher-chatbot-class">수업</label>
-                        <select
-                            id="teacher-chatbot-class"
-                            value={selectedClassId}
-                            onChange={(event) => setSelectedClassId(event.target.value)}
-                            disabled={isLoadingClasses || classes.length === 0}
-                        >
-                            <option value="">전체 수업</option>
-                            {classes.map((item) => (
-                                <option key={item.id} value={item.id}>{item.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
                     <div className="teacher-chatbot__messages" ref={messagesRef} aria-live="polite" aria-relevant="additions text">
+                        {classes.length > 0 && (
+                            <div className="teacher-chatbot__context">
+                                <label htmlFor="teacher-chatbot-class">수업 범위</label>
+                                <select
+                                    id="teacher-chatbot-class"
+                                    value={selectedClassId}
+                                    onChange={(event) => setSelectedClassId(event.target.value)}
+                                    disabled={isLoadingClasses}
+                                >
+                                    <option value="">전체 수업</option>
+                                    {classes.map((item) => (
+                                        <option key={item.id} value={item.id}>{item.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         {messages.map((message) => (
                             <ChatMessage key={message.id} message={message} />
                         ))}
 
                         {messages.length === 1 && (
                             <div className="teacher-chatbot__quick-questions" aria-label="빠른 질문">
-                                <p>이렇게 물어볼 수 있어요</p>
-                                {QUICK_QUESTIONS.map((question) => (
+                                <p>무엇을 도와드릴까요?</p>
+                                {QUICK_QUESTIONS.map((question, index) => (
                                     <button
                                         type="button"
-                                        key={question}
-                                        onClick={() => sendMessage(question)}
+                                        key={question.label}
+                                        onClick={() => sendMessage(question.prompt)}
                                         disabled={isSending}
                                     >
-                                        {question}
+                                        <span className="teacher-chatbot__quick-number">{String(index + 1).padStart(2, '0')}</span>
+                                        <span>{question.label}</span>
+                                        <ChevronRightIcon />
                                     </button>
                                 ))}
                             </div>
@@ -415,8 +437,13 @@ export default function TeacherChatbot({ initialClassId = '' }) {
                 aria-label={isOpen ? 'Refit AI 닫기' : 'Refit AI 열기'}
                 onClick={() => setIsOpen((previous) => !previous)}
             >
-                <ChatbotIcon />
-                <span>Refit AI</span>
+                {isOpen ? (
+                    <CloseIcon />
+                ) : (
+                    <span className="teacher-chatbot__launcher-mark" aria-hidden="true">
+                        <img src="/introduce/ai.webp" alt="" width="505" height="848" />
+                    </span>
+                )}
             </button>
         </div>
     );

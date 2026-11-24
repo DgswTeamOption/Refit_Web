@@ -16,9 +16,18 @@
 }
 
 .class-block__banner {
+    position: relative;
     flex: 0 0 94px;
+    overflow: hidden;
     border-radius: inherit;
     background: linear-gradient(to bottom right, #f5a98c, #ffdfa1);
+}
+
+.class-block__banner-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .class-block__body {
