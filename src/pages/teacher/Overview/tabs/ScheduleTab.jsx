@@ -34,6 +34,12 @@ const SCHEDULE_STYLES = `
     width: 200px;
   }
 
+  .form-section .schedule-form-hint {
+    margin: -2px 0 12px;
+    color: #777;
+    font-size: 14px;
+  }
+
   .form-section .day-select-group {
     display: flex;
     flex-wrap: wrap;
@@ -119,6 +125,19 @@ function toNumericId(value) {
   if (!str) return null;
   const num = Number(str);
   return Number.isNaN(num) ? null : num;
+}
+
+function findStudentSchedule(scheduleList, studentId, studentName) {
+  const normalizedId = normalizeValidId(studentId);
+  const normalizedName = String(studentName || "").trim().toLocaleLowerCase();
+
+  return scheduleList.find((item) => {
+    const existingId = normalizeValidId(item.studentId);
+    if (existingId && normalizedId) return existingId === normalizedId;
+
+    const existingName = String(item.studentName || "").trim().toLocaleLowerCase();
+    return !existingId && normalizedName && existingName === normalizedName;
+  });
 }
 
 function normalizeTimeValue(rawTime) {
@@ -365,6 +384,22 @@ export default function ScheduleTab({ classId, classroomId }) {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const availableStudentOptions = studentOptions.filter(
+    (student) => !findStudentSchedule(scheduleList, student.id, student.name)
+  );
+  const selectedStudentOption = studentOptions.find(
+    (student) => String(student.id) === String(selectedStudentId)
+  );
+  const selectedStudentSchedule = findStudentSchedule(
+    scheduleList,
+    selectedStudentId || editingItem?.studentId,
+    selectedStudentOption?.name || scheduleStudent
+  );
+  const hasSelectedStudentScheduleConflict = Boolean(
+    selectedStudentSchedule &&
+      (!editingItem || selectedStudentSchedule.id !== editingItem.id)
+  );
+
   const fetchSchedules = useCallback(async () => {
     if (!resolvedClassId) {
       setScheduleList([]);
@@ -465,8 +500,9 @@ export default function ScheduleTab({ classId, classroomId }) {
 
   const handleOpenForm = () => {
     setEditingItem(null);
-    setSelectedStudentId(studentOptions[0] ? String(studentOptions[0].id) : "");
-    setScheduleStudent(studentOptions[0] ? studentOptions[0].name : "");
+    const firstAvailableStudent = availableStudentOptions[0];
+    setSelectedStudentId(firstAvailableStudent ? String(firstAvailableStudent.id) : "");
+    setScheduleStudent(firstAvailableStudent ? firstAvailableStudent.name : "");
     setDaySchedules({});
     setIsAdding(true);
   };
@@ -535,9 +571,28 @@ export default function ScheduleTab({ classId, classroomId }) {
 
     if (!resolvedClassId || submitting) return;
 
+    const existingStudentSchedule = findStudentSchedule(
+      scheduleList,
+      resolvedStudentId,
+      selectedStudentOption?.name || trimmedName
+    );
+    if (!editingItem && (loading || error)) {
+      alert("기존 시간표를 확인할 수 없습니다. 시간표를 다시 불러온 뒤 등록해주세요.");
+      return;
+    }
+    if (
+      existingStudentSchedule &&
+      (!editingItem || existingStudentSchedule.id !== editingItem.id)
+    ) {
+      alert("이미 시간표가 등록된 학생입니다. 기존 시간표를 수정해주세요.");
+      return;
+    }
+
     const conflictingDays = selectedDays.filter((day) => {
-      const existingRow = scheduleList.find(
-        (item) => String(item.studentId) === String(resolvedStudentId)
+      const existingRow = findStudentSchedule(
+        scheduleList,
+        resolvedStudentId,
+        selectedStudentOption?.name || trimmedName
       );
       return existingRow?.slots?.[day.key] && existingRow.id !== editingItem?.id;
     });
@@ -644,7 +699,13 @@ export default function ScheduleTab({ classId, classroomId }) {
             onDelete={handleDelete}
           />
           <div className="bottom-action-bar">
-            <Button text="+ 학생 시간표 등록" color="blue" width={140} onClick={handleOpenForm} />
+            <Button
+              text="+ 학생 시간표 등록"
+              color="blue"
+              width={140}
+              onClick={handleOpenForm}
+              disabled={loading || Boolean(error)}
+            />
           </div>
         </section>
       ) : (
@@ -660,11 +721,25 @@ export default function ScheduleTab({ classId, classroomId }) {
                   className="form-control"
                 >
                   <option value="">학생 선택</option>
-                  {studentOptions.map((opt) => (
-                    <option key={opt.id} value={opt.id}>
-                      {opt.name}
-                    </option>
-                  ))}
+                  {studentOptions.map((opt) => {
+                    const isRegistered = Boolean(
+                      findStudentSchedule(scheduleList, opt.id, opt.name)
+                    );
+                    const isCurrentEditingStudent =
+                      editingItem &&
+                      (String(opt.id) === String(editingItem.studentId) ||
+                        (!normalizeValidId(editingItem.studentId) &&
+                          opt.name === editingItem.studentName));
+                    return (
+                      <option
+                        key={opt.id}
+                        value={opt.id}
+                        disabled={isRegistered && !isCurrentEditingStudent}
+                      >
+                        {opt.name}{isRegistered && !isCurrentEditingStudent ? " (등록됨)" : ""}
+                      </option>
+                    );
+                  })}
                 </select>
               ) : (
                 <input
@@ -680,6 +755,12 @@ export default function ScheduleTab({ classId, classroomId }) {
                 color="blue"
                 width={100}
                 onClick={handleRegister}
+                disabled={
+                  submitting ||
+                  hasSelectedStudentScheduleConflict ||
+                  (!editingItem &&
+                    (loading || Boolean(error) || !selectedStudentId))
+                }
               />
               <Button
                 text="취소"
@@ -688,6 +769,14 @@ export default function ScheduleTab({ classId, classroomId }) {
                 onClick={handleCancelForm}
               />
             </div>
+            {!editingItem &&
+              !loading &&
+              studentOptions.length > 0 &&
+              availableStudentOptions.length === 0 && (
+              <p role="status" className="schedule-form-hint">
+                시간표를 새로 등록할 수 있는 학생이 없습니다. 기존 학생의 시간표를 수정해주세요.
+              </p>
+            )}
             <div className="day-select-group" role="group" aria-label="수업 요일 선택">
               {DAYS_OPTIONS.map((day) => {
                 const isSelected = Object.prototype.hasOwnProperty.call(daySchedules, day.key);
