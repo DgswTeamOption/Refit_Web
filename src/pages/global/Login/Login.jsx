@@ -4,7 +4,7 @@ import Label from "../../../components/Label/Label";
 import GoogleLoginButton from "../../../components/GoogleLoginButton/GoogleLoginButton";
 import AuthLayout from "../../../components/AuthLayout/AuthLayout";
 import GlobalNavigation from "../../../components/GlobalNavigation/GlobalNavigation";
-import { authApiRequest, resolveAuthenticatedUser, saveAuthSession } from "../../../utils/auth";
+import { authApiRequest, logoutAuthSession, resolveAuthenticatedUser, saveAuthSession } from "../../../utils/auth";
 
 export default function Login({ onNavigate }) {
   const [email, setEmail] = useState("");
@@ -36,6 +36,10 @@ export default function Login({ onNavigate }) {
 
   async function signInWithSession(loginResponse) {
     const user = await resolveAuthenticatedUser(loginResponse);
+    if (!user.role) {
+      await logoutAuthSession();
+      throw new Error("계정 역할 정보를 확인하지 못했습니다. 다시 로그인해 주세요.");
+    }
     saveAuthSession(user);
     onNavigate(user.role);
   }
@@ -50,9 +54,7 @@ export default function Login({ onNavigate }) {
       });
       await signInWithSession(loginResponse);
     } catch (error) {
-      setMessage(error.status === 401
-        ? "Google 인증 토큰을 서버가 거부했습니다. 서버가 허용하는 Google Client ID 목록을 확인해 주세요."
-        : error.message || "Google 로그인에 실패했습니다.");
+      setMessage(error.message || "Google 로그인에 실패했습니다. 다시 시도해 주세요.");
     } finally {
       setIsSubmitting(false);
     }

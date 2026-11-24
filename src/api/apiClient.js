@@ -9,6 +9,21 @@ export class ApiError extends Error {
     }
 }
 
+const AUTH_REQUESTS_WITHOUT_REFRESH = new Set([
+    '/api/auth/login',
+    '/api/auth/register',
+    '/api/auth/google/login',
+    '/api/auth/google/register',
+    '/api/auth/refresh',
+    '/api/auth/logout',
+    '/api/user/email/send-code',
+    '/api/user/email/verify-code',
+]);
+
+export function shouldSkipAuthRefresh(path) {
+    return AUTH_REQUESTS_WITHOUT_REFRESH.has(path.split('?')[0]);
+}
+
 function formatErrorMessage(status, payload) {
     if (status === 401) return '로그인이 필요하거나 만료되었습니다. 다시 로그인해주세요.';
     if (status === 403) return '이 수업에 접근하거나 변경할 권한이 없습니다.';
@@ -99,13 +114,7 @@ export async function apiRequest(
     }
 
     // Access Token 만료(401) 시 /api/auth/refresh로 쿠키 갱신 후 1회 재시도
-    const isAuthEndpoint =
-        path.startsWith('/api/auth/login') ||
-        path.startsWith('/api/auth/google/login') ||
-        path.startsWith('/api/auth/refresh') ||
-        path.startsWith('/api/auth/logout');
-
-    if (response.status === 401 && !skipAuthRefresh && !isAuthEndpoint) {
+    if (response.status === 401 && !skipAuthRefresh && !shouldSkipAuthRefresh(path)) {
         try {
             await refreshAuthToken();
             response = await fetch(url, fetchOptions);
