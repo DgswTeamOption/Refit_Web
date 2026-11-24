@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { listChatbotClasses, queryChatbot } from '../../api/chatbot.js';
+import refitAiIcon from '../../assets/RefitAI.svg';
 import './TeacherChatbot.css';
 
 const QUICK_QUESTIONS = [
@@ -333,7 +334,7 @@ export default function TeacherChatbot({ initialClassId = '' }) {
                     <header className="teacher-chatbot__header">
                         <div className="teacher-chatbot__brand">
                             <span className="teacher-chatbot__brand-icon" aria-hidden="true">
-                                <img src="/introduce/ai.webp" alt="" width="505" height="848" />
+                                <img src={refitAiIcon} alt="" width="42" height="42" />
                             </span>
                             <div>
                                 <h2 id="teacher-chatbot-title">Refit AI</h2>
@@ -441,7 +442,7 @@ export default function TeacherChatbot({ initialClassId = '' }) {
                     <CloseIcon />
                 ) : (
                     <span className="teacher-chatbot__launcher-mark" aria-hidden="true">
-                        <img src="/introduce/ai.webp" alt="" width="505" height="848" />
+                        <img src={refitAiIcon} alt="" width="52" height="52" />
                     </span>
                 )}
             </button>

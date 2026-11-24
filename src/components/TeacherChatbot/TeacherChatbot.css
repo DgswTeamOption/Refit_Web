@@ -42,11 +42,9 @@
 
 .teacher-chatbot__launcher-mark,
 .teacher-chatbot__brand-icon {
-    position: relative;
     display: block;
     flex: 0 0 auto;
     overflow: hidden;
-    background: #f5f7f9;
 }
 
 .teacher-chatbot__launcher-mark {
@@ -57,20 +55,10 @@
 
 .teacher-chatbot__launcher-mark img,
 .teacher-chatbot__brand-icon img {
-    position: absolute;
-    width: 505px;
-    max-width: none;
-    height: 848px;
-}
-
-.teacher-chatbot__launcher-mark img {
-    top: -46px;
-    left: -58px;
-}
-
-.teacher-chatbot__brand-icon img {
-    top: -51px;
-    left: -63px;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .teacher-chatbot__launcher.is-open {

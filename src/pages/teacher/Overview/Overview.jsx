@@ -18,6 +18,7 @@ function formatClassList(list = []) {
     return list.map((item, index) => ({
         ...item,
         title: item.name,
+        bannerImageUrl: item.bannerImageUrl || item.banner_image_url || item.imageUrl || item.image_url || '',
         color: CLASS_COLORS[index % CLASS_COLORS.length],
     }));
 }
