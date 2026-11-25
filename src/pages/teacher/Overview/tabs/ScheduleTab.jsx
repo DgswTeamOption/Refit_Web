@@ -164,7 +164,8 @@ function normalizeTimeValue(rawTime) {
 function addOneHour(startTime) {
   if (!startTime || !startTime.includes(":")) return "";
   const [hStr, mStr] = startTime.split(":");
-  const nextHour = (Number(hStr) + 1) % 24;
+  const nextHour = Number(hStr) + 1;
+  if (!Number.isInteger(nextHour) || nextHour >= 24) return "";
   return `${String(nextHour).padStart(2, "0")}:${mStr}`;
 }
 
@@ -660,6 +661,14 @@ export default function ScheduleTab({ classId, classroomId }) {
       return;
     }
 
+    const dayPastLatestStart = selectedDays.find(
+      (day) => daySchedules[day.key] >= "23:00"
+    );
+    if (dayPastLatestStart) {
+      alert("수업은 1시간으로 등록되므로 시작 시간은 오후 11시 전으로 선택해주세요.");
+      return;
+    }
+
     if (!resolvedClassId || submitting) return;
 
     const existingStudentSchedule = findStudentSchedule(
@@ -895,6 +904,7 @@ export default function ScheduleTab({ classId, classroomId }) {
                         <input
                           type="time"
                           aria-label={`${day.fullLabel} 수업 시간`}
+                          max="22:59"
                           value={classTime}
                           onClick={(e) => e.currentTarget.showPicker?.()}
                           onChange={(e) =>
