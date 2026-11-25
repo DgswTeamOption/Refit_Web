@@ -60,6 +60,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
     const [attendanceStats, setAttendanceStats] = useState(null);
     const [absenceList, setAbsenceList] = useState([]);
     const [makeupList, setMakeupList] = useState([]);
+    const [availableMakeupSlots, setAvailableMakeupSlots] = useState([]);
     const [classSchedules, setClassSchedules] = useState([]);
     const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -74,10 +75,11 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
         let isMounted = true;
 
         async function fetchStaticClassData() {
-            const [noticesData, absencesData, makeupsData, schedulesData] = await Promise.all([
+            const [noticesData, absencesData, makeupsData, availabilityData, schedulesData] = await Promise.all([
                 studentApi.getNotices(numericClassId).catch(() => null),
                 studentApi.getMyAbsences(numericClassId).catch(() => null),
                 studentApi.getMakeups(numericClassId).catch(() => null),
+                studentApi.getMakeupAvailability({ class_id: numericClassId }).catch(() => null),
                 studentApi.getClassSchedules(numericClassId).catch(() => null),
             ]);
 
@@ -95,6 +97,10 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
 
             if (Array.isArray(makeupsData)) {
                 setMakeupList(makeupsData.map((item) => mapMakeupFromApi(item)));
+            }
+
+            if (Array.isArray(availabilityData)) {
+                setAvailableMakeupSlots(availabilityData);
             }
 
             const parsedSchedules = extractScheduleList(schedulesData);
@@ -355,6 +361,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                 {subView === 'makeup-apply' && (
                     <MakeupApply
                         items={makeupList}
+                        availableSlots={availableMakeupSlots}
                         classSchedules={classSchedules}
                         calendarEvents={calendarEvents}
                         calendarYear={calendarDate.year}
