@@ -83,8 +83,10 @@ const Header = ({
             if (typeof updatedName === 'string' && updatedName.trim()) {
                 setProfileName(updatedName.trim());
             }
-            if (typeof updatedPhoto === 'string') {
+            if (typeof updatedPhoto === 'string' && updatedPhoto.trim()) {
                 setProfileImageUrl(updatedPhoto.trim());
+            } else {
+                loadProfile();
             }
         };
 

@@ -24,11 +24,17 @@ function resolveImageUrl(url) {
 }
 
 function normalizeProfile(data, fallback = {}) {
-  const rawPhoto = data?.profileImageUrl ?? data?.profile_image_url ?? fallback.photo ?? "";
+  const rawPhoto =
+    data?.profileImageUrl ||
+    data?.profile_image_url ||
+    data?.imageUrl ||
+    data?.image_url ||
+    fallback.photo ||
+    "";
   return {
     id: data?.id ?? fallback.id ?? null,
-    name: data?.name ?? fallback.name ?? "",
-    email: data?.emailId ?? data?.email_id ?? data?.email ?? fallback.email ?? "",
+    name: data?.name || fallback.name || "",
+    email: data?.emailId || data?.email_id || data?.email || fallback.email || "",
     photo: resolveImageUrl(rawPhoto),
   };
 }

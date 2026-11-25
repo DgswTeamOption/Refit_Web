@@ -5,7 +5,7 @@ import HistoryTable from './HistoryTable';
 /**
  * 보강 일정 탭 화면 (view11)
  */
-function MakeupList({ items = [], onOpenApply, onCancel }) {
+function MakeupList({ items = [], onOpenApply, onCancel, onView }) {
     return (
         <div className="class-makeup-tab-content">
             <div className="absence-section-header">
@@ -23,6 +23,7 @@ function MakeupList({ items = [], onOpenApply, onCancel }) {
                     items={items}
                     contentLabel="보강 시간"
                     onCancel={onCancel}
+                    onView={onView}
                 />
             </div>
         </div>

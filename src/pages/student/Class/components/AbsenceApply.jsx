@@ -15,6 +15,7 @@ function AbsenceApply({
     onMonthChange,
     onSubmit,
     onCancel,
+    onView,
 }) {
     const [absenceDate, setAbsenceDate] = useState('');
     const [absenceReason, setAbsenceReason] = useState('');
@@ -130,6 +131,7 @@ function AbsenceApply({
                         items={items}
                         contentLabel="사유"
                         onCancel={onCancel}
+                        onView={onView}
                     />
                 </div>
             </div>

@@ -399,6 +399,43 @@
     text-align: center;
 }
 
+.makeup-mode-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.makeup-mode-tab {
+    flex: 1;
+    height: 40px;
+    border: 1px solid #ECECEC;
+    border-radius: 8px;
+    background-color: #FFFFFF;
+    color: #666666;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.makeup-mode-tab.is-active {
+    border-color: #0099FF;
+    background-color: #F0F8FF;
+    color: #0099FF;
+    font-weight: 600;
+}
+
+.makeup-direct-hint {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background-color: #F8F9FA;
+    font-size: 13px;
+    color: #555555;
+    line-height: 1.4;
+}
+
 .apply-textarea {
     width: 100%;
     height: 140px;
@@ -612,4 +649,82 @@
         font-size: 25px;
         line-height: 32px;
     }
+}
+
+/* 결석·보강 상태 상세 모달 */
+.class-detail-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(17, 17, 17, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.class-detail-modal-card {
+    width: 100%;
+    max-width: 400px;
+    background-color: #FFFFFF;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+    box-sizing: border-box;
+}
+
+.class-detail-modal-title {
+    margin: 0 0 18px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #111111;
+}
+
+.class-detail-modal-list {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.class-detail-modal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #F2F2F2;
+    font-size: 14px;
+}
+
+.class-detail-modal-row dt {
+    color: #767B81;
+    flex-shrink: 0;
+}
+
+.class-detail-modal-row dd {
+    margin: 0;
+    color: #111111;
+    font-weight: 500;
+    text-align: right;
+    word-break: break-word;
+}
+
+.class-detail-modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.class-detail-modal-close-btn {
+    height: 38px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 8px;
+    background-color: #0099FF;
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
 }
