@@ -9,12 +9,27 @@ import {
 } from "../../../utils/auth";
 import "./PersonalInfo.css";
 
+function resolveImageUrl(url) {
+  if (typeof url !== "string") return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (/^(https?:|blob:|data:)/i.test(trimmed) || trimmed.startsWith("/api/")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("/")) {
+    const baseUrl = (import.meta.env.VITE_API_BASE_URL || "https://refit.team").replace(/\/+$/, "");
+    return `${baseUrl}${trimmed}`;
+  }
+  return trimmed;
+}
+
 function normalizeProfile(data, fallback = {}) {
+  const rawPhoto = data?.profileImageUrl ?? data?.profile_image_url ?? fallback.photo ?? "";
   return {
     id: data?.id ?? fallback.id ?? null,
     name: data?.name ?? fallback.name ?? "",
     email: data?.emailId ?? data?.email_id ?? data?.email ?? fallback.email ?? "",
-    photo: data?.profileImageUrl ?? data?.profile_image_url ?? fallback.photo ?? "",
+    photo: resolveImageUrl(rawPhoto),
   };
 }
 
@@ -28,6 +43,7 @@ export default function PersonalInfo({ onNavigate }) {
   const [draftName, setDraftName] = useState("");
   const [pendingPhoto, setPendingPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState("");
+  const [failedPhotoUrl, setFailedPhotoUrl] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [message, setMessage] = useState("");
@@ -148,6 +164,14 @@ export default function PersonalInfo({ onNavigate }) {
       if (nextProfile.name) {
         localStorage.setItem("userName", nextProfile.name);
       }
+      window.dispatchEvent(
+        new CustomEvent("refit:profile-updated", {
+          detail: {
+            name: nextProfile.name,
+            photo: nextProfile.photo,
+          },
+        }),
+      );
       setDraftName(nextProfile.name);
       setPendingPhoto(null);
       setPhotoPreview("");
@@ -269,7 +293,15 @@ export default function PersonalInfo({ onNavigate }) {
         <section className="personal-view" aria-label="내 정보">
           <div className="personal-photo-column">
             <div className="personal-photo-circle">
-              {profile.photo ? <img src={profile.photo} alt="프로필 사진" /> : <span>사진</span>}
+              {profile.photo && failedPhotoUrl !== profile.photo ? (
+                <img
+                  src={profile.photo}
+                  alt="프로필 사진"
+                  onError={() => setFailedPhotoUrl(profile.photo)}
+                />
+              ) : (
+                <span>사진</span>
+              )}
             </div>
           </div>
           <div className="personal-values">

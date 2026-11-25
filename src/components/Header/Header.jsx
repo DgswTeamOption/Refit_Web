@@ -76,7 +76,23 @@ const Header = ({
         };
 
         loadProfile();
-        return () => controller.abort();
+
+        const handleProfileUpdated = (event) => {
+            const updatedName = event?.detail?.name;
+            const updatedPhoto = event?.detail?.photo;
+            if (typeof updatedName === 'string' && updatedName.trim()) {
+                setProfileName(updatedName.trim());
+            }
+            if (typeof updatedPhoto === 'string') {
+                setProfileImageUrl(updatedPhoto.trim());
+            }
+        };
+
+        window.addEventListener('refit:profile-updated', handleProfileUpdated);
+        return () => {
+            controller.abort();
+            window.removeEventListener('refit:profile-updated', handleProfileUpdated);
+        };
     }, [isLoggedIn, userName]);
 
     const unreadCount = notifications.filter((item) => item.isUnread).length;

@@ -1,12 +1,10 @@
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Header from '../Header/Header';
-import Footer from '../Footer/Footer';
-import GlobalNavigation from '../GlobalNavigation/GlobalNavigation';
 import { logoutAuthSession } from '../../utils/auth';
 
 /**
- * 학생 화면 전용 레이아웃 (로그인 전용 헤더 + 컨텐츠 + 푸터)
+ * 학생 화면 전용 레이아웃 (로그인 전용 헤더 + 컨텐츠)
  */
 export default function StudentLayout() {
   const navigate = useNavigate();
@@ -28,9 +26,6 @@ export default function StudentLayout() {
       <main style={{ flex: 1 }}>
         <Outlet />
       </main>
-      <GlobalNavigation variant="footer" onNavigate={(page) => navigate(`/${page}`)}>
-        <Footer />
-      </GlobalNavigation>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Footer from '../Footer/Footer.jsx';
 import GlobalNavigation from '../GlobalNavigation/GlobalNavigation.jsx';
 import Header from '../Header/Header.jsx';
-import { normalizeRole } from '../../utils/auth.js';
+import { isAuthenticatedSession, normalizeRole } from '../../utils/auth.js';
 import '../../styles/global-pages.css';
 
 const PAGE_PATHS = {
@@ -15,6 +15,7 @@ const PAGE_PATHS = {
 export default function MainLayout() {
     const { pathname } = useLocation();
     const navigate = useNavigate();
+    const isLoggedIn = isAuthenticatedSession();
     const isTeacherPage = pathname.startsWith('/teacher');
     const isStudentPage = pathname === '/student' || pathname.startsWith('/class/');
     const savedRole = typeof window !== 'undefined'
@@ -26,7 +27,7 @@ export default function MainLayout() {
         : activeRole === 'student'
             ? '/student'
             : '/login';
-    const showFooter = pathname !== '/personal-info';
+    const showFooter = !isLoggedIn && !isTeacherPage && !isStudentPage && pathname !== '/personal-info';
 
     return (
         <div className="global-site">
