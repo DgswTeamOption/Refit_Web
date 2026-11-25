@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import Condition from "../../../../components/Condition/Condition";
 import Button from "../../../../components/Button/Button";
 import {
+  getClassStudents,
   getClassMakeups,
   approveMakeup,
   rejectMakeup,
@@ -36,6 +37,14 @@ function formatMakeupTime(rawTime) {
   return str;
 }
 
+function extractList(response, keys) {
+  if (Array.isArray(response)) return response;
+  for (const key of keys) {
+    if (Array.isArray(response?.[key])) return response[key];
+  }
+  return [];
+}
+
 function normalizeMakeupStatus(rawStatus) {
   if (rawStatus === 0 || rawStatus === "0") return "대기중";
   if (rawStatus === 1 || rawStatus === "1") return "수락됨";
@@ -54,13 +63,15 @@ function normalizeMakeupStatus(rawStatus) {
   return "대기중";
 }
 
-function mapMakeupItem(item) {
+function mapMakeupItem(item, studentNamesById) {
   const rawDate =
     item?.date ??
     item?.makeupDate ??
     item?.makeup_date ??
     item?.scheduleDate ??
     item?.schedule_date ??
+    item?.makeup_time ??
+    item?.makeupTime ??
     item?.startTime;
   const rawTime =
     item?.time ??
@@ -69,14 +80,20 @@ function mapMakeupItem(item) {
     item?.startTime ??
     item?.start_time;
 
+  const studentId = normalizeValidId(
+    item?.student_id ?? item?.studentId ?? item?.student?.id
+  );
+  const studentName =
+    item?.studentName ??
+    item?.student_name ??
+    item?.name ??
+    item?.student?.name ??
+    studentNamesById.get(studentId) ??
+    (studentId ? `학생 ${studentId}` : "-");
+
   return {
     id: item?.id ?? item?.makeupId ?? item?.makeup_id ?? null,
-    studentName:
-      item?.studentName ??
-      item?.student_name ??
-      item?.name ??
-      item?.student?.name ??
-      "-",
+    studentName,
     date: formatMakeupDate(rawDate),
     time: formatMakeupTime(rawTime),
     status: normalizeMakeupStatus(
@@ -96,12 +113,12 @@ export default function MakeupTab({ classId, classroomId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [processingId, setProcessingId] = useState(null);
-  const [editingSelection, setEditingSelection] = useState(null);
-  const editingId = editingSelection?.classId === resolvedClassId ? editingSelection.id : null;
 
   useEffect(() => {
     if (!resolvedClassId) {
       setMakeupList([]);
+      setLoading(false);
+      setError("");
       return;
     }
 
@@ -109,18 +126,43 @@ export default function MakeupTab({ classId, classroomId }) {
     setLoading(true);
     setError("");
 
-    getClassMakeups(resolvedClassId)
-      .then((res) => {
+    Promise.allSettled([
+      getClassMakeups(resolvedClassId),
+      getClassStudents(resolvedClassId),
+    ])
+      .then(([makeupResult, studentsResult]) => {
         if (!isMounted) return;
-        const list = Array.isArray(res)
-          ? res
-          : res?.makeups || res?.content || res?.items || res?.list || [];
-        setMakeupList(list.map(mapMakeupItem));
-      })
-      .catch((err) => {
-        if (!isMounted) return;
-        setError(err.message || "보강 신청 목록을 불러오지 못했습니다.");
-        setMakeupList([]);
+        if (makeupResult.status === "rejected") {
+          setError(
+            makeupResult.reason?.message || "보강 신청 목록을 불러오지 못했습니다."
+          );
+          setMakeupList([]);
+          return;
+        }
+
+        const students =
+          studentsResult.status === "fulfilled"
+            ? extractList(studentsResult.value, ["students", "content", "items", "list"])
+            : [];
+        const studentNamesById = new Map(
+          students
+            .map((student) => {
+              const id = normalizeValidId(
+                student?.student_id ?? student?.studentId ?? student?.id
+              );
+              const name =
+                student?.name ?? student?.studentName ?? student?.student_name;
+              return id && name ? [id, name] : null;
+            })
+            .filter(Boolean)
+        );
+        const makeups = extractList(makeupResult.value, [
+          "makeups",
+          "content",
+          "items",
+          "list",
+        ]);
+        setMakeupList(makeups.map((item) => mapMakeupItem(item, studentNamesById)));
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -144,7 +186,6 @@ export default function MakeupTab({ classId, classroomId }) {
     try {
       await approveMakeup(id);
       updateLocalStatus(id, "수락됨");
-      setEditingSelection(null);
     } catch (err) {
       alert(err.message || "보강 수락 처리에 실패했습니다.");
     } finally {
@@ -159,7 +200,6 @@ export default function MakeupTab({ classId, classroomId }) {
     try {
       await rejectMakeup(id);
       updateLocalStatus(id, "거절됨");
-      setEditingSelection(null);
     } catch (err) {
       alert(err.message || "보강 거절 처리에 실패했습니다.");
     } finally {
@@ -203,7 +243,7 @@ export default function MakeupTab({ classId, classroomId }) {
                 </td>
                 <td>
                   <div className="action-buttons">
-                    {item.status === "대기중" || editingId === item.id ? (
+                    {item.status === "대기중" ? (
                       <>
                         <Button
                           text="수락"
@@ -219,26 +259,7 @@ export default function MakeupTab({ classId, classroomId }) {
                           disabled={item.id === null || processingId === item.id}
                           onClick={() => handleReject(item.id)}
                         />
-                        {editingId === item.id && item.status !== "대기중" && (
-                          <Button
-                            text="취소"
-                            color="lightGray"
-                            width={60}
-                            disabled={item.id === null || processingId === item.id}
-                            onClick={() => setEditingSelection(null)}
-                          />
-                        )}
                       </>
-                    ) : item.status === "수락됨" || item.status === "거절됨" ? (
-                      <Button
-                        text="수정"
-                        color="lightGray"
-                        width={60}
-                        disabled={item.id === null || processingId === item.id}
-                        onClick={() =>
-                          setEditingSelection({ classId: resolvedClassId, id: item.id })
-                        }
-                      />
                     ) : (
                       <span>-</span>
                     )}
