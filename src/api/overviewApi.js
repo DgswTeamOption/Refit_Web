@@ -66,6 +66,13 @@ export const logoutAuth = () =>
 export const getTeacherClasses = () => request('/api/class');
 export const createTeacherClass = (data) =>
   request('/api/class', { method: 'POST', body: JSON.stringify(data) });
+export const uploadImage = (file) => {
+  const body = new FormData();
+  body.append('file', file);
+  return request('/api/files/images', { method: 'POST', body });
+};
+export const deleteUploadedImage = (fileId) =>
+  request(`/api/files/${requireValidId(fileId, '이미지 파일 ID')}`, { method: 'DELETE' });
 export const deleteTeacherClass = (classroomId) =>
   request(`/api/class/${requireValidId(classroomId, '수업 ID')}`, {
     method: 'DELETE',
@@ -74,11 +81,12 @@ export const deleteTeacherClass = (classroomId) =>
 export const getClassStudents = (classroomId) =>
   request(`/api/class/${requireValidId(classroomId, '수업 ID')}/students`);
 
-export const getClassMakeups = (classId, approvalStatus) =>
+export const getClassMakeups = (classId, approvalStatus, signal) =>
   request(
     `/api/class/makeups/${requireValidId(classId, '수업 ID')}${buildQuery({
       approval_status: approvalStatus,
-    })}`
+    })}`,
+    { signal }
   );
 export const approveMakeup = (makeupId, approvalStatus = 1) =>
   request(`/api/makeups/approve/${requireValidId(makeupId, '보강 ID')}`, {
@@ -114,8 +122,8 @@ export const deleteMakeupAvailability = (availabilityId) =>
     }
   );
 
-export const getClassSchedules = (classId) =>
-  request(`/api/class/schedule/${requireValidId(classId, '수업 ID')}`);
+export const getClassSchedules = (classId, signal) =>
+  request(`/api/class/schedule/${requireValidId(classId, '수업 ID')}`, { signal });
 export const createClassSchedule = (classId, data) =>
   request(`/api/class/schedule/${requireValidId(classId, '수업 ID')}`, {
     method: 'POST',
@@ -226,6 +234,8 @@ export default {
   logoutAuth,
   getTeacherClasses,
   createTeacherClass,
+  uploadImage,
+  deleteUploadedImage,
   deleteTeacherClass,
   getClassStudents,
   getClassMakeups,

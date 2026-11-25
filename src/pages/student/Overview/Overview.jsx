@@ -100,7 +100,9 @@ function Overview({ onSelectClass }) {
 
     // 참여 중인 수업의 월별 캘린더 일정 불러오기
     useEffect(() => {
-        if (classes.length === 0) return;
+        // 수업에서 나가거나 목록을 다시 불러오는 동안 이전 수업의 표시가 남지 않게 비웁니다.
+        setCalendarEvents({});
+        if (classes.length === 0) return undefined;
 
         let isMounted = true;
         const { year, month } = calendarDate;

@@ -30,7 +30,7 @@ export default function JoinClassModal({
                     <input
                         type="text"
                         className={`overview-modal-input ${joinError ? 'is-error' : ''}`}
-                        placeholder="VswqGQtd"
+                        placeholder="수업코드"
                         value={joinCode}
                         onChange={(e) => onChangeCode(e.target.value)}
                         disabled={isSubmitting}

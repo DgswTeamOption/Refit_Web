@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { resolveImageUrl } from '../../utils/imageUrl.js';
 import './ClassBlock.css';
 
 /**
@@ -32,7 +33,7 @@ function ClassBlock({
                     }) {
     const titleId = useId();
     const [failedBannerUrl, setFailedBannerUrl] = useState('');
-    const imageUrl = typeof bannerImageUrl === 'string' ? bannerImageUrl.trim() : '';
+    const imageUrl = resolveImageUrl(bannerImageUrl);
 
     return (
         <article

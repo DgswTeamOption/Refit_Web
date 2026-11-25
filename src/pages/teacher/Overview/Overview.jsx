@@ -4,15 +4,57 @@ import Calendar from '../../../components/Calendar/Calendar.jsx';
 import Button from '../../../components/Button/Button.jsx';
 import ClassBlock from '../../../components/ClassBlock/ClassBlock.jsx';
 import { INITIAL_TEACHER_CLASSES } from '../classData.js';
+import { getMonthlyCalendar } from '../../../api/teacher.js';
 import {
     getTeacherClasses,
     createTeacherClass,
+    deleteUploadedImage,
     deleteTeacherClass,
+    getClassMakeups,
+    uploadImage,
 } from '../../../api/overviewApi.js';
+import { currentPeriod } from '../teacherViewData.js';
 import './Overview.css';
 
 const MAX_VISIBLE_CLASSES = 4;
 const CLASS_COLORS = [...new Set(INITIAL_TEACHER_CLASSES.map(({ color }) => color))];
+const ACTIVE_MAKEUP_STATUSES = new Map([
+    ['0', 'darkGray'],
+    ['PENDING', 'darkGray'],
+    ['WAITING', 'darkGray'],
+    ['1', 'yellow'],
+    ['APPROVED', 'yellow'],
+]);
+
+function extractItems(response, keys) {
+    if (Array.isArray(response)) return response;
+    const source = response?.data ?? response;
+    if (Array.isArray(source)) return source;
+    for (const key of keys) {
+        if (Array.isArray(source?.[key])) return source[key];
+    }
+    return [];
+}
+
+function dayInPeriod(rawDate, { year, month }) {
+    if (typeof rawDate !== 'string') return null;
+    const match = rawDate.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (!match) return null;
+    const [, rawYear, rawMonth, rawDay] = match;
+    const day = Number(rawDay);
+    return Number(rawYear) === year && Number(rawMonth) === month && day > 0 ? day : null;
+}
+
+function markCalendarDay(events, day, color) {
+    if (!day) return;
+    const markers = events[day] ??= [];
+    if (!markers.includes(color)) markers.push(color);
+}
+
+function makeupMarker(makeup) {
+    const status = makeup?.approvalStatus ?? makeup?.approval_status;
+    return ACTIVE_MAKEUP_STATUSES.get(String(status ?? '').toUpperCase()) || '';
+}
 
 function formatClassList(list = []) {
     return list.map((item, index) => ({
@@ -25,13 +67,19 @@ function formatClassList(list = []) {
 
 export default function Overview({ hidden }) {
     const [classes, setClasses] = useState([]);
+    const [calendarPeriod, setCalendarPeriod] = useState(currentPeriod);
+    const [calendarEvents, setCalendarEvents] = useState({});
     const [modal, setModal] = useState(null);
     const [title, setTitle] = useState('');
     const [titleError, setTitleError] = useState('');
+    const [bannerError, setBannerError] = useState('');
+    const [bannerFile, setBannerFile] = useState(null);
+    const [bannerPreview, setBannerPreview] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const dialogRef = useRef(null);
     const titleInputRef = useRef(null);
+    const bannerInputRef = useRef(null);
 
     useEffect(() => {
         async function fetchClasses() {
@@ -44,6 +92,63 @@ export default function Overview({ hidden }) {
         }
         fetchClasses();
     }, []);
+
+    useEffect(() => {
+        if (!bannerPreview) return undefined;
+        return () => URL.revokeObjectURL(bannerPreview);
+    }, [bannerPreview]);
+
+    useEffect(() => {
+        setCalendarEvents({});
+        if (classes.length === 0) return undefined;
+
+        let isMounted = true;
+        const controller = new AbortController();
+        async function loadCalendar() {
+            const results = await Promise.all(classes.map(async (classItem) => {
+                const [schedules, makeups] = await Promise.allSettled([
+                    getMonthlyCalendar(classItem.id, {
+                        year: calendarPeriod.year,
+                        month: calendarPeriod.month,
+                        signal: controller.signal,
+                    }),
+                    getClassMakeups(classItem.id, undefined, controller.signal),
+                ]);
+                return { schedules, makeups };
+            }));
+
+            if (!isMounted) return;
+
+            const events = {};
+            results.forEach(({ schedules, makeups }) => {
+                if (schedules.status === 'fulfilled') {
+                    extractItems(schedules.value, ['schedules', 'content', 'items', 'list'])
+                        .forEach((schedule) => {
+                            const startTime = schedule?.startTime ?? schedule?.start_time ?? schedule?.date;
+                            markCalendarDay(events, dayInPeriod(startTime, calendarPeriod), 'blue');
+                        });
+                }
+
+                if (makeups.status === 'fulfilled') {
+                    extractItems(makeups.value, ['makeups', 'content', 'items', 'list'])
+                        .forEach((makeup) => {
+                            const color = makeupMarker(makeup);
+                            if (!color) return;
+                            const makeupTime = makeup?.makeupTime ?? makeup?.makeup_time;
+                            markCalendarDay(events, dayInPeriod(makeupTime, calendarPeriod), color);
+                        });
+                }
+            });
+
+            setCalendarEvents(events);
+        }
+
+        loadCalendar();
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
+    }, [classes, calendarPeriod]);
 
     useEffect(() => {
         if (!modal) return;
@@ -66,18 +171,48 @@ export default function Overview({ hidden }) {
 
     function closeModal() {
         if (isSubmitting) return;
+        setBannerFile(null);
+        setBannerPreview('');
+        setBannerError('');
         setModal(null);
     }
 
     function openCreateModal() {
         setTitle('');
         setTitleError('');
+        setBannerError('');
+        setBannerFile(null);
+        setBannerPreview('');
+        if (bannerInputRef.current) bannerInputRef.current.value = '';
         setModal({ type: 'create' });
+    }
+
+    function handleBannerSelect(event) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            setBannerFile(null);
+            setBannerPreview('');
+            setBannerError('이미지 파일을 선택해 주세요.');
+            event.target.value = '';
+            return;
+        }
+        setBannerError('');
+        setBannerFile(file);
+        setBannerPreview(URL.createObjectURL(file));
+    }
+
+    function clearBannerSelection() {
+        setBannerFile(null);
+        setBannerPreview('');
+        setBannerError('');
+        if (bannerInputRef.current) bannerInputRef.current.value = '';
     }
 
     async function handleCreateSubmit(event) {
         event.preventDefault();
         if (isSubmitting) return;
+        if (bannerError) return;
 
         const classTitle = title.trim();
 
@@ -87,15 +222,34 @@ export default function Overview({ hidden }) {
             return;
         }
 
+        let uploadedFileId = null;
         try {
             setIsSubmitting(true);
-            const created = await createTeacherClass({ name: classTitle });
+            let bannerImageId;
+            if (bannerFile) {
+                const uploaded = await uploadImage(bannerFile);
+                uploadedFileId = uploaded?.fileId;
+                if (!uploadedFileId) throw new Error('수업 사진을 업로드하지 못했습니다.');
+                bannerImageId = uploadedFileId;
+            }
+
+            const created = await createTeacherClass({ name: classTitle, bannerImageId });
+            uploadedFileId = null;
 
             setClasses((previous) => formatClassList([created, ...previous]));
             setTitle('');
             setTitleError('');
+            setBannerFile(null);
+            setBannerPreview('');
             setModal(null);
         } catch (error) {
+            if (uploadedFileId) {
+                try {
+                    await deleteUploadedImage(uploadedFileId);
+                } catch {
+                    // Preserve the class creation error for the user.
+                }
+            }
             setTitleError(error.message || '수업 생성에 실패했습니다.');
         } finally {
             setIsSubmitting(false);
@@ -140,7 +294,13 @@ export default function Overview({ hidden }) {
                     className="teacher-overview__calendar"
                     aria-label="수업 달력"
                 >
-                    <Calendar />
+                    <Calendar
+                        mode="teacher"
+                        highlightToday
+                        period={calendarPeriod}
+                        onPeriodChange={setCalendarPeriod}
+                        events={calendarEvents}
+                    />
                 </aside>
 
                 <section
@@ -252,12 +412,27 @@ export default function Overview({ hidden }) {
                             </form>
                             <div className="overview-modal__photo">
                                 <p className="overview-modal__label">배너 사진</p>
-
-                                <Button
-                                    text="사진 선택"
-                                    color="lightGray"
-                                    disabled
+                                <input
+                                    ref={bannerInputRef}
+                                    className="overview-modal__file-input"
+                                    type="file"
+                                    accept="image/*"
+                                    aria-label="수업 배너 사진 선택"
+                                    onChange={handleBannerSelect}
                                 />
+                                <Button
+                                    text={bannerFile ? '사진 변경' : '사진 선택'}
+                                    color="lightGray"
+                                    onClick={() => bannerInputRef.current?.click()}
+                                />
+                                {bannerPreview && (
+                                    <div className="overview-modal__photo-preview">
+                                        <img src={bannerPreview} alt="선택한 수업 배너 미리보기" />
+                                        <span>{bannerFile?.name}</span>
+                                        <Button text="삭제" color="lightGray" onClick={clearBannerSelection} />
+                                    </div>
+                                )}
+                                {bannerError && <p className="overview-modal__error" role="alert">{bannerError}</p>}
                             </div>
 
                             <div className="overview-modal__actions">

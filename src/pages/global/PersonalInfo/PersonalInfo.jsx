@@ -7,6 +7,7 @@ import {
   isAuthenticatedSession,
   logoutAuthSession,
 } from "../../../utils/auth";
+import { resolveImageUrl } from "../../../utils/imageUrl.js";
 import "./PersonalInfo.css";
 
 function normalizeProfile(data, fallback = {}) {
@@ -14,7 +15,7 @@ function normalizeProfile(data, fallback = {}) {
     id: data?.id ?? fallback.id ?? null,
     name: data?.name ?? fallback.name ?? "",
     email: data?.emailId ?? data?.email_id ?? data?.email ?? fallback.email ?? "",
-    photo: data?.profileImageUrl ?? data?.profile_image_url ?? fallback.photo ?? "",
+    photo: resolveImageUrl(data) || resolveImageUrl(fallback.photo),
   };
 }
 
