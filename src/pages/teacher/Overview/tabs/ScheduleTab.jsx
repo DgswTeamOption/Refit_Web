@@ -9,6 +9,7 @@ import {
   getClassStudents,
   getClassAbsences,
   getClassMakeups,
+  getClassSchedules,
 } from "../../../../api/overviewApi";
 
 const DAYS_OPTIONS = [
@@ -99,6 +100,15 @@ const SCHEDULE_STYLES = `
 
   .form-section .time-input-box.is-empty:focus-within .time-placeholder {
     display: none;
+  }
+
+  .schedule-table__lock-hint {
+    max-width: 220px;
+    margin: 8px auto 0;
+    color: #666;
+    font-size: 12px;
+    line-height: 1.45;
+    text-align: center;
   }
 
   .form-section .day-time-input::-webkit-calendar-picker-indicator {
@@ -259,6 +269,46 @@ function extractArray(res, keys) {
   return [];
 }
 
+function hasPendingOrApprovedMakeup(makeup) {
+  const rawStatus = makeup?.approvalStatus ?? makeup?.approval_status;
+  const status = String(rawStatus ?? "").toUpperCase();
+  return ["0", "1", "PENDING", "WAITING", "APPROVED"].includes(status);
+}
+
+function getLockedRuleIds(scheduleResponse, makeupResponse) {
+  const schedules = extractArray(scheduleResponse, ["schedules", "content", "items", "list"]);
+  const makeups = extractArray(makeupResponse, ["makeups", "content", "items", "list"]);
+  const activeScheduleIds = new Set(
+    makeups
+      .filter(hasPendingOrApprovedMakeup)
+      .map((makeup) => normalizeValidId(
+        makeup?.scheduleId ?? makeup?.schedule_id ?? makeup?.schedule?.id
+      ))
+      .filter(Boolean)
+  );
+  const lockedRuleIds = new Set();
+
+  schedules.forEach((schedule) => {
+    const scheduleId = normalizeValidId(
+      schedule?.scheduleId ?? schedule?.schedule_id ?? schedule?.id
+    );
+    const ruleId = normalizeValidId(
+      schedule?.ruleId ?? schedule?.rule_id ?? schedule?.scheduleRuleId ?? schedule?.schedule_rule_id
+    );
+    if (scheduleId && ruleId && activeScheduleIds.has(scheduleId)) {
+      lockedRuleIds.add(ruleId);
+    }
+  });
+
+  return lockedRuleIds;
+}
+
+function rowHasPendingOrApprovedMakeup(item, lockedRuleIds) {
+  return (item?.ruleIds || []).some((ruleId) =>
+    lockedRuleIds.has(normalizeValidId(ruleId))
+  );
+}
+
 function mapScheduleList(rawList, studentOptions = []) {
   if (!Array.isArray(rawList) || rawList.length === 0) return [];
 
@@ -317,7 +367,16 @@ function mapScheduleList(rawList, studentOptions = []) {
   return Array.from(groupedMap.values());
 }
 
-function ScheduleTable({ scheduleList, loading, error, onEdit, onDelete }) {
+function ScheduleTable({
+  scheduleList,
+  loading,
+  error,
+  lockedRuleIds,
+  makeupRestrictionsLoaded,
+  checkingMakeupRestrictions,
+  onEdit,
+  onDelete,
+}) {
   return (
     <div className="table-wrapper">
       <table className="schedule-table">
@@ -344,20 +403,36 @@ function ScheduleTable({ scheduleList, loading, error, onEdit, onDelete }) {
               <td colSpan={9}>등록된 시간표가 없습니다.</td>
             </tr>
           ) : (
-            scheduleList.map((item) => (
-              <tr key={item.id}>
-                <td>{item.studentName}</td>
-                {DAYS_OPTIONS.map((d) => (
-                  <td key={d.key}>{formatDisplayCell(item.slots?.[d.key])}</td>
-                ))}
-                <td>
-                  <div className="action-buttons">
-                    <Button text="수정" color="lightGray" width={60} onClick={() => onEdit(item)} />
-                    <Button text="삭제" color="red" width={60} onClick={() => onDelete(item)} />
-                  </div>
-                </td>
-              </tr>
-            ))
+            scheduleList.map((item) => {
+              const hasActiveMakeup = rowHasPendingOrApprovedMakeup(item, lockedRuleIds);
+              const isLocked = hasActiveMakeup || !makeupRestrictionsLoaded;
+              return (
+                <tr key={item.id}>
+                  <td>{item.studentName}</td>
+                  {DAYS_OPTIONS.map((d) => (
+                    <td key={d.key}>{formatDisplayCell(item.slots?.[d.key])}</td>
+                  ))}
+                  <td>
+                    <div className="action-buttons">
+                      <Button text="수정" color="lightGray" width={60} disabled={isLocked} onClick={() => onEdit(item)} />
+                      <Button text="삭제" color="red" width={60} disabled={isLocked} onClick={() => onDelete(item)} />
+                    </div>
+                    {hasActiveMakeup && (
+                      <p className="schedule-table__lock-hint" role="note">
+                        대기 또는 승인된 보강 신청이 있어 시간 변경 및 삭제를 할 수 없습니다
+                      </p>
+                    )}
+                    {!hasActiveMakeup && !makeupRestrictionsLoaded && (
+                      <p className="schedule-table__lock-hint" role="status">
+                        {checkingMakeupRestrictions
+                          ? "보강 신청 상태를 확인하고 있습니다"
+                          : "보강 신청 상태를 확인할 수 없어 변경할 수 없습니다"}
+                      </p>
+                    )}
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
@@ -379,6 +454,9 @@ export default function ScheduleTab({ classId, classroomId }) {
   const [daySchedules, setDaySchedules] = useState({});
 
   const [scheduleList, setScheduleList] = useState([]);
+  const [lockedRuleIds, setLockedRuleIds] = useState(() => new Set());
+  const [makeupRestrictionsLoaded, setMakeupRestrictionsLoaded] = useState(false);
+  const [checkingMakeupRestrictions, setCheckingMakeupRestrictions] = useState(true);
   const [studentOptions, setStudentOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -428,13 +506,25 @@ export default function ScheduleTab({ classId, classroomId }) {
   useEffect(() => {
     if (!resolvedClassId) return;
     let isMounted = true;
+    setLockedRuleIds(new Set());
+    setMakeupRestrictionsLoaded(false);
+    setCheckingMakeupRestrictions(true);
 
     Promise.allSettled([
       getClassStudents(resolvedClassId),
       getClassAbsences(resolvedClassId),
       getClassMakeups(resolvedClassId),
-    ]).then(([studentsRes, absencesRes, makeupsRes]) => {
+      getClassSchedules(resolvedClassId),
+    ]).then(([studentsRes, absencesRes, makeupsRes, schedulesRes]) => {
       if (!isMounted) return;
+
+      const restrictionsAvailable =
+        makeupsRes.status === "fulfilled" && schedulesRes.status === "fulfilled";
+      setMakeupRestrictionsLoaded(restrictionsAvailable);
+      setCheckingMakeupRestrictions(false);
+      if (restrictionsAvailable) {
+        setLockedRuleIds(getLockedRuleIds(schedulesRes.value, makeupsRes.value));
+      }
 
       const optionsMap = new Map();
 
@@ -516,6 +606,7 @@ export default function ScheduleTab({ classId, classroomId }) {
   };
 
   const handleEdit = (item) => {
+    if (!makeupRestrictionsLoaded || rowHasPendingOrApprovedMakeup(item, lockedRuleIds)) return;
     setEditingItem(item);
     setScheduleStudent(item.studentName);
     const matched = studentOptions.find(
@@ -666,7 +757,11 @@ export default function ScheduleTab({ classId, classroomId }) {
   };
 
   const handleDelete = async (item) => {
-    if (!resolvedClassId) return;
+    if (
+      !resolvedClassId ||
+      !makeupRestrictionsLoaded ||
+      rowHasPendingOrApprovedMakeup(item, lockedRuleIds)
+    ) return;
     try {
       const targetIds =
         Array.isArray(item.ruleIds) && item.ruleIds.length > 0
@@ -695,6 +790,9 @@ export default function ScheduleTab({ classId, classroomId }) {
             scheduleList={scheduleList}
             loading={loading}
             error={error}
+            lockedRuleIds={lockedRuleIds}
+            makeupRestrictionsLoaded={makeupRestrictionsLoaded}
+            checkingMakeupRestrictions={checkingMakeupRestrictions}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />

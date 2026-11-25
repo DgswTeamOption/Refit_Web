@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Header.css';
 import bellIcon from '../../assets/bell.svg';
 import { fetchCurrentUserProfile, isAuthenticatedSession, logoutAuthSession } from '../../utils/auth';
+import { resolveImageUrl } from '../../utils/imageUrl.js';
 
 function DefaultProfileAvatar({ className = 'header-profile-icon' }) {
     return (
@@ -59,14 +60,10 @@ const Header = ({
                 if (!profile) return;
 
                 const name = profile?.name ?? profile?.userName ?? profile?.username ?? '';
-                const imageUrl = profile?.profileImageUrl
-                    ?? profile?.profile_image_url
-                    ?? profile?.profileImage
-                    ?? profile?.profile_image
-                    ?? '';
+                const imageUrl = resolveImageUrl(profile);
 
                 if (typeof name === 'string' && name.trim()) setProfileName(name.trim());
-                if (typeof imageUrl === 'string') setProfileImageUrl(imageUrl.trim());
+                setProfileImageUrl(imageUrl);
             } catch (error) {
                 if (error?.name !== 'AbortError') {
                     setProfileName(userName || '학생1');

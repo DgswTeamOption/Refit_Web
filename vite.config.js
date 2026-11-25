@@ -30,6 +30,10 @@ export default defineConfig({
           })
         },
       },
+      "/uploads": {
+        target: "https://refit.team",
+        changeOrigin: true,
+      },
     },
   },
 })

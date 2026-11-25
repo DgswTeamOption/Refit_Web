@@ -74,8 +74,8 @@
 
 .teacher-chatbot__launcher:focus-visible,
 .teacher-chatbot__panel :is(button, select, textarea):focus-visible {
-    outline: 3px solid #151515;
-    outline-offset: 3px;
+    outline: 2px solid var(--chatbot-blue);
+    outline-offset: 2px;
 }
 
 .teacher-chatbot__panel {
