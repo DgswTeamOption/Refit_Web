@@ -1,7 +1,7 @@
 .ri {
     --ri-ink: #142633;
     --ri-muted: #546874;
-    --ri-accent: #0067a8;
+    --ri-accent: #0099ff;
     --ri-blue: #0099ff;
     --ri-dark: #292929;
     --ri-yellow: #ffcc40;
@@ -40,7 +40,7 @@
     gap: .6em;
     padding: .7rem 1.4rem;
     border-radius: 99px;
-    background: var(--ri-blue);
+    background: var(--color-blue);
     color: #fff;
     font-size: 1rem;
     font-weight: 720;

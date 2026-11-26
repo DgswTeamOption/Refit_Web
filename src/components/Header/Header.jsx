@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 import bellIcon from '../../assets/bell.svg';
 import { fetchCurrentUserProfile, isAuthenticatedSession, logoutAuthSession } from '../../utils/auth';
@@ -143,9 +143,7 @@ const Header = ({
         );
     };
 
-    const handleLogoClick = onLogoClick || (() => navigate(isLoggedIn ? '/student' : '/login'));
-    const handleLoginClick = onLoginClick || (() => navigate('/login'));
-    const handleSignupClick = onSignupClick || (() => navigate('/signup'));
+    const handleLogoClick = onLogoClick || (() => navigate(isLoggedIn ? '/student' : '/'));
     const handleLogoutClick = async () => {
         if (onLogoutClick) {
             await onLogoutClick();
@@ -166,17 +164,17 @@ const Header = ({
                         aria-label="Refit 홈으로 이동"
                         style={{ background: 'none', border: 'none', padding: 0 }}
                     >
-                        <img src="/logo.svg" alt="Refit 로고" className="header-logo" />
+                        <img src="/logo.svg" alt="Refit 로고" width="103" height="49" className="header-logo" />
                     </button>
 
                     {/* 로그인 전 헤더 메뉴 (Header · 로그인 전) */}
                     {!isLoggedIn && showServiceMenu && (
                         <nav className="header-prelog-nav" aria-label="메인 메뉴">
-                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce#overview')}>서비스 소개</button>
-                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce#features')}>기능</button>
-                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce#start')}>이용 방법</button>
-                            <button type="button" className="header-prelog-link" onClick={() => navigate('/introduce#ai')}>Refit AI</button>
-                            <button type="button" className="header-prelog-link" onClick={() => navigate('/faq')}>FAQ</button>
+                            <Link className="header-prelog-link" to="/#overview">서비스 소개</Link>
+                            <Link className="header-prelog-link" to="/#features">기능</Link>
+                            <Link className="header-prelog-link" to="/#start">이용 방법</Link>
+                            <Link className="header-prelog-link" to="/#ai">Refit AI</Link>
+                            <Link className="header-prelog-link" to="/faq">FAQ</Link>
                         </nav>
                     )}
                 </div>
@@ -184,20 +182,8 @@ const Header = ({
                     {/* 로그인 전: 로그인 및 회원가입 버튼 */}
                     {!isLoggedIn ? (
                         <div className="header-auth-buttons">
-                            <button
-                                type="button"
-                                className="header-login-btn"
-                                onClick={handleLoginClick}
-                            >
-                                로그인
-                            </button>
-                            <button
-                                type="button"
-                                className="header-signup-btn"
-                                onClick={handleSignupClick}
-                            >
-                                회원가입
-                            </button>
+                            <Link to="/login" className="header-login-btn" onClick={onLoginClick ? event => { event.preventDefault(); onLoginClick(); } : undefined}>로그인</Link>
+                            <Link to="/signup" className="header-signup-btn" onClick={onSignupClick ? event => { event.preventDefault(); onSignupClick(); } : undefined}>회원가입</Link>
                         </div>
                     ) : (
                         /* 로그인 후: 알림 아이콘 & 프로필 아바타 */

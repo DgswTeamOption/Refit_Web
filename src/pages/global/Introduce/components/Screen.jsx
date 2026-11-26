@@ -11,12 +11,12 @@ function source(name) {
     return `/introduce/${name}.webp`;
 }
 
-export function Screen({ name, mobile, alt, className = '', eager = false }) {
+export function Screen({ name, mobile, alt, className = '', eager = false, priority = false }) {
     const [width, height] = dimensions[name];
     return (
         <picture className={'ri-screen ' + className}>
             {mobile && <source media="(max-width: 767px)" srcSet={source(mobile)} width={dimensions[mobile][0]} height={dimensions[mobile][1]} />}
-            <img src={source(name)} alt={alt} width={width} height={height} decoding="async" loading={eager ? 'eager' : 'lazy'} />
+            <img src={source(name)} alt={alt} width={width} height={height} decoding={priority ? 'auto' : 'async'} fetchPriority={priority ? 'high' : undefined} loading={eager ? 'eager' : 'lazy'} />
         </picture>
     );
 }

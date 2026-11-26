@@ -18,7 +18,7 @@
 .ri-handset__action {
     position: absolute; left: 4.7%; top: 74.15%; width: 90.6%; height: 5.05%;
     display: grid; place-items: center;
-    border-radius: 1.5cqw; background: #0099ff; color: #fff;
+    border-radius: 1.5cqw; background: #006ebd; color: #fff;
     font-size: clamp(8px, 4.1cqw, 14px); font-weight: 700; line-height: 1;
 }
 

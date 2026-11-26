@@ -7,13 +7,13 @@ const screenAlt = {
     nfc: '영어1 수업의 출결 달력, NFC 출석 버튼과 공지',
 };
 
-export default function IntroPhone({ attendance = false, complete = false, eager = false, name = attendance ? 'nfc' : 'student' }) {
+export default function IntroPhone({ attendance = false, complete = false, eager = false, priority = false, name = attendance ? 'nfc' : 'student' }) {
     const alt = screenAlt[name] ?? '리핏 모바일 화면';
 
     return (
         <div className="ri-handset">
             <div className="ri-handset__display">
-                <Screen name={name} eager={eager} alt={alt} />
+                <Screen name={name} eager={eager} priority={priority} alt={alt} />
                 {attendance && (
                     <span data-nfc-action="" className="ri-handset__action" role="status">
                         {complete ? '✓ 출석 완료' : 'NFC 태그하기'}

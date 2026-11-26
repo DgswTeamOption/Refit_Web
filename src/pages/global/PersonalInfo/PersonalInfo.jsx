@@ -10,20 +10,6 @@ import {
 import { resolveImageUrl } from "../../../utils/imageUrl.js";
 import "./PersonalInfo.css";
 
-function resolveImageUrl(url) {
-  if (typeof url !== "string") return "";
-  const trimmed = url.trim();
-  if (!trimmed) return "";
-  if (/^(https?:|blob:|data:)/i.test(trimmed) || trimmed.startsWith("/api/")) {
-    return trimmed;
-  }
-  if (trimmed.startsWith("/")) {
-    const baseUrl = (import.meta.env.VITE_API_BASE_URL || "https://refit.team").replace(/\/+$/, "");
-    return `${baseUrl}${trimmed}`;
-  }
-  return trimmed;
-}
-
 function normalizeProfile(data, fallback = {}) {
   const rawPhoto =
     data?.profileImageUrl ||

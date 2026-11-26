@@ -13,9 +13,9 @@ export default function Hero() {
         const media = gsap.matchMedia();
         media.add('(prefers-reduced-motion: no-preference)', () => {
             const intro = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.65 } });
-            intro.from('.ri-title', { y: 24, opacity: 0 })
+            intro.from('.ri-title', { y: 24 })
                 .from('.ri-description, .ri-hero-actions', { y: 14, opacity: 0, stagger: 0.1 }, 0.13)
-                .from('.ri-hero-phone', { y: 26, opacity: 0, stagger: 0.13 }, 0.22);
+                .from('.ri-hero-phone', { y: 26, stagger: 0.13 }, 0.22);
 
             gsap.to('.ri-hero-phone .ri-handset', {
                 yPercent: index => index === 0 ? -3 : 3, ease: 'none',
@@ -37,7 +37,7 @@ export default function Hero() {
                 </div>
                 <div className="ri-hero-stage">
                     <div className="ri-hero-phone ri-hero-phone--back"><IntroPhone name="nfc" eager /></div>
-                    <div className="ri-hero-phone ri-hero-phone--front"><IntroPhone name="calendar" eager /></div>
+                    <div className="ri-hero-phone ri-hero-phone--front"><IntroPhone name="calendar" eager priority /></div>
                 </div>
             </div>
         </section>
