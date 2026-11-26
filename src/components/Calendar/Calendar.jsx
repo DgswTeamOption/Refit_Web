@@ -98,6 +98,8 @@ function Calendar({
         ? events
         : mode === 'attendance'
             ? DEFAULT_ATTENDANCE_EVENTS
+            : mode === 'teacher'
+                ? {}
             : (isClassEmpty ? {} : DEFAULT_CLASS_EVENTS);
 
     const checkSelected = (date) => {
@@ -148,7 +150,22 @@ function Calendar({
             </div>
 
             {/* 하단 범례 (모드에 따라 변경) */}
-            {mode === 'class' ? (
+            {mode === 'teacher' ? (
+                <div className="CalendarFoot">
+                    <div className="CalendarFootTag">
+                        <div className="CalendarCircle CalendarCircleBlue" />
+                        <div>수업</div>
+                    </div>
+                    <div className="CalendarFootTag">
+                        <div className="CalendarCircle CalendarCircleYellow" />
+                        <div>보강</div>
+                    </div>
+                    <div className="CalendarFootTag">
+                        <div className="CalendarCircle CalendarCircleDarkGray" />
+                        <div>보강 대기중</div>
+                    </div>
+                </div>
+            ) : mode === 'class' ? (
                 !isClassEmpty && (
                     <div className="CalendarFoot">
                         {(Array.isArray(classes) ? classes : [

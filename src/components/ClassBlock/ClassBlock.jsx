@@ -1,4 +1,5 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
+import { resolveImageUrl } from '../../utils/imageUrl.js';
 import './ClassBlock.css';
 
 /**
@@ -7,6 +8,7 @@ import './ClassBlock.css';
  *
  * @param {Object} props
  * @param {string} props.title 수업명 (필수)
+ * @param {string} [props.bannerImageUrl] 수업 카드 배너 이미지 URL
  * @param {() => void | Promise<void>} props.onLeave 나가기 요청 핸들러 (필수)
  * @param {boolean} [props.isLeaving=false] 부모에서 관리하는 요청 진행 상태
  * @param {boolean} [props.disabled=false] 나가기 버튼 비활성화 여부
@@ -23,19 +25,31 @@ const COLORS = {
 function ClassBlock({
                         title,
                         color = 'peach',
+                        bannerImageUrl = '',
                         onLeave,
                         isLeaving = false,
                         disabled = false,
                         className = '',
                     }) {
     const titleId = useId();
+    const [failedBannerUrl, setFailedBannerUrl] = useState('');
+    const imageUrl = resolveImageUrl(bannerImageUrl);
 
     return (
         <article
             className={`class-block ${className}`.trim()} aria-labelledby={titleId}>
             <div className="class-block__banner"
                  style={{background: COLORS[color] ?? COLORS.peach}}
-                 aria-hidden="true" />
+                 aria-hidden="true">
+                {imageUrl && failedBannerUrl !== imageUrl && (
+                    <img
+                        className="class-block__banner-image"
+                        src={imageUrl}
+                        alt=""
+                        onError={() => setFailedBannerUrl(imageUrl)}
+                    />
+                )}
+            </div>
 
             <div className="class-block__body">
                 <h3 id={titleId} className="class-block__title">

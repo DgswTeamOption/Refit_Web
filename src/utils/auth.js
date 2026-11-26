@@ -1,4 +1,4 @@
-import { logoutAuthApi, refreshAuthToken } from "../api/apiClient";
+import { logoutAuthApi, refreshAuthToken, shouldSkipAuthRefresh } from "../api/apiClient";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
 
@@ -22,13 +22,7 @@ export async function authApiRequest(path, { method = "POST", body, signal, skip
 
   let response = await fetch(`${API_BASE_URL}${path}`, fetchOptions);
 
-  const isAuthEndpoint =
-    path.startsWith("/api/auth/login") ||
-    path.startsWith("/api/auth/google/login") ||
-    path.startsWith("/api/auth/refresh") ||
-    path.startsWith("/api/auth/logout");
-
-  if (response.status === 401 && !skipAuthRefresh && !isAuthEndpoint) {
+  if (response.status === 401 && !skipAuthRefresh && !shouldSkipAuthRefresh(path)) {
     try {
       await refreshAuthToken();
       response = await fetch(`${API_BASE_URL}${path}`, fetchOptions);
@@ -120,11 +114,6 @@ export async function resolveAuthenticatedUser(loginResponse = null) {
       name ||= profile.name ?? profile.userName ?? profile.username ?? "";
       userId ||= readUserId(profile);
     }
-  }
-
-  // 로그인 응답 body가 {}이고 별도 내 정보 조회 API가 아직 없을 때 기본값 fallback
-  if (!role) {
-    role = normalizeRole(typeof window !== "undefined" ? localStorage.getItem("role") : "") || "student";
   }
 
   return { role, name, userId };

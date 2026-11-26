@@ -7,6 +7,7 @@ import {
   isAuthenticatedSession,
   logoutAuthSession,
 } from "../../../utils/auth";
+import { resolveImageUrl } from "../../../utils/imageUrl.js";
 import "./PersonalInfo.css";
 
 function resolveImageUrl(url) {
