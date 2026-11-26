@@ -234,14 +234,17 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
         setSubView('tab');
     };
 
-    // 보강 신청하기 (신청 후 서버 목록 재조회로 실제 ID 동기화)
+    // 보강 신청하기 (학생 본인의 결석/수업 schedule_id + class_id + makeup_time 전송)
     const handleSubmitMakeup = async (newMakeup) => {
         if (isValidClassId) {
-            const defaultScheduleId = extractScheduleId(classSchedules[0]);
-            const resolvedScheduleId = newMakeup.scheduleId || defaultScheduleId;
+            const absenceWithSchedule =
+                absenceList.find((item) => item.status === '수락됨' && item.scheduleId) ||
+                absenceList.find((item) => item.status !== '거절됨' && item.status !== '취소됨' && item.scheduleId) ||
+                absenceList.find((item) => item.scheduleId);
+            const studentScheduleId = absenceWithSchedule?.scheduleId || extractScheduleId(classSchedules[0]) || newMakeup.scheduleId;
             const created = await studentApi.requestMakeup({
                 class_id: numericClassId,
-                ...(resolvedScheduleId ? { schedule_id: Number(resolvedScheduleId) } : {}),
+                ...(studentScheduleId ? { schedule_id: Number(studentScheduleId) } : {}),
                 makeup_time: newMakeup.isoMakeupTime,
             });
             const latestMakeups = await studentApi.getMakeups(numericClassId).catch(() => null);

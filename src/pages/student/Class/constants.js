@@ -107,6 +107,7 @@ export const mapAbsenceFromApi = (item, fallback = {}) => {
     const rawDate = extractIsoDate(item?.absence_date || item?.created_at || fallback.rawDate);
     return {
         id: item?.absenceId ?? item?.absence_id ?? item?.id ?? fallback.id ?? Date.now(),
+        scheduleId: item?.scheduleId ?? item?.schedule_id ?? fallback.scheduleId ?? null,
         rawDate,
         date: formatToKoreanDate(rawDate) || fallback.date || '-',
         reason: item?.reason || fallback.reason || '기타 사유',

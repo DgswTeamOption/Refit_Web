@@ -108,9 +108,10 @@ function MakeupApply({
                 const slotDate = formatToKoreanDate(selectedSlot.makeup_time);
                 const slotTime = formatToTime(selectedSlot.makeup_time) || '시간 미정';
 
+                // 가능 시간은 class_id + makeup_time으로 매칭되므로 slot.schedule_id를 그대로 쓰지 않음
                 await onSubmit({
                     id: Date.now(),
-                    scheduleId: selectedSlot.schedule_id ?? defaultScheduleId,
+                    scheduleId: defaultScheduleId,
                     isoMakeupTime: selectedSlot.makeup_time,
                     date: slotDate,
                     time: slotTime,
