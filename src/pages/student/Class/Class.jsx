@@ -21,6 +21,17 @@ import MakeupList from './components/MakeupList';
 import AbsenceApply from './components/AbsenceApply';
 import MakeupApply from './components/MakeupApply';
 
+function extractScheduleList(data) {
+    if (Array.isArray(data)) return data;
+    if (!data || typeof data !== 'object') return [];
+    return data.schedules || data.content || data.items || data.list || [];
+}
+
+function extractScheduleId(item) {
+    if (!item || typeof item !== 'object') return null;
+    return item.scheduleId ?? item.schedule_id ?? item.ruleId ?? item.rule_id ?? item.id ?? null;
+}
+
 function Class({ classInfo: propClassInfo, onGoHome }) {
     const navigate = useNavigate();
     const location = useLocation();
@@ -50,23 +61,26 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
     const [absenceList, setAbsenceList] = useState([]);
     const [makeupList, setMakeupList] = useState([]);
     const [availableMakeupSlots, setAvailableMakeupSlots] = useState([]);
+    const [classSchedules, setClassSchedules] = useState([]);
+    const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const numericClassId = Number(classId);
     const isValidClassId = Number.isInteger(numericClassId) && numericClassId > 0;
 
-    // 1. 수업 기본 목록 데이터 불러오기 (공지, 결석, 보강, 보강 가능 시간)
+    // 1. 수업 기본 목록 데이터 불러오기 (공지, 결석, 보강, 수업 일정)
     useEffect(() => {
         if (!isValidClassId) return;
 
         let isMounted = true;
 
         async function fetchStaticClassData() {
-            const [noticesData, absencesData, makeupsData, availabilityData] = await Promise.all([
+            const [noticesData, absencesData, makeupsData, availabilityData, schedulesData] = await Promise.all([
                 studentApi.getNotices(numericClassId).catch(() => null),
                 studentApi.getMyAbsences(numericClassId).catch(() => null),
                 studentApi.getMakeups(numericClassId).catch(() => null),
                 studentApi.getMakeupAvailability({ class_id: numericClassId }).catch(() => null),
+                studentApi.getClassSchedules(numericClassId).catch(() => null),
             ]);
 
             if (!isMounted) return;
@@ -87,6 +101,11 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
 
             if (Array.isArray(availabilityData)) {
                 setAvailableMakeupSlots(availabilityData);
+            }
+
+            const parsedSchedules = extractScheduleList(schedulesData);
+            if (parsedSchedules.length > 0) {
+                setClassSchedules(parsedSchedules);
             }
         }
 
@@ -195,14 +214,19 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
         }
     };
 
-    // 결석 신청하기 (실패 시 로컬 상태 변경 없이 에러 전달)
+    // 결석 신청하기 (신청 후 서버 목록 재조회로 실제 ID 동기화)
     const handleSubmitAbsence = async (newAbsence) => {
         if (isValidClassId) {
             const created = await studentApi.requestAbsence(numericClassId, {
                 reason: newAbsence.reason,
                 absence_date: newAbsence.rawDate,
             });
-            setAbsenceList((prev) => [mapAbsenceFromApi(created, newAbsence), ...prev]);
+            const latestAbsences = await studentApi.getMyAbsences(numericClassId).catch(() => null);
+            if (Array.isArray(latestAbsences)) {
+                setAbsenceList(latestAbsences.map((item) => mapAbsenceFromApi(item)));
+            } else {
+                setAbsenceList((prev) => [mapAbsenceFromApi(created, newAbsence), ...prev]);
+            }
             setSubView('tab');
             return;
         }
@@ -210,15 +234,25 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
         setSubView('tab');
     };
 
-    // 보강 신청하기 (실패 시 로컬 상태 변경 없이 에러 전달)
+    // 보강 신청하기 (학생 본인의 결석/수업 schedule_id + class_id + makeup_time 전송)
     const handleSubmitMakeup = async (newMakeup) => {
         if (isValidClassId) {
+            const absenceWithSchedule =
+                absenceList.find((item) => item.status === '수락됨' && item.scheduleId) ||
+                absenceList.find((item) => item.status !== '거절됨' && item.status !== '취소됨' && item.scheduleId) ||
+                absenceList.find((item) => item.scheduleId);
+            const studentScheduleId = absenceWithSchedule?.scheduleId || extractScheduleId(classSchedules[0]) || newMakeup.scheduleId;
             const created = await studentApi.requestMakeup({
                 class_id: numericClassId,
-                schedule_id: newMakeup.scheduleId,
+                ...(studentScheduleId ? { schedule_id: Number(studentScheduleId) } : {}),
                 makeup_time: newMakeup.isoMakeupTime,
             });
-            setMakeupList((prev) => [mapMakeupFromApi(created, newMakeup), ...prev]);
+            const latestMakeups = await studentApi.getMakeups(numericClassId).catch(() => null);
+            if (Array.isArray(latestMakeups)) {
+                setMakeupList(latestMakeups.map((item) => mapMakeupFromApi(item)));
+            } else {
+                setMakeupList((prev) => [mapMakeupFromApi(created, newMakeup), ...prev]);
+            }
             setSubView('tab');
             return;
         }
@@ -323,6 +357,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                         onMonthChange={handleMonthChange}
                         onSubmit={handleSubmitAbsence}
                         onCancel={handleCancelAbsence}
+                        onView={(item) => setSelectedHistoryItem({ ...item, kind: 'absence' })}
                     />
                 )}
 
@@ -330,13 +365,14 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                     <MakeupApply
                         items={makeupList}
                         availableSlots={availableMakeupSlots}
-                        isServerMode={isValidClassId}
+                        classSchedules={classSchedules}
                         calendarEvents={calendarEvents}
                         calendarYear={calendarDate.year}
                         calendarMonth={calendarDate.month}
                         onMonthChange={handleMonthChange}
                         onSubmit={handleSubmitMakeup}
                         onCancel={handleCancelMakeup}
+                        onView={(item) => setSelectedHistoryItem({ ...item, kind: 'makeup' })}
                     />
                 )}
 
@@ -372,6 +408,7 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                                     items={absenceList}
                                     onOpenApply={() => setSubView('absence-apply')}
                                     onCancel={handleCancelAbsence}
+                                    onView={(item) => setSelectedHistoryItem({ ...item, kind: 'absence' })}
                                 />
                             )}
 
@@ -380,12 +417,64 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                                     items={makeupList}
                                     onOpenApply={() => setSubView('makeup-apply')}
                                     onCancel={handleCancelMakeup}
+                                    onView={(item) => setSelectedHistoryItem({ ...item, kind: 'makeup' })}
                                 />
                             )}
                         </section>
                     </div>
                 )}
             </div>
+
+            {selectedHistoryItem && (
+                <div className="class-detail-modal-overlay" onClick={() => setSelectedHistoryItem(null)}>
+                    <div
+                        className="class-detail-modal-card"
+                        onClick={(e) => e.stopPropagation()}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="class-history-detail-title"
+                    >
+                        <h3 id="class-history-detail-title" className="class-detail-modal-title">
+                            {selectedHistoryItem.kind === 'makeup' ? '보강 신청 상세' : '결석 신청 상세'}
+                        </h3>
+                        <dl className="class-detail-modal-list">
+                            <div className="class-detail-modal-row">
+                                <dt>날짜</dt>
+                                <dd>{selectedHistoryItem.date || '-'}</dd>
+                            </div>
+                            {selectedHistoryItem.kind === 'makeup' && (
+                                <div className="class-detail-modal-row">
+                                    <dt>보강 시간</dt>
+                                    <dd>{selectedHistoryItem.time || '-'}</dd>
+                                </div>
+                            )}
+                            <div className="class-detail-modal-row">
+                                <dt>신청 사유</dt>
+                                <dd>{selectedHistoryItem.reason || '-'}</dd>
+                            </div>
+                            <div className="class-detail-modal-row">
+                                <dt>처리 상태</dt>
+                                <dd>{selectedHistoryItem.status || '-'}</dd>
+                            </div>
+                            {selectedHistoryItem.rejectReason && (
+                                <div className="class-detail-modal-row">
+                                    <dt>거절 사유</dt>
+                                    <dd>{selectedHistoryItem.rejectReason}</dd>
+                                </div>
+                            )}
+                        </dl>
+                        <div className="class-detail-modal-actions">
+                            <button
+                                type="button"
+                                className="class-detail-modal-close-btn"
+                                onClick={() => setSelectedHistoryItem(null)}
+                            >
+                                닫기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

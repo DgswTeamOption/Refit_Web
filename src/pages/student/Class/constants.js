@@ -106,10 +106,12 @@ export const mapAbsenceFromApi = (item, fallback = {}) => {
     const statusLabel = APPROVAL_STATUS_MAP[item?.status] || item?.status || fallback.status || '대기중';
     const rawDate = extractIsoDate(item?.absence_date || item?.created_at || fallback.rawDate);
     return {
-        id: item?.id ?? fallback.id ?? Date.now(),
+        id: item?.absenceId ?? item?.absence_id ?? item?.id ?? fallback.id ?? Date.now(),
+        scheduleId: item?.scheduleId ?? item?.schedule_id ?? fallback.scheduleId ?? null,
         rawDate,
         date: formatToKoreanDate(rawDate) || fallback.date || '-',
         reason: item?.reason || fallback.reason || '기타 사유',
+        rejectReason: item?.reject_reason || item?.rejectReason || '',
         status: statusLabel,
         canCancel: statusLabel === '대기중',
     };
@@ -122,11 +124,12 @@ export const mapMakeupFromApi = (item, fallback = {}) => {
     const timeStr = item?.makeup_time ? formatToTime(item.makeup_time) : '';
 
     return {
-        id: item?.id ?? fallback.id ?? Date.now(),
+        id: item?.makeupId ?? item?.makeup_id ?? item?.id ?? fallback.id ?? Date.now(),
         rawDate,
         date: formatToKoreanDate(rawDate) || fallback.date || '-',
         time: timeStr || fallback.time || '시간 미정',
         reason: item?.reason || fallback.reason || '보강 신청',
+        rejectReason: item?.reject_reason || item?.rejectReason || '',
         status: statusLabel,
         canCancel: statusLabel === '대기중',
     };

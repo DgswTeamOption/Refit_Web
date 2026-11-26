@@ -5,7 +5,7 @@ import HistoryTable from './HistoryTable';
 /**
  * 결석 일정 탭 화면 (view10)
  */
-function AbsenceList({ items = [], onOpenApply, onCancel }) {
+function AbsenceList({ items = [], onOpenApply, onCancel, onView }) {
     return (
         <div className="class-absence-tab-content">
             <div className="absence-section-header">
@@ -23,6 +23,7 @@ function AbsenceList({ items = [], onOpenApply, onCancel }) {
                     items={items}
                     contentLabel="신청 내용"
                     onCancel={onCancel}
+                    onView={onView}
                 />
             </div>
         </div>

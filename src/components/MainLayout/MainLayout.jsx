@@ -18,6 +18,7 @@ const PAGE_PATHS = {
 export default function MainLayout() {
     const { pathname } = useLocation();
     const navigate = useNavigate();
+    const isLoggedIn = isAuthenticatedSession();
     const isTeacherPage = pathname.startsWith('/teacher');
     const isStudentPage = pathname === '/student' || pathname.startsWith('/class/');
     const savedRole = typeof window !== 'undefined'
@@ -33,7 +34,7 @@ export default function MainLayout() {
         : activeRole === 'student'
             ? '/student'
             : '/login';
-    const showFooter = pathname !== '/personal-info';
+    const showFooter = !isLoggedIn && !isTeacherPage && !isStudentPage && pathname !== '/personal-info';
 
     return (
         <div className="global-site">
