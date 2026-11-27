@@ -9,7 +9,7 @@
 }
 
 .global-navigation-links a {
-  color: #0088e9;
+  color: var(--color-blue, #0099ff);
   text-decoration: none;
 }
 

@@ -1,5 +1,4 @@
 .auth-page {
-  --color-blue: #0099FF;
   display: grid;
   min-height: 100vh;
   min-height: 100svh;
@@ -113,7 +112,7 @@
   align-items: center;
   width: 100%;
   height: 18px;
-  color: #6c7177;
+  color: #999;
   font-size: 14px;
   line-height: 18px;
   text-align: center;
@@ -185,7 +184,7 @@
 
 .auth-actions p {
   margin: 0;
-  color: #6c7177;
+  color: var(--color-gray);
   font-size: 14px;
   line-height: 20px;
   text-align: center;
@@ -195,7 +194,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #006ab8;
+  color: var(--color-blue);
   font-size: inherit;
 }
 
@@ -204,7 +203,7 @@
   height: 14px;
   margin-block: -8px;
   overflow: hidden;
-  color: #006ab8;
+  color: var(--color-blue);
   font-size: 11px;
   line-height: 14px;
   text-overflow: ellipsis;

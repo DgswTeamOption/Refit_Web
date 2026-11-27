@@ -169,6 +169,40 @@ function addOneHour(startTime) {
   return `${String(nextHour).padStart(2, "0")}:${mStr}`;
 }
 
+function timeToMinutes(value) {
+  const normalized = normalizeTimeValue(value);
+  if (!normalized) return null;
+  const [hours, minutes] = normalized.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function findScheduleTimeConflict(scheduleList, dayKey, startTime, endTime, excludedRuleId) {
+  const proposedStart = timeToMinutes(startTime);
+  const proposedEnd = timeToMinutes(endTime);
+  if (proposedStart === null || proposedEnd === null) return null;
+
+  return scheduleList.find((row) => {
+    const slot = row.slots?.[dayKey];
+    if (!slot) return false;
+    if (
+      excludedRuleId !== undefined &&
+      excludedRuleId !== null &&
+      String(slot.ruleId) === String(excludedRuleId)
+    ) {
+      return false;
+    }
+
+    const existingStart = timeToMinutes(slot.startTime);
+    const existingEnd = timeToMinutes(slot.endTime || addOneHour(slot.startTime));
+    return (
+      existingStart !== null &&
+      existingEnd !== null &&
+      proposedStart < existingEnd &&
+      existingStart < proposedEnd
+    );
+  });
+}
+
 function parseDateTimeToLocalParts(rawDateTime) {
   if (!rawDateTime) return { dayKey: "", time: "" };
   const str = String(rawDateTime).trim();
@@ -459,6 +493,8 @@ export default function ScheduleTab({ classId, classroomId }) {
   const [makeupRestrictionsLoaded, setMakeupRestrictionsLoaded] = useState(false);
   const [checkingMakeupRestrictions, setCheckingMakeupRestrictions] = useState(true);
   const [studentOptions, setStudentOptions] = useState([]);
+  const [loadingStudents, setLoadingStudents] = useState(true);
+  const [studentOptionsError, setStudentOptionsError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -505,8 +541,15 @@ export default function ScheduleTab({ classId, classroomId }) {
   }, [fetchSchedules]);
 
   useEffect(() => {
-    if (!resolvedClassId) return;
+    if (!resolvedClassId) {
+      setStudentOptions([]);
+      setStudentOptionsError("수업 정보를 확인할 수 없어 학생 목록을 불러오지 못했습니다.");
+      setLoadingStudents(false);
+      return;
+    }
     let isMounted = true;
+    setLoadingStudents(true);
+    setStudentOptionsError("");
     setLockedRuleIds(new Set());
     setMakeupRestrictionsLoaded(false);
     setCheckingMakeupRestrictions(true);
@@ -570,7 +613,16 @@ export default function ScheduleTab({ classId, classroomId }) {
         });
       });
 
-      setStudentOptions(Array.from(optionsMap.values()));
+      const nextStudentOptions = Array.from(optionsMap.values());
+      setStudentOptions(nextStudentOptions);
+      setStudentOptionsError(
+        nextStudentOptions.length > 0
+          ? ""
+          : studentsRes.status === "rejected"
+          ? studentsRes.reason?.message || "학생 목록을 불러오지 못했습니다."
+          : "수업에 등록된 학생이 없어 시간표를 등록할 수 없습니다."
+      );
+      setLoadingStudents(false);
     });
 
     return () => {
@@ -666,6 +718,20 @@ export default function ScheduleTab({ classId, classroomId }) {
     );
     if (dayPastLatestStart) {
       alert("수업은 1시간으로 등록되므로 시작 시간은 오후 11시 전으로 선택해주세요.");
+      return;
+    }
+
+    const overlappingDay = selectedDays.find((day) =>
+      findScheduleTimeConflict(
+        scheduleList,
+        day.key,
+        daySchedules[day.key],
+        addOneHour(daySchedules[day.key]),
+        editingItem?.slots?.[day.key]?.ruleId
+      )
+    );
+    if (overlappingDay) {
+      alert(`${overlappingDay.fullLabel}에 이미 등록된 수업과 시간이 겹칩니다. 다른 시간을 선택해주세요.`);
       return;
     }
 
@@ -849,13 +915,9 @@ export default function ScheduleTab({ classId, classroomId }) {
                   })}
                 </select>
               ) : (
-                <input
-                  type="text"
-                  placeholder="학생 이름 입력"
-                  value={scheduleStudent}
-                  onChange={(e) => setScheduleStudent(e.target.value)}
-                  className="form-control"
-                />
+                <p className="schedule-form-hint" role={loadingStudents ? "status" : "alert"}>
+                  {loadingStudents ? "학생 목록을 불러오는 중입니다." : studentOptionsError}
+                </p>
               )}
               <Button
                 text={editingItem ? "수정" : "등록"}

@@ -42,7 +42,7 @@
 .footer-slogan {
     font-size: 14px;
     line-height: 1.6;
-    color: #6c7177;
+    color: var(--color-gray, #767B81);
     letter-spacing: -0.2px;
 }
 
@@ -79,7 +79,7 @@
 .dev-group-title {
     font-size: 13px;
     font-weight: 500;
-    color: #6c7177;
+    color: var(--color-gray, #767B81);
     margin-bottom: 8px;
 }
 
@@ -136,7 +136,7 @@
 
 .footer-link {
     font-size: 14px;
-    color: #6c7177;
+    color: var(--color-gray, #767B81);
     text-decoration: none;
     transition: color 0.2s ease;
     letter-spacing: -0.2px;
@@ -213,7 +213,7 @@
 
 .footer-copyright {
     font-size: 13px;
-    color: #6c7177;
+    color: var(--color-gray, #767B81);
     letter-spacing: -0.1px;
 }
 

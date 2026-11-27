@@ -78,7 +78,7 @@
     --ri-muted: #fff;
     --ri-accent: #daefff;
     padding-block: var(--story-pad) clamp(48px, 4.3vw, 62px);
-    background: var(--color-blue);
+    background: #0099ff;
     color: var(--ri-ink);
 }
 .ri-solution__path {
