@@ -15,7 +15,7 @@ function RequestState({ resource, onRetry }) {
     );
 }
 
-export default function ClassHome({ classroom, period, onPeriodChange, summary, attendance, selectedDate, onSelectDate, notices, onRetry, onCreate, onOpen, onList }) {
+export default function ClassHome({ classroom, makeups, period, onPeriodChange, summary, attendance, selectedDate, onSelectDate, notices, onRetry, onCreate, onOpen, onList }) {
     const totals = attendanceTotals(summary.data);
     const total = totals.present + totals.late + totals.absent;
     const [, month, day] = selectedDate.split('-');
@@ -24,7 +24,8 @@ export default function ClassHome({ classroom, period, onPeriodChange, summary, 
         <div className="teacher-class__layout">
             <div className="teacher-class__sidebar">
                 <aside className="teacher-class__calendar" aria-label="수업 달력">
-                    <ClassCalendar period={period} onPeriodChange={onPeriodChange} classroom={classroom} selectedDate={selectedDate} onSelectDate={onSelectDate} />
+                    <ClassCalendar period={period} onPeriodChange={onPeriodChange} classroom={classroom} makeups={makeups.data} selectedDate={selectedDate} onSelectDate={onSelectDate} />
+                    {makeups.error && <p role="status">보강 일정을 불러오지 못했습니다.</p>}
                 </aside>
                 {classroom.classCode && <ClassCodeCard classCode={classroom.classCode} />}
             </div>

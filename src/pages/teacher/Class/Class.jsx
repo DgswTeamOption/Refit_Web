@@ -4,6 +4,7 @@ import SubNav from '../../../components/SubNav/SubNav.jsx';
 import Button from '../../../components/Button/Button.jsx';
 import Nav from '../../../components/Nav/Nav.jsx';
 import * as teacherApi from '../../../api/teacher.js';
+import { getClassMakeups } from '../../../api/overviewApi.js';
 import { currentPeriod, dateKey, noticeForView } from '../teacherViewData.js';
 import ClassHome from './components/ClassHome.jsx';
 import Notices from './notices/Notices.jsx';
@@ -34,6 +35,7 @@ function ClassPage({ classId }) {
     const [selectedDate, setSelectedDate] = useState(dateKey);
     const [home, setHome] = useState(() => emptyResource(null));
     const [summary, setSummary] = useState(() => emptyResource([]));
+    const [makeups, setMakeups] = useState(() => emptyResource([]));
     const [notices, setNotices] = useState(() => emptyResource([]));
     const [attendance, setAttendance] = useState(() => emptyResource([]));
     const [detail, setDetail] = useState(() => emptyResource(null));
@@ -42,6 +44,18 @@ function ClassPage({ classId }) {
     const [saving, setSaving] = useState(false);
     const [actionError, setActionError] = useState('');
     const bodyView = view.type === 'delete' ? 'detail' : view.type;
+
+    useEffect(() => {
+        const controller = new AbortController();
+        getClassMakeups(classId, undefined, controller.signal)
+            .then((data) => {
+                if (!controller.signal.aborted) setMakeups({ data: Array.isArray(data) ? data : [], loading: false, error: '' });
+            })
+            .catch((failure) => {
+                if (!controller.signal.aborted) setMakeups({ data: [], loading: false, error: failure.message });
+            });
+        return () => controller.abort();
+    }, [classId, reload]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -158,7 +172,7 @@ function ClassPage({ classId }) {
     } else if (home.error || !home.data) {
         body = <div role="alert"><p>{home.error || '수업 정보를 찾을 수 없습니다.'}</p><Button text="다시 시도" onClick={retry} /><Link to="/teacher">내 수업으로 이동</Link></div>;
     } else if (view.type === 'home') {
-        body = <ClassHome classroom={home.data} period={period} onPeriodChange={changePeriod} selectedDate={selectedDate} onSelectDate={selectDate} summary={summary} attendance={attendance} notices={notices} onRetry={retry} onCreate={() => show({ type: 'create', from: 'home' })} onOpen={(noticeId) => show({ type: 'detail', noticeId })} onList={() => show({ type: 'list' })} />;
+        body = <ClassHome classroom={home.data} makeups={makeups} period={period} onPeriodChange={changePeriod} selectedDate={selectedDate} onSelectDate={selectDate} summary={summary} attendance={attendance} notices={notices} onRetry={retry} onCreate={() => show({ type: 'create', from: 'home' })} onOpen={(noticeId) => show({ type: 'detail', noticeId })} onList={() => show({ type: 'list' })} />;
     } else if (view.type === 'create') {
         body = <NoticesEditor mode="create" saving={saving} error={actionError} onCancel={() => show({ type: view.from })} onSave={saveNotice} />;
     } else if (view.type === 'list') {

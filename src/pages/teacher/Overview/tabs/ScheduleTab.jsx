@@ -406,12 +406,11 @@ function ScheduleTable({
   scheduleList,
   loading,
   error,
-  lockedRuleIds,
-  makeupRestrictionsLoaded,
-  checkingMakeupRestrictions,
   onEdit,
   onDelete,
+  makeupRestrictions,
 }) {
+  const { lockedRuleIds, makeupRestrictionsLoaded, checkingMakeupRestrictions } = makeupRestrictions;
   return (
     <div className="table-wrapper">
       <table className="schedule-table">
@@ -498,6 +497,14 @@ export default function ScheduleTab({ classId, classroomId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const makeupRestrictions = {
+    lockedRuleIds,
+    makeupRestrictionsLoaded,
+    checkingMakeupRestrictions,
+  };
+  const isEditingLocked = Boolean(editingItem && (
+    !makeupRestrictionsLoaded || rowHasPendingOrApprovedMakeup(editingItem, lockedRuleIds)
+  ));
 
   const availableStudentOptions = studentOptions.filter(
     (student) => !findStudentSchedule(scheduleList, student.id, student.name)
@@ -692,6 +699,8 @@ export default function ScheduleTab({ classId, classroomId }) {
   };
 
   const handleRegister = async () => {
+    if (!resolvedClassId || submitting || isEditingLocked) return;
+
     const trimmedName = scheduleStudent.trim();
     const matchedByName = studentOptions.find(
       (opt) => opt.name === trimmedName
@@ -734,8 +743,6 @@ export default function ScheduleTab({ classId, classroomId }) {
       alert(`${overlappingDay.fullLabel}에 이미 등록된 수업과 시간이 겹칩니다. 다른 시간을 선택해주세요.`);
       return;
     }
-
-    if (!resolvedClassId || submitting) return;
 
     const existingStudentSchedule = findStudentSchedule(
       scheduleList,
@@ -865,9 +872,7 @@ export default function ScheduleTab({ classId, classroomId }) {
             scheduleList={scheduleList}
             loading={loading}
             error={error}
-            lockedRuleIds={lockedRuleIds}
-            makeupRestrictionsLoaded={makeupRestrictionsLoaded}
-            checkingMakeupRestrictions={checkingMakeupRestrictions}
+            makeupRestrictions={makeupRestrictions}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
@@ -926,6 +931,7 @@ export default function ScheduleTab({ classId, classroomId }) {
                 onClick={handleRegister}
                 disabled={
                   submitting ||
+                  isEditingLocked ||
                   hasSelectedStudentScheduleConflict ||
                   (!editingItem &&
                     (loading || Boolean(error) || !selectedStudentId))
@@ -991,6 +997,7 @@ export default function ScheduleTab({ classId, classroomId }) {
               scheduleList={scheduleList}
               loading={loading}
               error={error}
+              makeupRestrictions={makeupRestrictions}
               onEdit={handleEdit}
               onDelete={handleDelete}
             />

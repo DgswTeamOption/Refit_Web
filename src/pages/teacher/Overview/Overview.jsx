@@ -10,52 +10,13 @@ import {
     createTeacherClass,
     deleteUploadedImage,
     deleteTeacherClass,
-    getClassMakeups,
     uploadImage,
 } from '../../../api/overviewApi.js';
-import { currentPeriod } from '../teacherViewData.js';
+import { currentPeriod, markCalendarDate } from '../teacherViewData.js';
 import './Overview.css';
 
 const MAX_VISIBLE_CLASSES = 4;
 const CLASS_COLORS = [...new Set(INITIAL_TEACHER_CLASSES.map(({ color }) => color))];
-const ACTIVE_MAKEUP_STATUSES = new Map([
-    ['0', 'darkGray'],
-    ['PENDING', 'darkGray'],
-    ['WAITING', 'darkGray'],
-    ['1', 'yellow'],
-    ['APPROVED', 'yellow'],
-]);
-
-function extractItems(response, keys) {
-    if (Array.isArray(response)) return response;
-    const source = response?.data ?? response;
-    if (Array.isArray(source)) return source;
-    for (const key of keys) {
-        if (Array.isArray(source?.[key])) return source[key];
-    }
-    return [];
-}
-
-function dayInPeriod(rawDate, { year, month }) {
-    if (typeof rawDate !== 'string') return null;
-    const match = rawDate.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
-    if (!match) return null;
-    const [, rawYear, rawMonth, rawDay] = match;
-    const day = Number(rawDay);
-    return Number(rawYear) === year && Number(rawMonth) === month && day > 0 ? day : null;
-}
-
-function markCalendarDay(events, day, color) {
-    if (!day) return;
-    const markers = events[day] ??= [];
-    if (!markers.includes(color)) markers.push(color);
-}
-
-function makeupMarker(makeup) {
-    const status = makeup?.approvalStatus ?? makeup?.approval_status;
-    return ACTIVE_MAKEUP_STATUSES.get(String(status ?? '').toUpperCase()) || '';
-}
-
 function formatClassList(list = []) {
     return list.map((item, index) => ({
         ...item,
@@ -102,41 +63,19 @@ export default function Overview({ hidden }) {
         setCalendarEvents({});
         if (classes.length === 0) return undefined;
 
-        let isMounted = true;
         const controller = new AbortController();
         async function loadCalendar() {
-            const results = await Promise.all(classes.map(async (classItem) => {
-                const [schedules, makeups] = await Promise.allSettled([
-                    getMonthlyCalendar(classItem.id, {
-                        year: calendarPeriod.year,
-                        month: calendarPeriod.month,
-                        signal: controller.signal,
-                    }),
-                    getClassMakeups(classItem.id, undefined, controller.signal),
-                ]);
-                return { schedules, makeups };
-            }));
-
-            if (!isMounted) return;
+            const results = await Promise.allSettled(classes.map((item) =>
+                getMonthlyCalendar(item.id, { ...calendarPeriod, signal: controller.signal })
+            ));
+            if (controller.signal.aborted) return;
 
             const events = {};
-            results.forEach(({ schedules, makeups }) => {
-                if (schedules.status === 'fulfilled') {
-                    extractItems(schedules.value, ['schedules', 'content', 'items', 'list'])
-                        .forEach((schedule) => {
-                            const startTime = schedule?.startTime ?? schedule?.start_time ?? schedule?.date;
-                            markCalendarDay(events, dayInPeriod(startTime, calendarPeriod), 'blue');
-                        });
-                }
-
-                if (makeups.status === 'fulfilled') {
-                    extractItems(makeups.value, ['makeups', 'content', 'items', 'list'])
-                        .forEach((makeup) => {
-                            const color = makeupMarker(makeup);
-                            if (!color) return;
-                            const makeupTime = makeup?.makeupTime ?? makeup?.makeup_time;
-                            markCalendarDay(events, dayInPeriod(makeupTime, calendarPeriod), color);
-                        });
+            results.forEach((schedules, index) => {
+                if (schedules.status !== 'fulfilled') return;
+                for (const schedule of schedules.value) {
+                    const start = schedule.startTime ?? schedule.start_time ?? schedule.date;
+                    markCalendarDate(events, start, calendarPeriod, classes[index].color);
                 }
             });
 
@@ -144,10 +83,7 @@ export default function Overview({ hidden }) {
         }
 
         loadCalendar();
-        return () => {
-            isMounted = false;
-            controller.abort();
-        };
+        return () => controller.abort();
     }, [classes, calendarPeriod]);
 
     useEffect(() => {
@@ -295,11 +231,12 @@ export default function Overview({ hidden }) {
                     aria-label="수업 달력"
                 >
                     <Calendar
-                        mode="teacher"
+                        mode="class"
                         highlightToday
                         period={calendarPeriod}
                         onPeriodChange={setCalendarPeriod}
                         events={calendarEvents}
+                        classes={classes}
                     />
                 </aside>
 
@@ -328,6 +265,7 @@ export default function Overview({ hidden }) {
                                         title={item.title}
                                         color={item.color}
                                         bannerImageUrl={item.bannerImageUrl}
+                                        actionLabel="수업 삭제"
                                         onLeave={() => setModal({ type: 'delete', item })}
                                     />
                                     <Link

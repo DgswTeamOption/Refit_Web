@@ -19,6 +19,30 @@ export function shiftPeriod({ year, month }, offset) {
     return { year: date.getFullYear(), month: date.getMonth() + 1 };
 }
 
+export function markCalendarDate(events, dateTime, { year, month }, color) {
+    if (!color || typeof dateTime !== 'string') return;
+    const prefix = `${year}-${String(month).padStart(2, '0')}-`;
+    if (!dateTime.startsWith(prefix)) return;
+    const day = Number(dateTime.slice(8, 10));
+    if (!Number.isInteger(day) || day < 1 || day > new Date(year, month, 0).getDate()) return;
+    const marks = events[day] ??= [];
+    if (!marks.includes(color)) marks.push(color);
+}
+
+export function teacherClassCalendarEvents(schedules, makeups, period) {
+    const events = {};
+    for (const schedule of schedules) {
+        markCalendarDate(events, schedule.startTime ?? schedule.start_time ?? schedule.date, period, 'blue');
+    }
+    for (const makeup of makeups) {
+        const status = String(makeup.approval_status ?? makeup.approvalStatus ?? '').toUpperCase();
+        const color = ['0', 'PENDING', 'WAITING'].includes(status) ? 'darkGray'
+            : ['1', 'APPROVED'].includes(status) ? 'yellow' : '';
+        markCalendarDate(events, makeup.makeup_time ?? makeup.makeupTime, period, color);
+    }
+    return events;
+}
+
 // Weekly rows are keyed by class ID, for example { 4: [{ mon: '16:00' }] }.
 export function calendarEvents(schedules, classes, { year, month }, weeklySchedules = {}) {
     const prefix = `${year}-${String(month).padStart(2, '0')}-`;

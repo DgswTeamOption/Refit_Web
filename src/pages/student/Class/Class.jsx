@@ -29,7 +29,7 @@ function extractScheduleList(data) {
 
 function extractScheduleId(item) {
     if (!item || typeof item !== 'object') return null;
-    return item.scheduleId ?? item.schedule_id ?? item.ruleId ?? item.rule_id ?? item.id ?? null;
+    return item.scheduleId ?? item.schedule_id ?? item.id ?? null;
 }
 
 function Class({ classInfo: propClassInfo, onGoHome }) {
@@ -234,19 +234,24 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
         setSubView('tab');
     };
 
-    // 보강 신청하기 (학생 본인의 결석/수업 schedule_id + class_id + makeup_time 전송)
     const handleSubmitMakeup = async (newMakeup) => {
         if (isValidClassId) {
-            const absenceWithSchedule =
-                absenceList.find((item) => item.status === '수락됨' && item.scheduleId) ||
-                absenceList.find((item) => item.status !== '거절됨' && item.status !== '취소됨' && item.scheduleId) ||
-                absenceList.find((item) => item.scheduleId);
-            const studentScheduleId = absenceWithSchedule?.scheduleId || extractScheduleId(classSchedules[0]) || newMakeup.scheduleId;
-            const created = await studentApi.requestMakeup({
+            const request = {
                 class_id: numericClassId,
-                ...(studentScheduleId ? { schedule_id: Number(studentScheduleId) } : {}),
                 makeup_time: newMakeup.isoMakeupTime,
-            });
+            };
+            // 등록된 가능 시간 신청에만 학생 본인의 회차 ID가 필요하다.
+            if (!newMakeup.isProposal) {
+                const absenceWithSchedule =
+                    absenceList.find((item) => item.status === '수락됨' && item.scheduleId) ||
+                    absenceList.find((item) => item.status !== '거절됨' && item.status !== '취소됨' && item.scheduleId);
+                const studentScheduleId = Number(absenceWithSchedule?.scheduleId ?? extractScheduleId(classSchedules[0]));
+                if (!Number.isSafeInteger(studentScheduleId) || studentScheduleId < 1) {
+                    throw new Error('연결할 본인 수업 일정이 없습니다. 직접 시간을 제안할 수 있습니다.');
+                }
+                request.schedule_id = studentScheduleId;
+            }
+            const created = await studentApi.requestMakeup(request);
             const latestMakeups = await studentApi.getMakeups(numericClassId).catch(() => null);
             if (Array.isArray(latestMakeups)) {
                 setMakeupList(latestMakeups.map((item) => mapMakeupFromApi(item)));
@@ -365,7 +370,6 @@ function Class({ classInfo: propClassInfo, onGoHome }) {
                     <MakeupApply
                         items={makeupList}
                         availableSlots={availableMakeupSlots}
-                        classSchedules={classSchedules}
                         calendarEvents={calendarEvents}
                         calendarYear={calendarDate.year}
                         calendarMonth={calendarDate.month}

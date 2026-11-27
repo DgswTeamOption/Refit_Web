@@ -62,7 +62,7 @@ export const studentApi = {
     requestMakeup: ({ class_id, schedule_id, makeup_time }) =>
         apiClient.post('/api/makeups/request', {
             class_id,
-            schedule_id,
+            ...(schedule_id == null ? {} : { schedule_id }),
             makeup_time,
         }),
 
