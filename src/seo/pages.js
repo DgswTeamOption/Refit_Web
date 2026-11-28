@@ -39,16 +39,27 @@ export function pageMetadata(path) {
     }
     const schema = pathname === '/' ? {
         '@context': 'https://schema.org',
-        '@type': 'WebApplication',
-        name: '리핏',
-        alternateName: 'Refit',
-        url: canonical,
-        description,
-        applicationCategory: 'EducationalApplication',
-        operatingSystem: 'Web',
-        inLanguage: 'ko-KR',
-        audience: { '@type': 'Audience', audienceType: '학원 선생님과 학생' },
-        featureList: ['수업 일정 관리', '결석 및 보강 관리', 'NFC 출석'],
+        '@graph': [
+            {
+                '@type': 'WebSite',
+                '@id': `${origin}/#website`,
+                name: brand,
+                alternateName: 'Refit',
+                url: canonical,
+            },
+            {
+                '@type': 'WebApplication',
+                name: '리핏',
+                alternateName: 'Refit',
+                url: canonical,
+                description,
+                applicationCategory: 'EducationalApplication',
+                operatingSystem: 'Web',
+                inLanguage: 'ko-KR',
+                audience: { '@type': 'Audience', audienceType: '학원 선생님과 학생' },
+                featureList: ['수업 일정 관리', '결석 및 보강 관리', 'NFC 출석'],
+            },
+        ],
     } : pathname === '/faq' ? {
         '@context': 'https://schema.org', '@type': 'FAQPage',
         name: '리핏 자주 묻는 질문', description, url: canonical, inLanguage: 'ko-KR',
