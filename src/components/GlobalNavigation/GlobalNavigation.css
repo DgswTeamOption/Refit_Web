@@ -9,16 +9,8 @@
 }
 
 .global-navigation-links a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.global-navigation-links button {
-  padding: 0;
-  border: 0;
-  background: transparent;
   color: var(--color-blue, #0099ff);
-  font-size: inherit;
+  text-decoration: none;
 }
 
 @media (max-width: 768px) {

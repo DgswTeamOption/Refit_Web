@@ -86,6 +86,7 @@
 }
 
 .header-login-btn {
+    text-decoration: none;
     background: none;
     border: none;
     font-size: 14px;
@@ -102,7 +103,8 @@
 }
 
 .header-signup-btn {
-    background-color: var(--color-primary-blue, #0099FF);
+    text-decoration: none;
+    background-color: var(--color-blue);
     color: #FFFFFF;
     border: none;
     border-radius: 10px;

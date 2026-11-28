@@ -25,7 +25,7 @@ const Footer = () => {
                     {/* Brand Section */}
                     <div className="footer-brand">
                         <Link to="/" className="footer-logo-link" aria-label="Refit 홈으로 이동">
-                            <img src="/logo.svg" alt="Refit 로고" className="footer-logo" />
+                            <img src="/logo.svg" alt="Refit 로고" width="103" height="49" className="footer-logo" />
                         </Link>
                         <p className="footer-slogan">
                             빈틈을 채우는 스마트한<br />
@@ -81,7 +81,7 @@ const Footer = () => {
                             <h3 className="footer-column-title">Service</h3>
                             <ul className="footer-links">
                                 <li>
-                                    <a href="#service-intro" className="footer-link">서비스 소개</a>
+                                    <Link to="/" className="footer-link">서비스 소개</Link>
                                 </li>
                             </ul>
                         </div>
@@ -91,13 +91,13 @@ const Footer = () => {
                             <h3 className="footer-column-title">Help</h3>
                             <ul className="footer-links">
                                 <li>
-                                    <a href="#faq" className="footer-link">FAQ</a>
+                                    <Link to="/faq" className="footer-link">FAQ</Link>
                                 </li>
                                 <li>
-                                    <a href="#terms" className="footer-link">이용 약관</a>
+                                    <Link to="/terms" className="footer-link">이용 약관</Link>
                                 </li>
                                 <li>
-                                    <a href="#privacy" className="footer-link">개인정보 처리방침</a>
+                                    <Link to="/privacy" className="footer-link">개인정보 처리방침</Link>
                                 </li>
                             </ul>
                         </div>

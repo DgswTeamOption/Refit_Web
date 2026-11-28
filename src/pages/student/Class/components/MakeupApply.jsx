@@ -13,7 +13,6 @@ import { formatToKoreanDate, formatToTime } from '../constants';
 function MakeupApply({
     items = [],
     availableSlots = [],
-    classSchedules = [],
     calendarEvents = {},
     calendarYear,
     calendarMonth,
@@ -26,28 +25,11 @@ function MakeupApply({
     const [selectedSlotId, setSelectedSlotId] = useState(null);
     const [makeupDate, setMakeupDate] = useState('');
     const [makeupStartTime, setMakeupStartTime] = useState('');
-    const [makeupEndTime, setMakeupEndTime] = useState('');
-    const [makeupReason, setMakeupReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
 
     const hasServerSlots = availableSlots.length > 0;
     const selectedSlot = availableSlots.find((slot) => slot.id === selectedSlotId) || null;
-    const firstSchedule = classSchedules[0];
-    const defaultScheduleId =
-        firstSchedule?.scheduleId ??
-        firstSchedule?.schedule_id ??
-        firstSchedule?.ruleId ??
-        firstSchedule?.rule_id ??
-        firstSchedule?.id ??
-        null;
-
-    const isTimeInvalid = Boolean(
-        isProposeMode &&
-        makeupStartTime &&
-        makeupEndTime &&
-        makeupStartTime >= makeupEndTime
-    );
 
     const handleSelectDateFromCalendar = (day, year, month) => {
         if (!isProposeMode) return;
@@ -72,7 +54,6 @@ function MakeupApply({
         setIsProposeMode(false);
         setMakeupDate('');
         setMakeupStartTime('');
-        setMakeupEndTime('');
         setSubmitError('');
     };
 
@@ -94,8 +75,8 @@ function MakeupApply({
                 setSubmitError('보강 시작 시간을 입력해주세요.');
                 return;
             }
-            if (isTimeInvalid) {
-                setSubmitError('시작 시간은 종료 시간보다 앞서야 합니다.');
+            if (new Date(`${makeupDate}T${makeupStartTime}:00`) < new Date()) {
+                setSubmitError('지난 시간은 보강 시간으로 제안할 수 없습니다.');
                 return;
             }
         }
@@ -108,31 +89,25 @@ function MakeupApply({
                 const slotDate = formatToKoreanDate(selectedSlot.makeup_time);
                 const slotTime = formatToTime(selectedSlot.makeup_time) || '시간 미정';
 
-                // 가능 시간은 class_id + makeup_time으로 매칭되므로 slot.schedule_id를 그대로 쓰지 않음
                 await onSubmit({
                     id: Date.now(),
-                    scheduleId: defaultScheduleId,
                     isoMakeupTime: selectedSlot.makeup_time,
                     date: slotDate,
                     time: slotTime,
-                    reason: makeupReason.trim() || '보강 신청',
+                    reason: '보강 신청',
                     status: '대기중',
                     canCancel: true,
                 });
                 setSelectedSlotId(null);
             } else {
-                const timeStr = makeupStartTime && makeupEndTime
-                    ? `${makeupStartTime} ~ ${makeupEndTime}`
-                    : makeupStartTime;
-
                 await onSubmit({
                     id: Date.now(),
+                    isProposal: true,
                     rawDate: makeupDate,
                     isoMakeupTime: `${makeupDate}T${makeupStartTime}:00`,
-                    scheduleId: defaultScheduleId,
                     date: formatToKoreanDate(makeupDate),
-                    time: timeStr,
-                    reason: makeupReason.trim() || '보강 시간 제안',
+                    time: makeupStartTime,
+                    reason: '보강 시간 제안',
                     status: '대기중',
                     canCancel: true,
                 });
@@ -141,8 +116,6 @@ function MakeupApply({
 
             setMakeupDate('');
             setMakeupStartTime('');
-            setMakeupEndTime('');
-            setMakeupReason('');
         } catch (err) {
             setSubmitError(err?.message || '보강 신청에 실패했습니다. 다시 시도해주세요.');
         } finally {
@@ -151,7 +124,7 @@ function MakeupApply({
     };
 
     const isSubmitDisabled = isProposeMode
-        ? (isSubmitting || isTimeInvalid || !makeupDate || !makeupStartTime)
+        ? (isSubmitting || !makeupDate || !makeupStartTime)
         : (isSubmitting || !selectedSlot);
 
     const calendarSelectedDate = isProposeMode
@@ -261,53 +234,22 @@ function MakeupApply({
                                 />
 
                                 <label className="apply-field-label" htmlFor="makeup-start-time">
-                                    보강 시간 <span style={{ color: '#F04444' }}>*</span>
+                                    보강 시작 시간 <span style={{ color: '#F04444' }}>*</span>
                                 </label>
-                                <div className="apply-time-row">
-                                    <input
-                                        id="makeup-start-time"
-                                        type="time"
-                                        required
-                                        className={`apply-input apply-time-input ${isTimeInvalid ? 'input-error' : ''}`}
-                                        value={makeupStartTime}
-                                        disabled={isSubmitting}
-                                        onChange={(e) => {
-                                            setMakeupStartTime(e.target.value);
-                                            setSubmitError('');
-                                        }}
-                                    />
-                                    <span className="apply-time-tilde">~</span>
-                                    <input
-                                        id="makeup-end-time"
-                                        type="time"
-                                        className={`apply-input apply-time-input ${isTimeInvalid ? 'input-error' : ''}`}
-                                        value={makeupEndTime}
-                                        disabled={isSubmitting}
-                                        onChange={(e) => {
-                                            setMakeupEndTime(e.target.value);
-                                            setSubmitError('');
-                                        }}
-                                    />
-                                </div>
-                                {isTimeInvalid && (
-                                    <p className="apply-error-message">
-                                        시작 시간은 종료 시간보다 앞서야 합니다.
-                                    </p>
-                                )}
+                                <input
+                                    id="makeup-start-time"
+                                    type="time"
+                                    required
+                                    className="apply-input"
+                                    value={makeupStartTime}
+                                    disabled={isSubmitting}
+                                    onChange={(e) => {
+                                        setMakeupStartTime(e.target.value);
+                                        setSubmitError('');
+                                    }}
+                                />
                             </>
                         )}
-
-                        <label className="apply-field-label" htmlFor="makeup-reason">
-                            신청 사유
-                        </label>
-                        <textarea
-                            id="makeup-reason"
-                            className="apply-textarea"
-                            placeholder="사유를 입력해주세요"
-                            value={makeupReason}
-                            disabled={isSubmitting}
-                            onChange={(e) => setMakeupReason(e.target.value)}
-                        />
 
                         {submitError && (
                             <p className="apply-error-message" role="alert">

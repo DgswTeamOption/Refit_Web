@@ -10,6 +10,7 @@ import './ClassBlock.css';
  * @param {string} props.title 수업명 (필수)
  * @param {string} [props.bannerImageUrl] 수업 카드 배너 이미지 URL
  * @param {() => void | Promise<void>} props.onLeave 나가기 요청 핸들러 (필수)
+ * @param {string} [props.actionLabel='수업 나가기'] 수업 카드의 관리 버튼 문구
  * @param {boolean} [props.isLeaving=false] 부모에서 관리하는 요청 진행 상태
  * @param {boolean} [props.disabled=false] 나가기 버튼 비활성화 여부
  * @param {string} [props.className=''] 레이아웃 확장용 클래스
@@ -27,6 +28,7 @@ function ClassBlock({
                         color = 'peach',
                         bannerImageUrl = '',
                         onLeave,
+                        actionLabel = '수업 나가기',
                         isLeaving = false,
                         disabled = false,
                         className = '',
@@ -61,10 +63,10 @@ function ClassBlock({
                     className="class-block__leave"
                     onClick={onLeave}
                     disabled={disabled || isLeaving}
-                    aria-label={`${title} 수업 나가기`}
+                    aria-label={`${title} ${actionLabel}`}
                     aria-busy={isLeaving}
                 >
-                    {isLeaving ? '나가는 중…' : '수업 나가기'}
+                    {isLeaving ? '나가는 중…' : actionLabel}
                 </button>
             </div>
         </article>

@@ -199,6 +199,7 @@ function SettingTable({ availableList, loading, error, onEdit, onDelete }) {
                       text="수정"
                       color="lightGray"
                       width={60}
+                      disabled={!item.canChangeTime}
                       onClick={() => onEdit(item)}
                     />
                     <Button
@@ -314,6 +315,7 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   };
 
   const handleEdit = (item) => {
+    if (!item.canChangeTime || submitting) return;
     setEditingId(item.id);
     setSelectedScheduleId(item.scheduleId);
     const schedule = scheduleOptions.find((option) => option.id === item.scheduleId);
@@ -329,6 +331,11 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   };
 
   const handleSave = async () => {
+    if (submitting) return;
+    if (editingId !== null && !editingItem?.canChangeTime) {
+      setSaveMessage(editingItem?.lockReason || "이 보강 가능 시간을 수정할 수 없습니다.");
+      return;
+    }
     setSaveMessage("");
     const scheduleIdNumber = Number(selectedScheduleId);
     if (
@@ -407,6 +414,7 @@ export default function MakeupSettingTab({ classId, classroomId }) {
   };
 
   const handleDelete = async (id) => {
+    if (!availableList.find((item) => item.id === id)?.canDelete) return;
     setActionError("");
     try {
       await deleteMakeupAvailability(id);
@@ -522,7 +530,9 @@ export default function MakeupSettingTab({ classId, classroomId }) {
               text={submitting ? "저장 중" : editingId !== null ? "수정" : "저장"}
               color="blue"
               width={90}
-              disabled={submitting || (editingId === null && (!selectedScheduleId || scheduleOptions.length === 0))}
+              disabled={submitting || (editingId === null
+                ? !selectedScheduleId || scheduleOptions.length === 0
+                : !editingItem?.canChangeTime)}
               onClick={handleSave}
             />
             {editingId !== null && (

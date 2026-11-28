@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useSyncExternalStore } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Footer from '../Footer/Footer.jsx';
 import GlobalNavigation from '../GlobalNavigation/GlobalNavigation.jsx';
@@ -9,16 +9,22 @@ import '../../styles/global-pages.css';
 const TeacherChatbot = lazy(() => import('../TeacherChatbot/TeacherChatbot.jsx'));
 
 const PAGE_PATHS = {
-    introduce: '/introduce',
+    introduce: '/',
     faq: '/faq',
     terms: '/terms',
     privacy: '/privacy',
 };
 
+function subscribe(onChange) {
+    window.addEventListener('storage', onChange);
+    return () => window.removeEventListener('storage', onChange);
+}
+const readServerSession = () => false;
+
 export default function MainLayout() {
     const { pathname } = useLocation();
     const navigate = useNavigate();
-    const isLoggedIn = isAuthenticatedSession();
+    const isLoggedIn = useSyncExternalStore(subscribe, isAuthenticatedSession, readServerSession);
     const isTeacherPage = pathname.startsWith('/teacher');
     const isStudentPage = pathname === '/student' || pathname.startsWith('/class/');
     const savedRole = typeof window !== 'undefined'
@@ -33,12 +39,12 @@ export default function MainLayout() {
         ? '/teacher'
         : activeRole === 'student'
             ? '/student'
-            : '/login';
+            : '/';
     const showFooter = !isLoggedIn && !isTeacherPage && !isStudentPage && pathname !== '/personal-info';
 
     return (
         <div className="global-site">
-            <Header showServiceMenu onLogoClick={() => navigate(homePath)} />
+            <Header isLoggedIn={isLoggedIn} showServiceMenu onLogoClick={() => navigate(homePath)} />
             <Outlet />
             {showTeacherChatbot && (
                 <Suspense fallback={null}>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import "./GlobalNavigation.css";
 
 const footerPages = {
@@ -31,22 +32,17 @@ export default function GlobalNavigation({
     );
   }
 
-  const handleNavClick = (page) => {
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    onNavigate?.(page);
-  };
-
   return (
     <nav className="global-navigation-links" aria-label="서비스 메뉴">
-      <button type="button" onClick={() => handleNavClick("introduce")}>서비스 소개</button>
+      <Link to="/">서비스 소개</Link>
       <span>·</span>
-      <button type="button" onClick={() => handleNavClick("faq")}>FAQ</button>
+      <Link to="/faq">FAQ</Link>
       <span>·</span>
-      <button type="button" onClick={() => handleNavClick("terms")}>이용약관</button>
+      <Link to="/terms">이용약관</Link>
       <span>·</span>
-      <button type="button" onClick={() => handleNavClick("privacy")}>
+      <Link to="/privacy">
         개인정보 처리방침
-      </button>
+      </Link>
     </nav>
   );
 }
